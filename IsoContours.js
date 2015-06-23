@@ -1,4 +1,4 @@
-var MarchingSquares = (function (my) {
+var MarchingSquaresJS = (function (my) {
   /*
     Compute the isocontour(s) of a scalar 2D field given
     a certain threshold by applying the Marching Squares
@@ -296,4 +296,4 @@ var MarchingSquares = (function (my) {
 
 
   return my;
-}(MarchingSquares || {}));
+}(MarchingSquaresJS || {}));

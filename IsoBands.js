@@ -1,4 +1,4 @@
-var MarchingSquares = (function (my) {
+var MarchingSquaresJS = (function (my) {
 
   /*
     Compute isobands(s) of a scalar 2D field given a certain
@@ -2879,4 +2879,4 @@ var MarchingSquares = (function (my) {
   
 
   return my;
-}(MarchingSquares || {}));
+}(MarchingSquaresJS || {}));
