@@ -4,12 +4,37 @@ var MarchingSquaresJS = (function (my) {
     a certain threshold by applying the Marching Squares
     Algorithm. The function returns a list of path coordinates
   */
-  my.IsoContours  = function(data, threshold, successCallback, progressCallback, verbose){
-    verbose = verbose || false;
-    if(verbose)
+  var defaultSettings = {
+    successCallback:  null,
+    progressCallback: null,
+    verbose:          false
+  };
+
+  var settings = {};
+
+  my.IsoContours  = function(data, threshold, options){
+    /* process options */
+    options = options ? options : {};
+
+    var optionKeys = Object.keys(defaultSettings);
+
+    for(var i = 0; i < optionKeys.length; i++){
+      var key = optionKeys[i];
+      var val = options[key];
+      val = ((typeof val !== 'undefined') && (val !== null)) ? val : defaultSettings[key];
+
+      settings[key] = val;
+    }
+
+    if(settings.verbose)
       console.log("computing isocontour for " + threshold);
 
-    return ContourGrid2Paths(computeContourGrid(data, threshold, successCallback, progressCallback, verbose));
+    var ret = ContourGrid2Paths(computeContourGrid(data, threshold));
+
+    if(typeof settings.successCallback === 'function')
+      settings.successCallback(ret);
+
+    return ret;
   };
 
   /*
@@ -22,7 +47,7 @@ var MarchingSquaresJS = (function (my) {
   Isocontour implementation below
   ################################
   */
-  
+
   /* assume that x1 == 1 &&  x0 == 0 */
   function interpolateX(y, y0, y1){
     return (y - y0) / (y1 - y0);
@@ -33,18 +58,18 @@ var MarchingSquaresJS = (function (my) {
     var rows = data.length - 1;
     var cols = data[0].length - 1;
     var ContourGrid = { rows: rows, cols: cols, cells: [] };
-  
+
     for(var j = 0; j < rows; ++j){
       ContourGrid.cells[j] = [];
       for(var i = 0; i < cols; ++i){
         /* compose the 4-bit corner representation */
         var cval = 0;
-  
+
         var tl = data[j+1][i];
         var tr = data[j+1][i+1];
         var br = data[j][i+1];
         var bl = data[j][i];
-  
+
         if(isNaN(tl) || isNaN(tr) || isNaN(br) || isNaN(bl)){
           continue;
         }
@@ -52,7 +77,7 @@ var MarchingSquaresJS = (function (my) {
         cval |= ((tr >= threshold) ? 4 : 0);
         cval |= ((br >= threshold) ? 2 : 0);
         cval |= ((bl >= threshold) ? 1 : 0);
-  
+
         /* resolve ambiguity for cval == 5 || 10 via averaging */
         var flipped = false;
         if(cval == 5 || cval == 10){
@@ -65,7 +90,7 @@ var MarchingSquaresJS = (function (my) {
             flipped = true;
           }
         }
-  
+
         /* add cell to ContourGrid if it contains edges */
         if(cval != 0 && cval != 15){
           var top, bottom, left, right;
@@ -120,29 +145,36 @@ var MarchingSquaresJS = (function (my) {
           } else {
             console.log("Illegal cval detected: " + cval);
           }
-          ContourGrid.cells[j][i] = {cval, flipped, top, right, bottom, left};
+          ContourGrid.cells[j][i] = {
+                                      cval:     cval,
+                                      flipped:  flipped,
+                                      top:      top,
+                                      right:    right,
+                                      bottom:   bottom,
+                                      left:     left
+                                    };
         }
-  
+
       }
     }
-  
+
     return ContourGrid;
   }
-  
+
   function isSaddle(cell){
     return cell.cval == 5 || cell.cval == 10;
   }
-  
+
   function isTrivial(cell){
     return cell.cval == 0 || cell.cval == 15;
   }
-  
+
   function clearCell(cell){
     if((!isTrivial(cell)) && (cell.cval != 5) && (cell.cval != 10)){
       cell.cval = 15;
     }
   }
-  
+
   function getXY(cell, edge){
     if(edge === "top"){
       return [cell.top, 1.0];
@@ -154,14 +186,14 @@ var MarchingSquaresJS = (function (my) {
       return [0.0, cell.left];
     }
   }
-  
+
   function ContourGrid2Paths(grid){
     var paths = [];
     var path_idx = 0;
     var rows = grid.rows;
     var cols = grid.cols;
     var epsilon = 1e-7;
-  
+
     grid.cells.forEach(function(g, j){
       g.forEach(function(gg, i){
         if((typeof gg !== 'undefined') && (!isSaddle(gg)) && (!isTrivial(gg))){
@@ -175,7 +207,7 @@ var MarchingSquaresJS = (function (my) {
             */
             var x = p.path[p.path.length - 1][0],
                 y = p.path[p.path.length - 1][1];
-  
+
             for(var k = path_idx - 1; k >= 0; k--){
               if((Math.abs(paths[k][0][0] - x) <= epsilon) && (Math.abs(paths[k][0][1] - y) <= epsilon)){
                 for(var l = p.path.length - 2; l >= 0; --l){
@@ -191,10 +223,10 @@ var MarchingSquaresJS = (function (my) {
         }
       });
     });
-  
+
     return paths;
   }
-  
+
   /*
     construct consecutive line segments from starting cell by
     walking arround the enclosed area clock-wise
@@ -208,27 +240,27 @@ var MarchingSquaresJS = (function (my) {
     var startEdge = ["none", "left", "bottom", "left", "right", "none", "bottom", "left", "top", "top", "none", "top", "right", "right", "bottom", "none"];
     var nextEdge  = ["none", "bottom", "right", "right", "top", "top", "top", "top", "left", "bottom", "right", "right", "left", "bottom", "left", "none"];
     var edge;
-  
+
     var startCell   = grid[j][i];
     var currentCell = grid[j][i];
-  
+
     var cval = currentCell.cval;
     var edge = startEdge[cval];
-  
+
     var pt = getXY(currentCell, edge);
-  
+
     /* push initial segment */
     p.push([i + pt[0], j + pt[1]]);
     edge = nextEdge[cval];
     pt = getXY(currentCell, edge);
     p.push([i + pt[0], j + pt[1]]);
     clearCell(currentCell);
-  
+
     /* now walk arround the enclosed area in clockwise-direction */
     var k = i + dxContour[cval];
     var l = j + dyContour[cval];
     var prev_cval = cval;
-  
+
     while((k >= 0) && (l >= 0) && (l < maxj) && ((k != i) || (l != j))){
       currentCell = grid[l][k];
       if(typeof currentCell === 'undefined'){ /* path ends here */
@@ -289,7 +321,7 @@ var MarchingSquaresJS = (function (my) {
       l += dy;
       prev_cval = cval;
     }
-  
+
     return { path: p, info: "closed" };
   }
 

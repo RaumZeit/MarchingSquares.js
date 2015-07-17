@@ -1,5 +1,14 @@
 var MarchingSquaresJS = (function (my) {
 
+  var defaultSettings = {
+    successCallback:  null,
+    progressCallback: null,
+    verbose:          false,
+    polygons:         false
+  };
+
+  var settings = {};
+
   /*
     Compute isobands(s) of a scalar 2D field given a certain
     threshold and a bandwidth by applying the Marching Squares
@@ -7,28 +16,44 @@ var MarchingSquaresJS = (function (my) {
     either for individual polygons within each grid cell, or the
     outline of connected polygons.
   */
-  my.IsoBands = function(data, minV, bandwidth, polygons, successCallback, progressCallback, verbose){
-    verbose   = verbose || false;
-    polygons  = polygons || false;
+  my.IsoBands = function(data, minV, bandwidth, options){
+    /* process options */
+    options = options ? options : {};
 
-    if(verbose)
+    var optionKeys = Object.keys(defaultSettings);
+
+    for(var i = 0; i < optionKeys.length; i++){
+      var key = optionKeys[i];
+      var val = options[key];
+      val = ((typeof val !== 'undefined') && (val !== null)) ? val : defaultSettings[key];
+
+      settings[key] = val;
+    }
+
+    if(settings.verbose)
       console.log("computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
 
-    grid = computeBandGrid(data, minV, bandwidth, successCallback, progressCallback, verbose);
+    grid = computeBandGrid(data, minV, bandwidth);
 
-    if(verbose){
-      if(polygons){
+    if(settings.verbose){
+      if(settings.polygons){
         console.log("returning single polygons for each grid cell");
       } else {
         console.log("returning polygon paths for entire data grid");
       }
     }
 
-    if(polygons){
-      return BandGrid2Areas(grid);
+    var ret;
+    if(settings.polygons){
+      ret = BandGrid2Areas(grid);
     } else {
-      return BandGrid2AreaPaths(grid);
+      ret = BandGrid2AreaPaths(grid);
     }
+
+    if(typeof settings.successCallback === 'function')
+      settings.successCallback(ret);
+
+    return ret;
   };
 
   /*
@@ -1150,31 +1175,31 @@ var MarchingSquaresJS = (function (my) {
     var rows = data.length - 1;
     var cols = data[0].length - 1;
     var BandGrid = { rows: rows, cols: cols, cells: [] };
-  
+
     var maxV = minV + Math.abs(bandwidth);
-  
+
     for(var j = 0; j < rows; ++j){
       BandGrid.cells[j] = [];
       for(var i = 0; i < cols; ++i){
         /*  compose the 4-trit corner representation */
         var cval = 0;
-  
+
         var tl = data[j+1][i];
         var tr = data[j+1][i+1];
         var br = data[j][i+1];
         var bl = data[j][i];
-  
+
         if(isNaN(tl) || isNaN(tr) || isNaN(br) || isNaN(bl)){
           continue;
         }
-  
+
         cval |= (tl < minV) ? 0 : (tl > maxV) ? 128 : 64;
         cval |= (tr < minV) ? 0 : (tr > maxV) ? 32 : 16;
         cval |= (br < minV) ? 0 : (br > maxV) ? 8 : 4;
         cval |= (bl < minV) ? 0 : (bl > maxV) ? 2 : 1;
-  
+
         var cval_real = +cval;
-  
+
         /* resolve ambiguity via averaging */
         var flipped = 0;
         if(     (cval == 17) /* 0101 */
@@ -1195,9 +1220,9 @@ var MarchingSquaresJS = (function (my) {
           var average = (tl + tr + br + bl) / 4;
           /* set flipped state */
           flipped = (average > maxV) ? 2 : (average < minV) ? 0 : 1;
-  
+
           /* adjust cval for flipped cases */
-  
+
           /* 8-sided cases */
           if(cval === 34){
             if(flipped === 1){
@@ -1213,7 +1238,7 @@ var MarchingSquaresJS = (function (my) {
               cval = 34;
             }
           }
-  
+
           /* 6-sided polygon cases */
           else if(cval === 17){
             if(flipped === 1){
@@ -1236,7 +1261,7 @@ var MarchingSquaresJS = (function (my) {
             if(flipped === 1)
               cval = 103;
           }
-  
+
           /* 7-sided polygon cases */
           else if(cval === 152){
             if(flipped < 2){
@@ -1288,17 +1313,17 @@ var MarchingSquaresJS = (function (my) {
             }
           }
         }
-  
+
         /* add cell to BandGrid if it contains at least one polygon-side */
         if((cval != 0) && (cval != 170)){
           var topleft, topright, bottomleft, bottomright,
               righttop, rightbottom, lefttop, leftbottom;
-  
+
           topleft = topright = bottomleft = bottomright = righttop
                   = rightbottom = lefttop = leftbottom = 0.5;
-  
+
           var edges = [];
-  
+
           /* do interpolation here */
           /* 1st Triangles */
           if(cval === 1){ /* 0001 */
@@ -1392,7 +1417,7 @@ var MarchingSquaresJS = (function (my) {
             edges.push(isoBandEdgeLB[cval]);
             edges.push(isoBandEdgeLT[cval]);
           }
-  
+
           /* 3rd rectangle cases */
           if(cval === 5){ /* 0011 */
             rightbottom = 1 - interpolateX(minV, tr, br);
@@ -1455,7 +1480,7 @@ var MarchingSquaresJS = (function (my) {
             edges.push(isoBandEdgeBR[cval]);
             edges.push(isoBandEdgeBL[cval]);
           }
-  
+
           /* 4th single pentagon cases */
           else if(cval === 101){ /* 1211 */
             rightbottom = interpolateX(maxV, br, tr);
@@ -1602,7 +1627,7 @@ var MarchingSquaresJS = (function (my) {
             edges.push(isoBandEdgeRT[cval]);
             edges.push(isoBandEdgeRB[cval]);
           }
-  
+
           /* 5th single hexagon cases */
           else if(cval === 37){ /* 0211 */
             rightbottom = interpolateX(maxV, br, tr);
@@ -1689,7 +1714,7 @@ var MarchingSquaresJS = (function (my) {
             edges.push(isoBandEdgeRB[cval]);
             edges.push(isoBandEdgeBR[cval]);
           }
-  
+
           /* 8-sided cases */
           else if(cval === 34){ /* 0202 || 2020 with flipped == 0 */
             if(flipped === 0){
@@ -1764,7 +1789,7 @@ var MarchingSquaresJS = (function (my) {
             edges.push(isoBandEdgeLB[cval]);
             edges.push(isoBandEdgeLT[cval]);
           }
-  
+
           /* 6-sided polygon cases */
           else if(cval === 153){ /* 0101 with flipped == 0 || 2121 with flipped == 2 */
             if(flipped === 0){
@@ -1823,7 +1848,7 @@ var MarchingSquaresJS = (function (my) {
             edges.push(isoBandEdgeRB[cval]);
             edges.push(isoBandEdgeBR[cval]);
           }
-  
+
           /* 7-sided polygon cases */
           else if(cval === 152){ /* 2120 with flipped == 2 || 0102 with flipped == 0 */
             if(flipped === 0){
@@ -1978,7 +2003,7 @@ var MarchingSquaresJS = (function (my) {
             edges.push(isoBandEdgeBR[cval]);
             edges.push(isoBandEdgeLT[cval]);
           }
-  
+
           else if(cval === 85){
             righttop = 1;
             rightbottom = 0;
@@ -1989,25 +2014,39 @@ var MarchingSquaresJS = (function (my) {
             topleft = 0;
             topright = 1;
           }
-  
+
           if(topleft < 0 || topleft > 1 || topright < 0 || topright > 1 || righttop < 0 || righttop > 1 || bottomright < 0 || bottomright > 1 || leftbottom < 0 || leftbottom > 1 || lefttop < 0 || lefttop > 1){
             console.log(cval + " " + cval_real + " " + tl + "," + tr + "," + br + "," + bl + " " + flipped + " " + topleft + " " + topright + " " + righttop + " " + rightbottom + " " + bottomright + " " + bottomleft + " " + leftbottom + " " + lefttop);
           }
-          BandGrid.cells[j][i] = {cval, cval_real, flipped, topleft, topright, righttop, rightbottom, bottomright, bottomleft, leftbottom, lefttop, edges};
+
+          BandGrid.cells[j][i] = {
+                                    cval:         cval,
+                                    cval_real:    cval_real,
+                                    flipped:      flipped,
+                                    topleft:      topleft,
+                                    topright:     topright,
+                                    righttop:     righttop,
+                                    rightbottom:  rightbottom,
+                                    bottomright:  bottomright,
+                                    bottomleft:   bottomleft,
+                                    leftbottom:   leftbottom,
+                                    lefttop:      lefttop,
+                                    edges:        edges
+                                };
         }
       }
     }
-  
+
     return BandGrid;
   }
-  
+
   function BandGrid2AreaPaths(grid){
     var areas = [];
     var area_idx = 0;
     var rows = grid.rows;
     var cols = grid.cols;
     var currentPolygon = [];
-  
+
     for(var j = 0; j < rows; j++){
       for(var i = 0; i < cols; i++){
         if((typeof grid.cells[j][i] !== 'undefined') && (grid.cells[j][i].edges.length > 0)){
@@ -2015,28 +2054,28 @@ var MarchingSquaresJS = (function (my) {
           var o = 0,
               x = i,
               y = j;
-  
+
           var cell = grid.cells[j][i];
           /* get start coordinates */
           var cval = cell.cval;
-  
+
           var prev  = getStartXY(cell),
               next  = null,
               p     = i,
               q     = j;
-  
+
           if(prev !== null){
             currentPolygon.push([ prev.p[0] + p, prev.p[1] + q ]);
             //console.log(cell);
             //console.log("coords: " + (prev.p[0] + p) + " " + (prev.p[1] + q));
           }
-  
+
           do{
             //console.log(p + "," + q);
             //console.log(grid.cells[q][p]);
             //console.log(grid.cells[q][p].edges);
             //console.log("from : " + prev.x + " " + prev.y + " " + prev.o);
-  
+
             next = getExitXY(grid.cells[q][p], prev.x, prev.y, prev.o);
             if(next !== null){
               //console.log("coords: " + (next.p[0] + p) + " " + (next.p[1] + q));
@@ -2055,13 +2094,13 @@ var MarchingSquaresJS = (function (my) {
                   arround the missing data, until we find an entry
                   point again
               */
-  
+
               /* set back coordinates of current cell */
               p -= next.x;
               q -= next.y;
-  
+
               //console.log("reached boundary at " + p + " " + q);
-  
+
               var missing = traceOutOfGridPath(grid, p, q, next.x, next.y, next.o);
               if(missing !== null){
                 missing.path.forEach(function(pp){
@@ -2078,7 +2117,7 @@ var MarchingSquaresJS = (function (my) {
             }
           } while(    (typeof grid.cells[q][p] !== 'undefined')
                    && (grid.cells[q][p].edges.length > 0));
-  
+
           areas.push(currentPolygon);
           //console.log("next polygon");
           //console.log(currentPolygon);
@@ -2090,7 +2129,7 @@ var MarchingSquaresJS = (function (my) {
     }
     return areas;
   }
-  
+
   function traceOutOfGridPath(grid, i, j, d_x, d_y, d_o){
     var cell = grid.cells[j][i];
     var cval = cell.cval_real;
@@ -2100,19 +2139,19 @@ var MarchingSquaresJS = (function (my) {
     var rows = grid.rows;
     var cols = grid.cols;
     var closed = false;
-  
+
     while(!closed){
       //console.log("processing cell " + p + "," + q + " " + d_x + " " + d_y + " " + d_o);
       if((typeof grid.cells[q] === 'undefined') || (typeof grid.cells[q][p] === 'undefined')){
         //console.log("which is undefined");
         /* we can't move on, so we have to change direction to proceed further */
-  
+
         /* go back to previous cell */
         q -= d_y;
         p -= d_x;
         cell = grid.cells[q][p];
         cval = cell.cval_real;
-  
+
         /* check where we've left defined cells of the grid... */
         if(d_y === -1){ /* we came from top */
           if(d_o === 0){  /* exit left */
@@ -2276,12 +2315,12 @@ var MarchingSquaresJS = (function (my) {
           console.log("we came from nowhere!");
           break;
         }
-  
+
       } else { /* try to find an entry into the regular grid again! */
         cell = grid.cells[q][p];
         cval = cell.cval_real;
         //console.log("which is defined");
-  
+
         if(d_x === -1){
           if(d_o === 0){
             /* try to go downwards */
@@ -2390,23 +2429,23 @@ var MarchingSquaresJS = (function (my) {
           console.log("where did we came from???");
           break;
         }
-  
+
       }
-  
+
       p += d_x;
       q += d_y;
       //console.log("going on to  " + p + "," + q + " via " + d_x + " " + d_y + " " + d_o);
-  
+
       if((p === i) && (q === j)){ /* bail out, once we've closed a circle path */
         break;
       }
-  
+
     }
-  
+
     //console.log("exit with " + p + "," + q + " " + d_x + " " + d_y + " " + d_o);
     return { path: path, i: p, j: q, x: d_x, y: d_y, o: d_o };
   }
-  
+
   function deleteEdge(cell, edgeIdx){
     delete cell.edges[edgeIdx];
     for(var k = edgeIdx + 1; k < cell.edges.length; k++){
@@ -2414,9 +2453,9 @@ var MarchingSquaresJS = (function (my) {
     }
     cell.edges.pop();
   }
-  
+
   function getStartXY(cell){
-  
+
     if(cell.edges.length > 0){
       var e = cell.edges[cell.edges.length - 1];
       //console.log("starting with edge " + e);
@@ -2547,15 +2586,15 @@ var MarchingSquaresJS = (function (my) {
                   break;
       }
     }
-  
+
     return null;
   }
-  
+
   function getExitXY(cell, x, y, o){
-  
+
     var e, id_x, x, y, d_x, d_y, cval = cell.cval;
     var d_o;
-  
+
     switch(x){
       case -1:  switch(o){
                   case 0:   e = isoBandEdgeRB[cval];
@@ -2614,7 +2653,7 @@ var MarchingSquaresJS = (function (my) {
                 };
                 break;
     }
-  
+
     id_x = cell.edges.indexOf(e);
     if(typeof cell.edges[id_x] !== 'undefined'){
       deleteEdge(cell, id_x);
@@ -2624,9 +2663,9 @@ var MarchingSquaresJS = (function (my) {
       //console.log(cell);
       return null;
     }
-  
+
     cval = cell.cval_real;
-  
+
     switch(e){
         case 0:   if(cval & Node1){ /* node 1 within range */
                     x = cell.topleft;
@@ -2824,7 +2863,7 @@ var MarchingSquaresJS = (function (my) {
                   console.log(cell);
                   return null;
     }
-  
+
     if((typeof x === 'undefined') || (typeof y === 'undefined') || (typeof d_x === 'undefined') || (typeof d_y === 'undefined') || (typeof d_o === 'undefined')){
       console.log("undefined value!");
       console.log(cell);
@@ -2832,14 +2871,13 @@ var MarchingSquaresJS = (function (my) {
     }
     return {p: [x, y], x: d_x, y: d_y, o: d_o};
   }
-  
-  
+
   function BandGrid2Areas(grid){
     var areas = [];
     var area_idx = 0;
     var rows = grid.rows;
     var cols = grid.cols;
-  
+
     grid.cells.forEach(function(g, j){
       g.forEach(function(gg, i){
         if(typeof gg !== 'undefined'){
@@ -2855,7 +2893,7 @@ var MarchingSquaresJS = (function (my) {
                   areas[area_idx++] = aa;
                 });
               } else {
-  
+
                 a.forEach(function(aa,k){
                   aa[0] += i;
                   aa[1] += j;
@@ -2871,12 +2909,9 @@ var MarchingSquaresJS = (function (my) {
         }
       });
     });
-  
+
     return areas;
   }
-  
-  
-  
 
   return my;
 }(MarchingSquaresJS || {}));
