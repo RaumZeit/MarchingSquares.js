@@ -326,6 +326,7 @@ var MarchingSquaresJS = (function (my) {
   }
 
 
+  if (typeof define === "function" && define.amd) define(my);
 
   return my;
 }(MarchingSquaresJS || {}));
