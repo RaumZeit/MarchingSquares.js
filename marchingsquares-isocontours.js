@@ -80,12 +80,12 @@ var MarchingSquaresJS = (function (my) {
 
         /* resolve ambiguity for cval == 5 || 10 via averaging */
         var flipped = false;
-        if(cval == 5 || cval == 10){
+        if(cval === 5 || cval === 10){
           var average = (tl + tr + br + bl) / 4;
-          if(cval == 5 && (average < threshold)){
+          if(cval === 5 && (average < threshold)){
             cval = 10;
             flipped = true;
-          } else if(cval == 10 && (average < threshold)){
+          } else if(cval === 10 && (average < threshold)){
             cval = 5;
             flipped = true;
           }
@@ -96,50 +96,50 @@ var MarchingSquaresJS = (function (my) {
           var top, bottom, left, right;
           top = bottom = left = right = 0.5;
           /* interpolate edges of cell */
-          if(cval == 1){
+          if(cval === 1){
             left    = 1 - interpolateX(threshold, tl, bl);
             bottom  = 1 - interpolateX(threshold, br, bl);
-          } else if(cval == 2){
+          } else if(cval === 2){
             bottom  = interpolateX(threshold, bl, br);
             right   = 1 - interpolateX(threshold, tr, br);
-          } else if(cval == 3){
+          } else if(cval === 3){
             left    = 1 - interpolateX(threshold, tl, bl);
             right   = 1 - interpolateX(threshold, tr, br);
-          } else if(cval == 4){
+          } else if(cval === 4){
             top     = interpolateX(threshold, tl, tr);
             right   = interpolateX(threshold, br, tr);
-          } else if(cval == 5){
+          } else if(cval === 5){
             top     = interpolateX(threshold, tl, tr);
             right   = interpolateX(threshold, br, tr);
             bottom  = 1 - interpolateX(threshold, br, bl);
             left    = 1 - interpolateX(threshold, tl, bl);
-          } else if(cval == 6){
+          } else if(cval === 6){
             bottom  = interpolateX(threshold, bl, br);
             top     = interpolateX(threshold, tl, tr);
-          } else if(cval == 7){
+          } else if(cval === 7){
             left    = 1 - interpolateX(threshold, tl, bl);
             top     = interpolateX(threshold, tl, tr);
-          } else if(cval == 8){
+          } else if(cval === 8){
             left    = interpolateX(threshold, bl, tl);
             top     = 1 - interpolateX(threshold, tr, tl);
-          } else if(cval == 9){
+          } else if(cval === 9){
             bottom  = 1 - interpolateX(threshold, br, bl);
             top     = 1 - interpolateX(threshold, tr, tl);
-          } else if(cval == 10){
+          } else if(cval === 10){
             top     = 1 - interpolateX(threshold, tr, tl);
             right   = 1 - interpolateX(threshold, tr, br);
             bottom  = interpolateX(threshold, bl, br);
             left    = interpolateX(threshold, bl, tl);
-          } else if(cval == 11){
+          } else if(cval === 11){
             top     = 1 - interpolateX(threshold, tr, tl);
             right   = 1 - interpolateX(threshold, tr, br);
-          } else if(cval == 12){
+          } else if(cval === 12){
             left    = interpolateX(threshold, bl, tl);
             right   = interpolateX(threshold, br, tr);
-          } else if(cval == 13){
+          } else if(cval === 13){
             bottom  = 1 - interpolateX(threshold, br, bl);
             right   = interpolateX(threshold, br, tr);
-          } else if(cval == 14){
+          } else if(cval === 14){
             left    = interpolateX(threshold, bl, tl);
             bottom  = interpolateX(threshold, bl, br);
           } else {
@@ -162,15 +162,15 @@ var MarchingSquaresJS = (function (my) {
   }
 
   function isSaddle(cell){
-    return cell.cval == 5 || cell.cval == 10;
+    return cell.cval === 5 || cell.cval === 10;
   }
 
   function isTrivial(cell){
-    return cell.cval == 0 || cell.cval == 15;
+    return cell.cval === 0 || cell.cval === 15;
   }
 
   function clearCell(cell){
-    if((!isTrivial(cell)) && (cell.cval != 5) && (cell.cval != 10)){
+    if((!isTrivial(cell)) && (cell.cval !== 5) && (cell.cval !== 10)){
       cell.cval = 15;
     }
   }
@@ -200,7 +200,7 @@ var MarchingSquaresJS = (function (my) {
           var p = tracePath(grid.cells, j, i);
           var merged = false;
           /* we may try to merge paths at this point */
-          if(p.info == "mergeable"){
+          if(p.info === "mergeable"){
             /*
               search backwards through the path array to find an entry
               that starts with where the current path ends...
@@ -268,17 +268,17 @@ var MarchingSquaresJS = (function (my) {
         break;
       }
       cval = currentCell.cval;
-      if((cval == 0) || (cval == 15)){
+      if((cval === 0) || (cval === 15)){
         return { path: p, info: "mergeable" };
       }
       edge  = nextEdge[cval];
       dx    = dxContour[cval];
       dy    = dyContour[cval];
-      if((cval == 5) || (cval == 10)){
+      if((cval === 5) || (cval === 10)){
         /* select upper or lower band, depending on previous cells cval */
-        if(cval == 5){
+        if(cval === 5){
           if(currentCell.flipped){ /* this is actually a flipped case 10 */
-            if(dyContour[prev_cval] == -1){
+            if(dyContour[prev_cval] === -1){
               edge  = "left";
               dx    = -1;
               dy    = 0;
@@ -288,15 +288,15 @@ var MarchingSquaresJS = (function (my) {
               dy    = 0;
             }
           } else { /* real case 5 */
-            if(dxContour[prev_cval] == -1){
+            if(dxContour[prev_cval] === -1){
               edge  = "bottom";
               dx    = 0;
               dy    = -1;
             }
           }
-        } else if(cval == 10){
+        } else if(cval === 10){
           if(currentCell.flipped){ /* this is actually a flipped case 5 */
-            if(dxContour[prev_cval] == -1){
+            if(dxContour[prev_cval] === -1){
               edge  = "top";
               dx    = 0;
               dy    = 1;
@@ -306,7 +306,7 @@ var MarchingSquaresJS = (function (my) {
               dy    = -1;
             }
           } else {  /* real case 10 */
-            if(dyContour[prev_cval] == 1){
+            if(dyContour[prev_cval] === 1){
               edge  = "left";
               dx    = -1;
               dy    = 0;
