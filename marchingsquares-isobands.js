@@ -3020,10 +3020,12 @@
     return areas;
   }
 
-  // if (typeof define === "function" && define.amd) {
-  //   define(MarchingSquaresJS);
-  // }
-    
+  /*
+    Define import modules
+  */
+  if (typeof define === "function" && define.amd) {
+    define(MarchingSquaresJS);
+  }
   if (typeof module !== 'undefined') {
     module.exports = MarchingSquaresJS;
   } else {
