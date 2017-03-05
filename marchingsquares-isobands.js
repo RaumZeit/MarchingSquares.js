@@ -1,6 +1,7 @@
 /*!
 * @license GNU Affero General Public License.
 * Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
+* v. 1.0.0
 * https://github.com/RaumZeit/MarchingSquares.js
 */
 
@@ -47,14 +48,12 @@
 
     var ret;
     if(settings.polygons){
-      if (settings.verbose) {
+      if (settings.verbose)
         console.log("returning single polygons for each grid cell");
-      }
       ret = BandGrid2Areas(grid);
     } else {
-      if (settings.verbose) {
+      if (settings.verbose)
         console.log("returning polygon paths for entire data grid");
-      }
       ret = BandGrid2AreaPaths(grid);
     }
 
@@ -850,12 +849,12 @@
   isoBandNextXTR[39] = 1;
   isoBandNextYTR[39] = 0;
   isoBandNextOTR[39] = 0;
-  
-  
+
+
   /*
    Define helper functions for the polygon_table
    */
-  
+
   /* triangle cases */
   var p00 = function (cell) {
     return [[cell.bottomleft, 0], [0, 0], [0, cell.leftbottom]];
@@ -1010,9 +1009,9 @@
     return [[1, cell.rightbottom], [1, 0], [cell.bottomright, 0], [0, cell.leftbottom], [0, cell.lefttop], [cell.topleft, 1], [cell.topright, 1]];
   };
   /* 0212 with flipped == 1 || 2010 with flipped == 1 */
-  
-  
-  
+
+
+
   /*
     The lookup tables for edge number given the polygon
     is entered at a specific location
@@ -2264,12 +2263,12 @@
         /* check where we've left defined cells of the grid... */
         if(d_y === -1){ /* we came from top */
           if(d_o === 0){  /* exit left */
-            if(cval && Node3){ /* lower left node is within range, so we move left */
+            if(cval & Node3){ /* lower left node is within range, so we move left */
               path.push([p, q]);
               d_x = -1;
               d_y = 0;
               d_o = 0;
-            } else if(cval && Node2){ /* lower right node is within range, so we move right */
+            } else if(cval & Node2){ /* lower right node is within range, so we move right */
               path.push([p + 1, q]);
               d_x = 1;
               d_y = 0;
@@ -2283,12 +2282,12 @@
               break;
             }
           } else {
-            if(cval && Node3){
+            if(cval & Node3){
               path.push([p, q]);
               d_x = -1;
               d_y = 0;
               d_o = 0;
-            } else if(cval && Node2){
+            } else if(cval & Node2){
               path.push([p + cell.bottomright, q]);
               d_x = 0;
               d_y = 1;
@@ -2307,12 +2306,12 @@
         } else if(d_y === 1){ /* we came from bottom */
           //console.log("we came from bottom and hit a non-existing cell " + (p + d_x) + "," + (q + d_y) + "!");
           if(d_o === 0){ /* exit left */
-            if(cval && Node1){ /* top right node is within range, so we move right */
+            if(cval & Node1){ /* top right node is within range, so we move right */
               path.push([p+1,q+1]);
               d_x = 1;
               d_y = 0;
               d_o = 1;
-            } else if(!(cval && Node0)){ /* found entry within same cell */
+            } else if(!(cval & Node0)){ /* found entry within same cell */
               path.push([p + cell.topright, q + 1]);
               d_x = 0;
               d_y = -1;
@@ -2329,7 +2328,7 @@
               break;
             }
           } else {
-            if(cval && Node1){
+            if(cval & Node1){
               path.push([p+1, q+1]);
               d_x = 1;
               d_y = 0;
@@ -2347,13 +2346,13 @@
           //console.log("we came from right and hit a non-existing cell at " + (p + d_x) + "," + (q + d_y) + "!");
           if(d_o === 0){
             //console.log("continue at bottom");
-            if(cval && Node0){
+            if(cval & Node0){
               path.push([p,q+1]);
               d_x = 0;
               d_y = 1;
               d_o = 0;
               //console.log("moving upwards to " + (p + d_x) + "," + (q + d_y) + "!");
-            } else if(!(cval && Node3)){ /* there has to be an entry into the regular grid again! */
+            } else if(!(cval & Node3)){ /* there has to be an entry into the regular grid again! */
               //console.log("exiting top");
               path.push([p, q + cell.lefttop]);
               d_x = 1;
@@ -2372,7 +2371,7 @@
             }
           } else {
             //console.log("continue at top");
-            if(cval && Node0){
+            if(cval & Node0){
               path.push([p,q+1]);
               d_x = 0;
               d_y = 1;
@@ -2386,7 +2385,7 @@
         } else if(d_x === 1){ /* we came from left */
           //console.log("we came from left and hit a non-existing cell " + (p + d_x) + "," + (q + d_y) + "!");
           if(d_o === 0){ /* exit bottom */
-            if(cval && Node2){
+            if(cval & Node2){
               path.push([p+1,q]);
               d_x = 0;
               d_y = -1;
@@ -2400,12 +2399,12 @@
               break;
             }
           } else { /* exit top */
-            if(cval && Node2){
+            if(cval & Node2){
               path.push([p+1,q]);
               d_x = 0;
               d_y = -1;
               d_o = 1;
-            } else if(!(cval && Node1)){
+            } else if(!(cval & Node1)){
               path.push([p + 1, q + cell.rightbottom]);
               d_x = -1;
               d_y = 0;
@@ -2437,7 +2436,7 @@
               d_x = 0;
               d_y = -1;
               d_o = 1;
-            } else if(cval && Node3){ /* proceed searching in x-direction */
+            } else if(cval & Node3){ /* proceed searching in x-direction */
               //console.log("proceeding in x-direction!");
               path.push([p, q]);
             } else { /* we must have found an entry into the regular grid */
@@ -2450,7 +2449,7 @@
               break;
             }
           } else {
-            if(cval && Node0) { /* proceed searchin in x-direction */
+            if(cval & Node0) { /* proceed searchin in x-direction */
               console.log("proceeding in x-direction!");
             } else { /* we must have found an entry into the regular grid */
               console.log("found entry from top at " + p + "," + q);
@@ -2467,7 +2466,7 @@
               d_x = 0;
               d_y = 1;
               d_o = 0;
-            } else if(cval && Node1){
+            } else if(cval & Node1){
               path.push([p+1,q+1]);
               d_x = 1;
               d_y = 0;
@@ -2489,7 +2488,7 @@
               d_x = 1;
               d_y = 0;
               d_o = 1;
-            } else if(cval && Node2){
+            } else if(cval & Node2){
               path.push([p+1,q]);
               d_x = 0;
               d_y = -1;
@@ -2515,7 +2514,7 @@
               d_x = -1;
               d_y = 0;
               d_o = 0;
-            } else if(cval && Node0){
+            } else if(cval & Node0){
               path.push([p,q+1]);
               d_x = 0;
               d_y = 1;
@@ -2570,122 +2569,122 @@
       //console.log("starting with edge " + e);
       var cval = cell.cval_real;
       switch(e){
-        case 0:   if(cval && Node1){ /* node 1 within range */
+        case 0:   if(cval & Node1){ /* node 1 within range */
                     return {p: [1, cell.righttop], x: -1, y: 0, o: 1};
                   } else { /* node 1 below or above threshold */
                     return {p: [cell.topleft, 1], x: 0, y: -1, o: 0};
                   }
-        case 1:   if(cval && Node2){
+        case 1:   if(cval & Node2){
                     return {p: [cell.topleft, 1], x: 0, y: -1, o: 0};
                   } else {
                     return {p: [1, cell.rightbottom], x: -1, y: 0, o: 0};
                   }
-        case 2:   if(cval && Node2){
+        case 2:   if(cval & Node2){
                     return {p: [cell.bottomright, 0], x: 0, y: 1, o: 1};
                   } else {
                     return {p: [cell.topleft, 1], x: 0, y: -1, o: 0};
                   }
-        case 3:   if(cval && Node3){
+        case 3:   if(cval & Node3){
                     return {p: [cell.topleft, 1], x: 0, y: -1, o: 0};
                   } else {
                     return {p: [cell.bottomleft, 0], x: 0, y: 1, o: 0};
                   }
-        case 4:   if(cval && Node1){
+        case 4:   if(cval & Node1){
                     return {p: [1, cell.righttop], x: -1, y: 0, o: 1};
                   } else {
                     return {p: [cell.topright, 1], x: 0, y: -1, o: 1};
                   }
-        case 5:   if(cval && Node2){
+        case 5:   if(cval & Node2){
                     return {p: [cell.topright, 1], x: 0, y: -1, o: 1};
                   } else {
                     return {p: [1, cell.rightbottom], x: -1, y: 0, o: 0};
                   }
-        case 6:   if(cval && Node2){
+        case 6:   if(cval & Node2){
                     return {p: [cell.bottomright, 0], x: 0, y: 1, o: 1};
                   } else {
                     return {p: [cell.topright, 1], x: 0, y: -1, o: 1};
                   }
-        case 7:   if(cval && Node3){
+        case 7:   if(cval & Node3){
                     return {p: [cell.topright, 1], x: 0, y: -1, o: 1};
                   } else {
                     return {p: [cell.bottomleft, 0], x: 0, y: 1, o: 0};
                   }
-        case 8:   if(cval && Node2){
+        case 8:   if(cval & Node2){
                     return {p: [cell.bottomright, 0], x: 0, y: 1, o: 1};
                   } else {
                     return {p: [1, cell.righttop], x: -1, y: 0, o: 1};
                   }
-        case 9:   if(cval && Node3){
+        case 9:   if(cval & Node3){
                     return {p: [1, cell.righttop], x: -1, y: 0, o: 1};
                   } else {
                     return {p: [cell.bottomleft, 0], x: 0, y: 1, o: 0};
                   }
-        case 10:  if(cval && Node3){
+        case 10:  if(cval & Node3){
                     return {p: [0, cell.leftbottom], x: 1, y: 0, o: 0};
                   } else {
                     return {p: [1, cell.righttop], x: -1, y: 0, o: 1};
                   }
-        case 11:  if(cval && Node0){
+        case 11:  if(cval & Node0){
                     return {p: [1, cell.righttop], x: -1, y: 0, o: 1};
                   } else {
                     return {p: [0, cell.lefttop], x: 1, y: 0, o: 1};
                   }
-        case 12:  if(cval && Node2){
+        case 12:  if(cval & Node2){
                     return {p: [cell.bottomright, 0], x: 0, y: 1, o: 1};
                   } else {
                     return {p: [1, cell.rightbottom], x: -1, y: 0, o: 0};
                   }
-        case 13:  if(cval && Node3){
+        case 13:  if(cval & Node3){
                     return {p: [1, cell.rightbottom], x: -1, y: 0, o: 0};
                   } else {
                     return {p: [cell.bottomleft, 0], x: 0, y: 1, o: 0};
                   }
-        case 14:  if(cval && Node3){
+        case 14:  if(cval & Node3){
                     return {p: [0, cell.leftbottom], x: 1, y: 0, o: 0};
                   } else {
                     return {p: [1, cell.rightbottom], x: -1, y: 0, o: 0};
                   }
-        case 15:  if(cval && Node0){
+        case 15:  if(cval & Node0){
                     return {p: [1, cell.rightbottom], x: -1, y: 0, o: 0};
                   } else {
                     return {p: [0, cell.lefttop], x: 1, y: 0, o: 1};
                   }
-        case 16:  if(cval && Node2){
+        case 16:  if(cval & Node2){
                     return {p: [cell.bottomright, 0], x: 0, y: 1, o: 1};
                   } else {
                     return {p: [0, cell.leftbottom], x: 1, y: 0, o: 0};
                   }
-        case 17:  if(cval && Node0){
+        case 17:  if(cval & Node0){
                     return {p: [cell.bottomright, 0], x: 0, y: 1, o: 1};
                   } else {
                     return {p: [0, cell.lefttop], x: 1, y: 0, o: 1};
                   }
-        case 18:  if(cval && Node3){
+        case 18:  if(cval & Node3){
                     return {p: [0, cell.leftbottom], x: 1, y: 0, o: 0};
                   } else {
                     return {p: [cell.bottomleft, 0], x: 0, y: 1, o: 0};
                   }
-        case 19:  if(cval && Node0){
+        case 19:  if(cval & Node0){
                     return {p: [cell.bottomleft, 0], x: 0, y: 1, o: 0};
                   } else {
                     return {p: [0, cell.lefttop], x: 1, y: 0, o: 1};
                   }
-        case 20:  if(cval && Node0){
+        case 20:  if(cval & Node0){
                     return {p: [cell.topleft, 1], x: 0, y: -1, o: 0};
                   } else {
                     return {p: [0, cell.leftbottom], x: 1, y: 0, o: 0};
                   }
-        case 21:  if(cval && Node1){
+        case 21:  if(cval & Node1){
                     return {p: [0, cell.leftbottom], x: 1, y: 0, o: 0};
                   } else {
                     return {p: [cell.topright, 1], x: 0, y: -1, o: 1};
                   }
-        case 22:  if(cval && Node0){
+        case 22:  if(cval & Node0){
                     return {p: [cell.topleft, 1], x: 0, y: -1, o: 0};
                   } else {
                     return {p: [0, cell.lefttop], x: 1, y: 0, o: 1};
                   }
-        case 23:  if(cval && Node1){
+        case 23:  if(cval & Node1){
                     return {p: [0, cell.lefttop], x: 1, y: 0, o: 1};
                   } else {
                     return {p: [cell.topright, 1], x: 0, y: -1, o: 1};
@@ -2776,7 +2775,7 @@
     cval = cell.cval_real;
 
     switch(e){
-        case 0:   if(cval && Node1){ /* node 1 within range */
+        case 0:   if(cval & Node1){ /* node 1 within range */
                     x = cell.topleft;
                     y = 1;
                   } else { /* node 1 below or above threshold */
@@ -2784,7 +2783,7 @@
                     y = cell.righttop;
                   }
                   break;
-        case 1:   if(cval && Node2){
+        case 1:   if(cval & Node2){
                     x = 1;
                     y = cell.rightbottom;
                   } else {
@@ -2792,7 +2791,7 @@
                     y = 1;
                   }
                   break;
-        case 2:   if(cval && Node2){
+        case 2:   if(cval & Node2){
                     x = cell.topleft;
                     y = 1;
                   } else {
@@ -2800,7 +2799,7 @@
                     y = 0;
                   }
                   break;
-        case 3:   if(cval && Node3){
+        case 3:   if(cval & Node3){
                     x = cell.bottomleft;
                     y = 0;
                   } else {
@@ -2808,7 +2807,7 @@
                     y = 1;
                   }
                   break;
-        case 4:   if(cval && Node1){
+        case 4:   if(cval & Node1){
                     x = cell.topright;
                     y = 1;
                   } else {
@@ -2816,7 +2815,7 @@
                     y = cell.righttop;
                   }
                   break;
-        case 5:   if(cval && Node2){
+        case 5:   if(cval & Node2){
                     x = 1;
                     y = cell.rightbottom;
                   } else {
@@ -2824,7 +2823,7 @@
                     y = 1;
                   }
                   break;
-        case 6:   if(cval && Node2){
+        case 6:   if(cval & Node2){
                     x = cell.topright;
                     y = 1;
                   } else {
@@ -2832,7 +2831,7 @@
                     y = 0;
                   }
                   break;
-        case 7:   if(cval && Node3){
+        case 7:   if(cval & Node3){
                     x = cell.bottomleft;
                     y = 0;
                   } else {
@@ -2840,7 +2839,7 @@
                     y = 1;
                   }
                   break;
-        case 8:   if(cval && Node2){
+        case 8:   if(cval & Node2){
                     x = 1;
                     y = cell.righttop;
                   } else {
@@ -2848,7 +2847,7 @@
                     y = 0;
                   }
                   break;
-        case 9:   if(cval && Node3){
+        case 9:   if(cval & Node3){
                     x = cell.bottomleft;
                     y = 0;
                   } else {
@@ -2856,7 +2855,7 @@
                     y = cell.righttop;
                   }
                   break;
-        case 10:  if(cval && Node3){
+        case 10:  if(cval & Node3){
                     x = 1;
                     y = cell.righttop;
                   } else {
@@ -2864,7 +2863,7 @@
                     y = cell.leftbottom;
                   }
                   break;
-        case 11:  if(cval && Node0){
+        case 11:  if(cval & Node0){
                     x = 0;
                     y = cell.lefttop;
                   } else {
@@ -2872,7 +2871,7 @@
                     y = cell.righttop;
                   }
                   break;
-        case 12:  if(cval && Node2){
+        case 12:  if(cval & Node2){
                     x = 1;
                     y = cell.rightbottom;
                   } else {
@@ -2880,7 +2879,7 @@
                     y = 0;
                   }
                   break;
-        case 13:  if(cval && Node3){
+        case 13:  if(cval & Node3){
                     x = cell.bottomleft;
                     y = 0;
                   } else {
@@ -2888,7 +2887,7 @@
                     y = cell.rightbottom;
                   }
                   break;
-        case 14:  if(cval && Node3){
+        case 14:  if(cval & Node3){
                     x = 1;
                     y = cell.rightbottom;
                   } else {
@@ -2896,7 +2895,7 @@
                     y = cell.leftbottom;
                   }
                   break;
-        case 15:  if(cval && Node0){
+        case 15:  if(cval & Node0){
                     x = 0;
                     y = cell.lefttop;
                   } else {
@@ -2904,7 +2903,7 @@
                     y = cell.rightbottom;
                   }
                   break;
-        case 16:  if(cval && Node2){
+        case 16:  if(cval & Node2){
                     x = 0;
                     y = cell.leftbottom;
                   } else {
@@ -2912,7 +2911,7 @@
                     y = 0;
                   }
                   break;
-        case 17:  if(cval && Node0){
+        case 17:  if(cval & Node0){
                     x = 0;
                     y = cell.lefttop;
                   } else {
@@ -2920,7 +2919,7 @@
                     y = 0;
                   }
                   break;
-        case 18:  if(cval && Node3){
+        case 18:  if(cval & Node3){
                     x = cell.bottomleft;
                     y = 0;
                   } else {
@@ -2928,7 +2927,7 @@
                     y = cell.leftbottom;
                   }
                   break;
-        case 19:  if(cval && Node0){
+        case 19:  if(cval & Node0){
                     x = 0;
                     y = cell.lefttop;
                   } else {
@@ -2936,7 +2935,7 @@
                     y = 0;
                   }
                   break;
-        case 20:  if(cval && Node0){
+        case 20:  if(cval & Node0){
                     x = 0;
                     y = cell.leftbottom;
                   } else {
@@ -2944,7 +2943,7 @@
                     y = 1;
                   }
                   break;
-        case 21:  if(cval && Node1){
+        case 21:  if(cval & Node1){
                     x = cell.topright;
                     y = 1;
                   } else {
@@ -2952,7 +2951,7 @@
                     y = cell.leftbottom;
                   }
                   break;
-        case 22:  if(cval && Node0){
+        case 22:  if(cval & Node0){
                     x = 0;
                     y = cell.lefttop;
                   } else {
@@ -2960,7 +2959,7 @@
                     y = 1;
                   }
                   break;
-        case 23:  if(cval && Node1){
+        case 23:  if(cval & Node1){
                     x = cell.topright;
                     y = 1;
                   } else {
@@ -2973,7 +2972,9 @@
                   return null;
     }
 
-    if((typeof x === 'undefined') || (typeof y === 'undefined') || (typeof d_x === 'undefined') || (typeof d_y === 'undefined') || (typeof d_o === 'undefined')){
+    if((typeof x === 'undefined') || (typeof y === 'undefined') ||
+        (typeof d_x === 'undefined') || (typeof d_y === 'undefined') ||
+        (typeof d_o === 'undefined')){
       console.log("undefined value!");
       console.log(cell);
       console.log(x + " " + y + " " + d_x + " " + d_y + " " + d_o);
@@ -3000,7 +3001,6 @@
                   areas[area_idx++] = aa;
                 });
               } else {
-
                 a.forEach(function(aa){
                   aa[0] += i;
                   aa[1] += j;

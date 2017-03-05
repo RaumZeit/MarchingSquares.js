@@ -3,9 +3,9 @@
 A JavaScript implementation of the Marching Squares algorithm
 featuring IsoContour and IsoBand computation.
 
-### Usage ###
+### Usage
 
-To use the marchingsquares-isobands.js routine, the input data must be formatted as a 2-dimensional grid
+To use the `marchingsquares-isobands.js` routine, the input data must be formatted as a 2-dimensional grid
 and passed to the `MarchingSquaresJS.IsoBands` function.
 
 The `lowerBand` parameter denotes the the lowest value that will be encompassed by this iso-band, while
@@ -22,10 +22,10 @@ var data = [[18, 13, 10, 9, 10, 13, 18],
     [18, 13, 10, 9, 10, 13, 18]]
 
 var bandWidth = upperBand - lowerBand;
-var band = MarchingSquaresJS.IsoBands(data, lowerBand, bandWidth);
+var band = MarchingSquaresJS.IsoBands(data, lowerBand, bandWidth, options);
 ```
 
-The return value, `band`, is an array of closed polygons which encircle the area defined by this contour:
+The return value, `band`, is an array of closed polygons which includes all the point of the grid with values between the limiting isolines:
 
 ```
 [Array[21], Array[5]]
@@ -49,5 +49,18 @@ The return value, `band`, is an array of closed polygons which encircle the area
   length: 2
   __proto__: Array[0]
 ```
+
+##### Options
+
+The object has the following fields:
+
+`successCallback`: function called at the end of the process with the band array passed as argument; default `null`.
+
+`progressCallback`: functino called after each __???__; default `null`.
+
+`verbose`: bool - logs info messages before each major step of the algorithm; default `false`.
+
+`polygons`: bool - if `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons. Default `false`
+
 
 Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
