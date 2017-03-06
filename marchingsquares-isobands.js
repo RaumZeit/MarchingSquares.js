@@ -9,7 +9,6 @@
 
   var defaultSettings = {
     successCallback:  null,
-    progressCallback: null,
     verbose:          false,
     polygons:         false
   };
