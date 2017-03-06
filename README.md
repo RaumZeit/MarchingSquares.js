@@ -1,6 +1,6 @@
 # MarchingSquaresJS
 
-A JavaScript implementation of the [Marching Squares](http://web.cse.ohio-state.edu/~wenger/publications/isosurface_book_preview.pdf) algorithm
+A JavaScript implementation of the [Marching Squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm
 featuring IsoContour and IsoBand computation.
 
 ### INSTALL
