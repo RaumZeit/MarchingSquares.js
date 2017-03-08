@@ -5,7 +5,23 @@
 * https://github.com/RaumZeit/MarchingSquares.js
 */
 
-(function (global) {
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define([], function() { return { IsoBands : factory }; })
+    } else if (typeof module === 'object' && module.exports) {
+        // Node. Does not work with strict CommonJS, but
+        // only CommonJS-like environments that support module.exports,
+        // like Node.
+        module.exports = { IsoBands : factory() };
+    } else {
+        // Browser globals (root is window)
+        root.MarchingSquaresJS = {
+                                    IsoBands : factory(),
+                                    IsoContours : (root.MarchingSquaresJS) ? root.MarchingSquaresJS.IsoContours : null
+                                 };
+    }
+}(this, function () {
 
   var defaultSettings = {
     successCallback:  null,
@@ -13,10 +29,6 @@
     polygons:         false
   };
     
-  var MarchingSquaresJS = {
-    IsoBands: IsoBands
-  };
-  
   var settings = {};
     
     /*
@@ -41,18 +53,18 @@
     }
 
     if(settings.verbose)
-      console.log("computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
+      console.log("MarchingSquaresJS-IsoBands: computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
 
     var grid = computeBandGrid(data, minV, bandwidth);
 
     var ret;
     if(settings.polygons){
       if (settings.verbose)
-        console.log("returning single polygons for each grid cell");
+        console.log("MarchingSquaresJS-IsoBands: returning single polygons for each grid cell");
       ret = BandGrid2Areas(grid);
     } else {
       if (settings.verbose)
-        console.log("returning polygon paths for entire data grid");
+        console.log("MarchingSquaresJS-IsoBands: returning polygon paths for entire data grid");
       ret = BandGrid2AreaPaths(grid);
     }
 
@@ -2129,7 +2141,7 @@
           }
 
           if(topleft < 0 || topleft > 1 || topright < 0 || topright > 1 || righttop < 0 || righttop > 1 || bottomright < 0 || bottomright > 1 || leftbottom < 0 || leftbottom > 1 || lefttop < 0 || lefttop > 1){
-            console.log(cval + " " + cval_real + " " + tl + "," + tr + "," + br + "," + bl + " " + flipped + " " + topleft + " " + topright + " " + righttop + " " + rightbottom + " " + bottomright + " " + bottomleft + " " + leftbottom + " " + lefttop);
+            console.log("MarchingSquaresJS-IsoBands: " + cval + " " + cval_real + " " + tl + "," + tr + "," + br + "," + bl + " " + flipped + " " + topleft + " " + topright + " " + righttop + " " + rightbottom + " " + bottomright + " " + bottomleft + " " + leftbottom + " " + lefttop);
           }
 
           BandGrid.cells[j][i] = {
@@ -2377,7 +2389,7 @@
               d_o = 0;
               //console.log("moving upwards to " + (p + d_x) + "," + (q + d_y) + "!");
             } else { /* */
-              console.log("wtf");
+              console.log("MarchingSquaresJS-IsoBands: wtf");
               break;
             }
           }
@@ -2419,7 +2431,7 @@
             }
           }
         } else { /* we came from the same cell */
-          console.log("we came from nowhere!");
+          console.log("MarchingSquaresJS-IsoBands: we came from nowhere!");
           break;
         }
 
@@ -2449,15 +2461,15 @@
             }
           } else {
             if(cval & Node0) { /* proceed searchin in x-direction */
-              console.log("proceeding in x-direction!");
+              console.log("MarchingSquaresJS-IsoBands: proceeding in x-direction!");
             } else { /* we must have found an entry into the regular grid */
-              console.log("found entry from top at " + p + "," + q);
+              console.log("MarchingSquaresJS-IsoBands: found entry from top at " + p + "," + q);
               break;
             }
           }
         } else if(d_x === 1){
           if(d_o === 0){
-            console.log("wtf");
+            console.log("MarchingSquaresJS-IsoBands: wtf");
             break;
           } else {
             /* try to go upwards */
@@ -2502,7 +2514,7 @@
               break;
             }
           } else {
-            console.log("wtf");
+            console.log("MarchingSquaresJS-IsoBands: wtf");
             break;
           }
         } else if(d_y === 1){
@@ -2529,11 +2541,11 @@
             }
           } else {
             //console.log("we came from bottom right and proceed to the right");
-            console.log("wtf");
+            console.log("MarchingSquaresJS-IsoBands: wtf");
             break;
           }
         } else {
-          console.log("where did we came from???");
+          console.log("MarchingSquaresJS-IsoBands: where did we came from???");
           break;
         }
 
@@ -2688,7 +2700,7 @@
                   } else {
                     return {p: [cell.topright, 1], x: 0, y: -1, o: 1};
                   }
-        default:  console.log("edge index out of range!");
+        default:  console.log("MarchingSquaresJS-IsoBands: edge index out of range!");
                   console.log(cell);
                   break;
       }
@@ -2966,7 +2978,7 @@
                     y = cell.lefttop;
                   }
                   break;
-        default:  console.log("edge index out of range!");
+        default:  console.log("MarchingSquaresJS-IsoBands: edge index out of range!");
                   console.log(cell);
                   return null;
     }
@@ -2974,7 +2986,7 @@
     if((typeof x === 'undefined') || (typeof y === 'undefined') ||
         (typeof d_x === 'undefined') || (typeof d_y === 'undefined') ||
         (typeof d_o === 'undefined')){
-      console.log("undefined value!");
+      console.log("MarchingSquaresJS-IsoBands: undefined value!");
       console.log(cell);
       console.log(x + " " + y + " " + d_x + " " + d_y + " " + d_o);
     }
@@ -3007,10 +3019,10 @@
                 areas[area_idx++] = a;
               }
             } else {
-              console.log("bandcell polygon with malformed coordinates");
+              console.log("MarchingSquaresJS-IsoBands: bandcell polygon with malformed coordinates");
             }
           } else {
-            console.log("bandcell polygon with null coordinates");
+            console.log("MarchingSquaresJS-IsoBands: bandcell polygon with null coordinates");
           }
         }
       });
@@ -3019,16 +3031,6 @@
     return areas;
   }
 
-  /*
-    Define import modules
-  */
-  if (typeof define === "function" && define.amd) {
-    define(MarchingSquaresJS);
-  }
-  if (typeof module !== 'undefined') {
-    module.exports = MarchingSquaresJS;
-  } else {
-    global.MarchingSquaresJS = MarchingSquaresJS;
-  }
-    
-}(this));
+  return IsoBands;
+
+}));

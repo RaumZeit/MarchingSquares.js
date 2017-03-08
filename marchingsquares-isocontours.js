@@ -1,4 +1,28 @@
-var MarchingSquaresJS = (function (my) {
+/*!
+* @license GNU Affero General Public License.
+* Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
+* v. 1.0.0
+* https://github.com/RaumZeit/MarchingSquares.js
+*/
+
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define([], function() { return { IsoContours : factory }; })
+    } else if (typeof module === 'object' && module.exports) {
+        // Node. Does not work with strict CommonJS, but
+        // only CommonJS-like environments that support module.exports,
+        // like Node.
+        module.exports = { IsoContours : factory() };
+    } else {
+        // Browser globals (root is window)
+        root.MarchingSquaresJS = {
+                                    IsoContours : factory(),
+                                    IsoBands : (root.MarchingSquaresJS) ? root.MarchingSquaresJS.IsoBands : null
+                                 };
+    }
+}(this, function () {
+
   /*
     Compute the isocontour(s) of a scalar 2D field given
     a certain threshold by applying the Marching Squares
@@ -6,13 +30,12 @@ var MarchingSquaresJS = (function (my) {
   */
   var defaultSettings = {
     successCallback:  null,
-    progressCallback: null,
     verbose:          false
   };
 
   var settings = {};
 
-  my.IsoContours  = function(data, threshold, options){
+  function IsoContours(data, threshold, options){
     /* process options */
     options = options ? options : {};
 
@@ -27,7 +50,7 @@ var MarchingSquaresJS = (function (my) {
     }
 
     if(settings.verbose)
-      console.log("computing isocontour for " + threshold);
+      console.log("MarchingSquaresJS-IsoContours: computing isocontour for " + threshold);
 
     var ret = ContourGrid2Paths(computeContourGrid(data, threshold));
 
@@ -35,7 +58,7 @@ var MarchingSquaresJS = (function (my) {
       settings.successCallback(ret);
 
     return ret;
-  };
+  }
 
   /*
     Thats all for the public interface, below follows the actual
@@ -143,7 +166,7 @@ var MarchingSquaresJS = (function (my) {
             left    = interpolateX(threshold, bl, tl);
             bottom  = interpolateX(threshold, bl, br);
           } else {
-            console.log("Illegal cval detected: " + cval);
+            console.log("MarchingSquaresJS-IsoContours: Illegal cval detected: " + cval);
           }
           ContourGrid.cells[j][i] = {
                                       cval:     cval,
@@ -325,8 +348,6 @@ var MarchingSquaresJS = (function (my) {
     return { path: p, info: "closed" };
   }
 
+  return IsoContours;
 
-  if (typeof define === "function" && define.amd) define(my);
-
-  return my;
-}(MarchingSquaresJS || {}));
+}));
