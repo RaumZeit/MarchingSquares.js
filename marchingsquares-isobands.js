@@ -1,22 +1,32 @@
-var MarchingSquaresJS = (function (my) {
+/*!
+* @license GNU Affero General Public License.
+* Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
+* v. 1.0.0
+* https://github.com/RaumZeit/MarchingSquares.js
+*/
+
+(function (global) {
 
   var defaultSettings = {
     successCallback:  null,
-    progressCallback: null,
     verbose:          false,
     polygons:         false
   };
-
+    
+  var MarchingSquaresJS = {
+    IsoBands: IsoBands
+  };
+  
   var settings = {};
-
-  /*
-    Compute isobands(s) of a scalar 2D field given a certain
-    threshold and a bandwidth by applying the Marching Squares
-    Algorithm. The function returns a list of path coordinates
-    either for individual polygons within each grid cell, or the
-    outline of connected polygons.
-  */
-  my.IsoBands = function(data, minV, bandwidth, options){
+    
+    /*
+      Compute isobands(s) of a scalar 2D field given a certain
+      threshold and a bandwidth by applying the Marching Squares
+      Algorithm. The function returns a list of path coordinates
+      either for individual polygons within each grid cell, or the
+      outline of connected polygons.
+    */
+  function IsoBands(data, minV, bandwidth, options){
     /* process options */
     options = options ? options : {};
 
@@ -33,20 +43,16 @@ var MarchingSquaresJS = (function (my) {
     if(settings.verbose)
       console.log("computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
 
-    grid = computeBandGrid(data, minV, bandwidth);
-
-    if(settings.verbose){
-      if(settings.polygons){
-        console.log("returning single polygons for each grid cell");
-      } else {
-        console.log("returning polygon paths for entire data grid");
-      }
-    }
+    var grid = computeBandGrid(data, minV, bandwidth);
 
     var ret;
     if(settings.polygons){
+      if (settings.verbose)
+        console.log("returning single polygons for each grid cell");
       ret = BandGrid2Areas(grid);
     } else {
+      if (settings.verbose)
+        console.log("returning polygon paths for entire data grid");
       ret = BandGrid2AreaPaths(grid);
     }
 
@@ -54,7 +60,7 @@ var MarchingSquaresJS = (function (my) {
       settings.successCallback(ret);
 
     return ret;
-  };
+  }
 
   /*
     Thats all for the public interface, below follows the actual
@@ -843,6 +849,168 @@ var MarchingSquaresJS = (function (my) {
   isoBandNextYTR[39] = 0;
   isoBandNextOTR[39] = 0;
 
+
+  /*
+   Define helper functions for the polygon_table
+   */
+
+  /* triangle cases */
+  var p00 = function (cell) {
+    return [[cell.bottomleft, 0], [0, 0], [0, cell.leftbottom]];
+  };
+  var p01 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [cell.bottomright, 0]];
+  };
+  var p02 = function (cell) {
+    return [[cell.topright, 1], [1, 1], [1, cell.righttop]];
+  };
+  var p03 = function (cell) {
+    return [[0, cell.lefttop], [0, 1], [cell.topleft, 1]];
+  };
+  /* trapezoid cases */
+  var p04 = function (cell) {
+    return [[cell.bottomright, 0], [cell.bottomleft, 0], [0, cell.leftbottom], [0, cell.lefttop]];
+  };
+  var p05 = function (cell) {
+    return [[cell.bottomright, 0], [cell.bottomleft, 0], [1, cell.righttop], [1, cell.rightbottom]];
+  };
+  var p06 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [cell.topleft, 1], [cell.topright, 1]];
+  };
+  var p07 = function (cell) {
+    return [[0, cell.leftbottom], [0, cell.lefttop], [cell.topleft, 1], [cell.topright, 1]];
+  };
+  /* rectangle cases */
+  var p08 = function (cell) {
+    return [[0, 0], [0, cell.leftbottom], [1, cell.rightbottom], [1, 0]];
+  };
+  var p09 = function (cell) {
+    return [[1, 0], [cell.bottomright, 0], [cell.topright, 1], [1, 1]];
+  };
+  var p10 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [0, cell.lefttop], [0, 1]];
+  };
+  var p11 = function (cell) {
+    return [[cell.bottomleft, 0], [0, 0], [0, 1], [cell.topleft, 1]];
+  };
+  var p12 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [0, cell.leftbottom], [0, cell.lefttop]];
+  };
+  var p13 = function (cell) {
+    return [[cell.topleft, 1], [cell.topright, 1], [cell.bottomright, 0], [cell.bottomleft, 0]];
+  };
+  /* square case */
+  var p14 = function () {
+    return [[0, 0], [0, 1], [1, 1], [1, 0]];
+  };
+  /* pentagon cases */
+  var p15 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [0, 0], [0, 1], [cell.topleft, 1]];
+  };
+  /* 1211 || 1011 */
+  var p16 = function (cell) {
+    return [[cell.topright, 1], [1, 1], [1, 0], [0, 0], [0, cell.leftbottom]];
+  };
+  /* 2111 || 0111 */
+  var p17 = function (cell) {
+    return [[1, 0], [cell.bottomright, 0], [0, cell.lefttop], [0, 1], [1, 1]];
+  };
+  /* 1112 || 1110 */
+  var p18 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [cell.bottomleft, 0], [0, 0], [0, 1]];
+  };
+  /* 1121 || 1101 */
+  var p19 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [0, cell.lefttop], [0, 1], [cell.topleft, 1]];
+  };
+  /* 1200 || 1022 */
+  var p20 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [cell.bottomright, 0], [cell.bottomleft, 0], [cell.topright, 1]];
+  };
+  /* 0120 || 2102 */
+  var p21 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [cell.bottomright, 0], [0, cell.leftbottom], [0, cell.lefttop]];
+  };
+  /* 0012 || 2210 */
+  var p22 = function (cell) {
+    return [[cell.topright, 1], [cell.bottomleft, 0], [0, 0], [0, cell.leftbottom], [cell.topleft, 1]];
+  };
+  /* 2001 || 0221 */
+  var p23 = function (cell) {
+    return [[cell.bottomright, 0], [cell.bottomleft, 0], [0, cell.lefttop], [0, 1], [cell.topleft, 1]];
+  };
+  /* 1002 || 1220 */
+  var p24 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [0, cell.leftbottom], [0, cell.lefttop], [cell.topright, 1]];
+  };
+  /* 2100 || 0122 */
+  var p25 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [cell.bottomright, 0], [cell.topleft, 1], [cell.topright, 1]];
+  };
+  /* 0210 || 2012 */
+  var p26 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [cell.bottomleft, 0], [0, 0], [0, cell.leftbottom]];
+  };
+  /* 0021 || 2201 */
+  /*hexagon cases */
+  var p27 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [0, 0], [0, cell.leftbottom], [cell.topleft, 1], [cell.topright, 1]];
+  };
+  /* 0211 || 2011 */
+  var p28 = function (cell) {
+    return [[1, 1], [1, 0], [cell.bottomright, 0], [0, cell.leftbottom], [0, cell.lefttop], [cell.topright, 1]];
+  };
+  /* 2110 || 0112 */
+  var p29 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [cell.bottomright, 0], [cell.bottomleft, 0], [0, cell.lefttop], [0, 1]];
+  };
+  /* 1102 || 1120 */
+  var p30 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [cell.bottomleft, 0], [0, 0], [0, 1], [cell.topleft, 1]];
+  };
+  /* 1021 || 1201 */
+  var p31 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [cell.bottomleft, 0], [0, 0], [0, cell.leftbottom], [cell.topright, 1]];
+  };
+  /* 2101 || 0121 */
+  var p32 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [cell.bottomright, 0], [0, cell.lefttop], [0, 1], [cell.topleft, 1]];
+  };
+  /* 1012 || 1210 */
+  /* 8-sided cases */
+  var p33 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [cell.bottomright, 0], [cell.bottomleft, 0], [0, cell.leftbottom], [0, cell.lefttop], [cell.topleft, 1], [cell.topright, 1]];
+  };
+  /* flipped == 1 state for 0202 and 2020 */
+  /* 6-sided cases */
+  var p34 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [cell.bottomleft, 0], [0, 0], [0, cell.leftbottom], [cell.topright, 1]];
+  };
+  /* 0101 with flipped == 1 || 2121 with flipped == 1 */
+  var p35 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [cell.bottomright, 0], [0, cell.lefttop], [0, 1], [cell.topleft, 1]];
+  };
+  /* 1010 with flipped == 1 || 1212 with flipped == 1 */
+  /* 7-sided cases */
+  var p36 = function (cell) {
+    return [[1, 1], [1, cell.righttop], [cell.bottomright, 0], [cell.bottomleft, 0], [0, cell.leftbottom], [0, cell.lefttop], [cell.topright, 1]];
+  };
+  /* 2120 with flipped == 1 || 0102 with flipped == 1 */
+  var p37 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [cell.bottomleft, 0], [0, 0], [0, cell.leftbottom], [cell.topleft, 1], [cell.topright, 1]];
+  };
+  /* 2021 with flipped == 1 || 0201 with flipped == 1 */
+  var p38 = function (cell) {
+    return [[1, cell.righttop], [1, cell.rightbottom], [cell.bottomright, 0], [cell.bottomleft, 0], [0, cell.lefttop], [0, 1], [cell.topleft, 1]];
+  };
+  /* 1202 with flipped == 1 || 1020 with flipped == 1 */
+  var p39 = function (cell) {
+    return [[1, cell.rightbottom], [1, 0], [cell.bottomright, 0], [0, cell.leftbottom], [0, cell.lefttop], [cell.topleft, 1], [cell.topright, 1]];
+  };
+  /* 0212 with flipped == 1 || 2010 with flipped == 1 */
+
+
+
   /*
     The lookup tables for edge number given the polygon
     is entered at a specific location
@@ -1093,63 +1261,8 @@ var MarchingSquaresJS = (function (my) {
   polygon_table[99] = p38; /* 1202 with flipped == 1 || 1020 with flipped == 1 */
   polygon_table[38] = function(c){ return [ p01(c), p07(c) ];}; /* 0212 with flipped == 2 || 2010 with flipped == 0 */
   polygon_table[39] = p39; /* 0212 with flipped == 1 || 2010 with flipped == 1 */
-
-  /*
-    The helper functions for the above polygon_table
-  */
-
-  /* triangle cases */
-  var p00 = function(cell){ return [[cell.bottomleft,0], [0,0], [0,cell.leftbottom]];};
-  var p01 = function(cell){ return [[1,cell.rightbottom],[1,0],[cell.bottomright, 0]];};
-  var p02 = function(cell){ return [[cell.topright, 1],[1,1],[1, cell.righttop]];};
-  var p03 = function(cell){ return [[0, cell.lefttop],[0,1],[cell.topleft,1]];};
-  /* trapezoid cases */
-  var p04 = function(cell){ return [[cell.bottomright,0],[cell.bottomleft,0],[0, cell.leftbottom],[0,cell.lefttop]];};
-  var p05 = function(cell){ return [[cell.bottomright,0],[cell.bottomleft,0],[1,cell.righttop],[1,cell.rightbottom]];};
-  var p06 = function(cell){ return [[1, cell.righttop],[1,cell.rightbottom],[cell.topleft,1],[cell.topright,1]];};
-  var p07 = function(cell){ return [[0,cell.leftbottom],[0,cell.lefttop],[cell.topleft,1],[cell.topright,1]];};
-  /* rectangle cases */
-  var p08 = function(cell){ return [[0,0],[0,cell.leftbottom],[1,cell.rightbottom],[1,0]];};
-  var p09 = function(cell){ return [[1,0],[cell.bottomright,0],[cell.topright,1],[1,1]];};
-  var p10 = function(cell){ return [[1,1],[1,cell.righttop],[0,cell.lefttop],[0,1]];};
-  var p11 = function(cell){ return [[cell.bottomleft,0],[0,0],[0,1],[cell.topleft,1]];};
-  var p12 = function(cell){ return [[1,cell.righttop],[1,cell.rightbottom],[0,cell.leftbottom],[0,cell.lefttop]];};
-  var p13 = function(cell){ return [[cell.topleft, 1],[cell.topright,1],[cell.bottomright,0],[cell.bottomleft,0]];};
-  /* square case */
-  var p14 = function(cell){ return [[0,0], [0,1], [1,1], [1,0]];};
-  /* pentagon cases */
-  var p15 = function(cell){ return [[1,cell.rightbottom],[1,0],[0,0],[0,1],[cell.topleft,1]];}; /* 1211 || 1011 */
-  var p16 = function(cell){ return [[cell.topright,1],[1,1],[1,0],[0,0],[0,cell.leftbottom]];}; /* 2111 || 0111 */
-  var p17 = function(cell){ return [[1,0],[cell.bottomright,0],[0,cell.lefttop],[0,1],[1,1]];}; /* 1112 || 1110 */
-  var p18 = function(cell){ return [[1,1],[1,cell.righttop],[cell.bottomleft,0],[0,0],[0,1]];}; /* 1121 || 1101 */
-  var p19 = function(cell){ return [[1,cell.righttop],[1,cell.rightbottom],[0,cell.lefttop],[0,1],[cell.topleft,1]];}; /* 1200 || 1022 */
-  var p20 = function(cell){ return [[1,1],[1,cell.righttop],[cell.bottomright,0],[cell.bottomleft,0],[cell.topright,1]];}; /* 0120 || 2102 */
-  var p21 = function(cell){ return [[1,cell.rightbottom],[1,0],[cell.bottomright,0],[0,cell.leftbottom],[0,cell.lefttop]];}; /* 0012 || 2210 */
-  var p22 = function(cell){ return [[cell.topright,1],[cell.bottomleft,0],[0,0],[0,cell.leftbottom],[cell.topleft,1]];}; /* 2001 || 0221 */
-  var p23 = function(cell){ return [[cell.bottomright,0],[cell.bottomleft,0],[0,cell.lefttop],[0,1],[cell.topleft,1]];}; /* 1002 || 1220 */
-  var p24 = function(cell){ return [[1,1],[1,cell.righttop],[0,cell.leftbottom],[0,cell.lefttop],[cell.topright,1]];}; /* 2100 || 0122 */
-  var p25 = function(cell){ return [[1,cell.rightbottom],[1,0],[cell.bottomright,0],[cell.topleft,1],[cell.topright,1]];}; /* 0210 || 2012 */
-  var p26 = function(cell){ return [[1,cell.righttop],[1,cell.rightbottom],[cell.bottomleft,0],[0,0],[0,cell.leftbottom]];}; /* 0021 || 2201 */
-  /*hexagon cases */
-  var p27 = function(cell){ return [[1,cell.rightbottom],[1,0],[0,0],[0,cell.leftbottom],[cell.topleft,1],[cell.topright,1]];}; /* 0211 || 2011 */
-  var p28 = function(cell){ return [[1,1],[1,0],[cell.bottomright,0],[0,cell.leftbottom],[0, cell.lefttop],[cell.topright, 1]];}; /* 2110 || 0112 */
-  var p29 = function(cell){ return [[1,1],[1,cell.righttop],[cell.bottomright,0],[cell.bottomleft,0],[0,cell.lefttop],[0,1]];}; /* 1102 || 1120 */
-  var p30 = function(cell){ return [[1,cell.righttop],[1,cell.rightbottom],[cell.bottomleft,0],[0,0],[0,1],[cell.topleft,1]];}; /* 1021 || 1201 */
-  var p31 = function(cell){ return [[1,1],[1,cell.righttop],[cell.bottomleft, 0],[0,0],[0,cell.leftbottom],[cell.topright,1]];}; /* 2101 || 0121 */
-  var p32 = function(cell){ return [[1,cell.rightbottom],[1,0],[cell.bottomright,0],[0,cell.lefttop],[0,1],[cell.topleft,1]];}; /* 1012 || 1210 */
-  /* 8-sided cases */
-  var p33 = function(cell){ return [[1,cell.righttop],[1,cell.rightbottom],[cell.bottomright,0],[cell.bottomleft,0],[0,cell.leftbottom],[0,cell.lefttop],[cell.topleft,1],[cell.topright,1]];}; /* flipped == 1 state for 0202 and 2020 */
-  /* 6-sided cases */
-  var p34 = function(cell){ return [[1,1],[1,cell.righttop],[cell.bottomleft,0],[0,0],[0,cell.leftbottom],[cell.topright,1]];}; /* 0101 with flipped == 1 || 2121 with flipped == 1 */
-  var p35 = function(cell){ return [[1,cell.rightbottom],[1,0],[cell.bottomright,0],[0,cell.lefttop],[0,1],[cell.topleft,1]];}; /* 1010 with flipped == 1 || 1212 with flipped == 1 */
-  /* 7-sided cases */
-  var p36 = function(cell){ return [[1,1],[1,cell.righttop],[cell.bottomright,0],[cell.bottomleft,0],[0,cell.leftbottom],[0,cell.lefttop],[cell.topright,1]];}; /* 2120 with flipped == 1 || 0102 with flipped == 1 */
-  var p37 = function(cell){ return [[1,cell.righttop],[1,cell.rightbottom],[cell.bottomleft,0],[0,0],[0,cell.leftbottom],[cell.topleft,1],[cell.topright,1]];}; /* 2021 with flipped == 1 || 0201 with flipped == 1 */
-  var p38 = function(cell){ return [[1,cell.righttop],[1,cell.rightbottom],[cell.bottomright,0],[cell.bottomleft,0],[0,cell.lefttop],[0,1],[cell.topleft,1]];}; /* 1202 with flipped == 1 || 1020 with flipped == 1 */
-  var p39 = function(cell){ return [[1,cell.rightbottom],[1,0],[cell.bottomright,0],[0,cell.leftbottom],[0,cell.lefttop],[cell.topleft,1],[cell.topright,1]];}; /* 0212 with flipped == 1 || 2010 with flipped == 1 */
-
-
-
+  
+  
   /*
   ####################################
   Some small helper functions
@@ -2042,7 +2155,6 @@ var MarchingSquaresJS = (function (my) {
 
   function BandGrid2AreaPaths(grid){
     var areas = [];
-    var area_idx = 0;
     var rows = grid.rows;
     var cols = grid.cols;
     var currentPolygon = [];
@@ -2051,13 +2163,10 @@ var MarchingSquaresJS = (function (my) {
       for(var i = 0; i < cols; i++){
         if((typeof grid.cells[j][i] !== 'undefined') && (grid.cells[j][i].edges.length > 0)){
           /* trace back polygon path starting from this cell */
-          var o = 0,
-              x = i,
-              y = j;
 
           var cell = grid.cells[j][i];
+
           /* get start coordinates */
-          var cval = cell.cval;
 
           var prev  = getStartXY(cell),
               next  = null,
@@ -2136,8 +2245,6 @@ var MarchingSquaresJS = (function (my) {
     var p = i + d_x,
         q = j + d_y;
     var path = [];
-    var rows = grid.rows;
-    var cols = grid.cols;
     var closed = false;
 
     while(!closed){
@@ -2592,7 +2699,7 @@ var MarchingSquaresJS = (function (my) {
 
   function getExitXY(cell, x, y, o){
 
-    var e, id_x, x, y, d_x, d_y, cval = cell.cval;
+    var e, id_x, d_x, d_y, cval = cell.cval;
     var d_o;
 
     switch(x){
@@ -2607,7 +2714,7 @@ var MarchingSquaresJS = (function (my) {
                             d_y = isoBandNextYRT[cval];
                             d_o = isoBandNextORT[cval];
                             break;
-                };
+                }
                 break;
       case 1:   switch(o){
                   case 0:   e = isoBandEdgeLB[cval];
@@ -2620,7 +2727,7 @@ var MarchingSquaresJS = (function (my) {
                             d_y = isoBandNextYLT[cval];
                             d_o = isoBandNextOLT[cval];
                             break;
-                };
+                }
                 break;
       default:  switch(y){
                   case -1:  switch(o){
@@ -2634,7 +2741,7 @@ var MarchingSquaresJS = (function (my) {
                                         d_y = isoBandNextYTR[cval];
                                         d_o = isoBandNextOTR[cval];
                                         break;
-                            };
+                            }
                             break;
                   case 1:   switch(o){
                               case 0:   e = isoBandEdgeBL[cval];
@@ -2647,10 +2754,10 @@ var MarchingSquaresJS = (function (my) {
                                         d_y = isoBandNextYBR[cval];
                                         d_o = isoBandNextOBR[cval];
                                         break;
-                            };
+                            }
                             break;
                   default:  break;
-                };
+                }
                 break;
     }
 
@@ -2864,7 +2971,9 @@ var MarchingSquaresJS = (function (my) {
                   return null;
     }
 
-    if((typeof x === 'undefined') || (typeof y === 'undefined') || (typeof d_x === 'undefined') || (typeof d_y === 'undefined') || (typeof d_o === 'undefined')){
+    if((typeof x === 'undefined') || (typeof y === 'undefined') ||
+        (typeof d_x === 'undefined') || (typeof d_y === 'undefined') ||
+        (typeof d_o === 'undefined')){
       console.log("undefined value!");
       console.log(cell);
       console.log(x + " " + y + " " + d_x + " " + d_y + " " + d_o);
@@ -2875,8 +2984,6 @@ var MarchingSquaresJS = (function (my) {
   function BandGrid2Areas(grid){
     var areas = [];
     var area_idx = 0;
-    var rows = grid.rows;
-    var cols = grid.cols;
 
     grid.cells.forEach(function(g, j){
       g.forEach(function(gg, i){
@@ -2885,7 +2992,7 @@ var MarchingSquaresJS = (function (my) {
           if((typeof a === 'object') && isArray(a)){
             if((typeof a[0] === 'object') && isArray(a[0])){
               if((typeof a[0][0] === 'object') && isArray(a[0][0])){
-                a.forEach(function(aa,k){
+                a.forEach(function(aa){
                   aa.forEach(function(aaa){
                     aaa[0] += i;
                     aaa[1] += j;
@@ -2893,8 +3000,7 @@ var MarchingSquaresJS = (function (my) {
                   areas[area_idx++] = aa;
                 });
               } else {
-
-                a.forEach(function(aa,k){
+                a.forEach(function(aa){
                   aa[0] += i;
                   aa[1] += j;
                 });
@@ -2913,7 +3019,16 @@ var MarchingSquaresJS = (function (my) {
     return areas;
   }
 
-  if (typeof define === "function" && define.amd) define(my);
-
-  return my;
-}(MarchingSquaresJS || {}));
+  /*
+    Define import modules
+  */
+  if (typeof define === "function" && define.amd) {
+    define(MarchingSquaresJS);
+  }
+  if (typeof module !== 'undefined') {
+    module.exports = MarchingSquaresJS;
+  } else {
+    global.MarchingSquaresJS = MarchingSquaresJS;
+  }
+    
+}(this));
