@@ -3,7 +3,11 @@
 A JavaScript implementation of the [Marching Squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm
 featuring IsoContour and IsoBand computation.
 
-The source code of this module is available through [github](https://github.com/RaumZeit/MarchingSquares.js)
+
+### Availability
+
+The source code of this module is available through [github](https://github.com/RaumZeit/MarchingSquares.js).
+This module is also available as an [npm package](https://www.npmjs.com/package/marchingsquares).
 
 ### INSTALL
 
