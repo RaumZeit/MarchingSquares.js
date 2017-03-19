@@ -1,14 +1,14 @@
 /*!
 * @license GNU Affero General Public License.
 * Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
-* v. 1.1.0
+* v. 1.1.1
 * https://github.com/RaumZeit/MarchingSquares.js
 */
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define([], function() { return { IsoBands : factory }; })
+        define([], function() { return { IsoBands : factory() }; })
     } else if (typeof module === 'object' && module.exports) {
         // Node. Does not work with strict CommonJS, but
         // only CommonJS-like environments that support module.exports,

@@ -58,6 +58,8 @@ MarchingSquaresJS = {
 };
 ```
 
+See also `example/index_require.html` for using MarchingSquaresJS with AMD
+
 ##### Using as browser global:
 
 Download the [minified IsoBands](https://raw.githubusercontent.com/RaumZeit/MarchingSquares.js/master/marchingsquares-isobands.min.js)
