@@ -21,7 +21,7 @@ define(['d3', 'marchingsquares'], function (d3, MarchingSquaresJS) {
     for (var i = 1; i < intervals.length; i++) {
         var lowerBand = intervals[i - 1];
         var upperBand = intervals[i];
-        var band = MarchingSquaresJS.IsoBands(
+        var band = MarchingSquaresJS.isoBands(
                 data,
                 lowerBand,
                 upperBand - lowerBand,

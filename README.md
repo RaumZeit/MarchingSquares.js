@@ -3,6 +3,8 @@
 A JavaScript implementation of the [Marching Squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm
 featuring IsoContour and IsoBand computation.
 
+The source code of this module is available through [github](https://github.com/RaumZeit/MarchingSquares.js)
+
 ### INSTALL
 
 This module uses the [Universal Module Definition (UMD)](https://github.com/umdjs/umd) API for
@@ -19,19 +21,19 @@ The above code creates an object `MarchingSquaresJS` with two function attribute
 
 ```javascript
 MarchingSquaresJS = {
-    IsoContours : function(data, threshold, options){},
-    IsoBands : function(data, minV, bandwidth, options){}
+    isoContours : function(data, threshold, options){},
+    isoBands : function(data, minV, bandwidth, options){}
 };
 ```
 
-It is possible to require only one of the implementations, `IsoContours` or `IsoBands`,
+It is possible to require only one of the implementations, `isoContours` or `isoBands`,
 by requiring the correpsonding implementation directly, e.g.:
 
 ```javascript
 var MarchingSquaresJS = require('./marchingsquares-isobands.js');
 ```
 
-This creates the same object as before but without bound `IsoContours` function.
+This creates the same object as before but without bound `isoContours` function.
 
 ##### Using AMD (e.g RequireJS):
 
@@ -48,13 +50,13 @@ or just a single one
 var MarchingSquaresJS = require('./marchingsquares-isobands');
 ```
 
-to retrieve an object with `IsoContours` and/or `IsoBands` function attributes:
+to retrieve an object with `isoContours` and/or `isoBands` function attributes:
 
 
 ```javascript
 MarchingSquaresJS = {
-    IsoContours : function(data, threshold, options){},
-    IsoBands : function(data, minV, bandwidth, options){}
+    isoContours : function(data, threshold, options){},
+    isoBands : function(data, minV, bandwidth, options){}
 };
 ```
 
@@ -62,8 +64,8 @@ See also `example/index_require.html` for using MarchingSquaresJS with AMD
 
 ##### Using as browser global:
 
-Download the [minified IsoBands](https://raw.githubusercontent.com/RaumZeit/MarchingSquares.js/master/marchingsquares-isobands.min.js)
-and/or the [minified IsoContours](https://raw.githubusercontent.com/RaumZeit/MarchingSquares.js/master/marchingsquares-isocontours.min.js)
+Download the [minified Iso Bands](https://raw.githubusercontent.com/RaumZeit/MarchingSquares.js/master/marchingsquares-isobands.min.js)
+and/or the [minified Iso Contours](https://raw.githubusercontent.com/RaumZeit/MarchingSquares.js/master/marchingsquares-isocontours.min.js)
 implementation, and include them in a script tag.
 
 ```html
@@ -76,8 +78,8 @@ attributes:
 
 ```javascript
 MarchingSquaresJS = {
-    IsoContours : function(data, threshold, options){},
-    IsoBands : function(data, minV, bandwidth, options){}
+    isoContours : function(data, threshold, options){},
+    isoBands : function(data, minV, bandwidth, options){}
 };
 ```
 
@@ -86,7 +88,7 @@ Again, it is possible to omit one of the script tags to load only one of the imp
 
 ### Usage
 
-For both implementations, `IsoContours` and `IsoBands`, the input data must be formatted as a
+For both implementations, `isoContours` and `isoBands`, the input data must be formatted as a
 regular 2-dimensional grid.
 
 #### Isocontours parameters
@@ -113,7 +115,7 @@ var data = [
 ];
 
 var bandWidth = upperBand - lowerBand;
-var band = MarchingSquaresJS.IsoBands(data, lowerBand, bandWidth, options);
+var band = MarchingSquaresJS.isoBands(data, lowerBand, bandWidth, options);
 ```
 
 The return value, `band`, is an array of closed polygons which includes all the point of the grid with values between the limiting isolines:

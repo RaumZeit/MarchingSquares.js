@@ -1,7 +1,7 @@
 /*!
 * @license GNU Affero General Public License.
 * Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
-* v. 1.1.1
+* v. 1.2.0
 * https://github.com/RaumZeit/MarchingSquares.js
 */
 
@@ -17,13 +17,13 @@
     } else {
         // Browser globals (root is window)
         root.MarchingSquaresJS = factory(
-                                    (root.MarchingSquaresJS) ? root.MarchingSquaresJS.IsoBands : null,
-                                    (root.MarchingSquaresJS) ? root.MarchingSquaresJS.IsoContours : null
+                                    (root.MarchingSquaresJS) ? root.MarchingSquaresJS.isoBands : null,
+                                    (root.MarchingSquaresJS) ? root.MarchingSquaresJS.isoContours : null
                                   );
     }
-}(this, function (IsoBands, IsoContours) {
+}(this, function (isoBands, isoContours) {
   return {
-      IsoBands : (typeof IsoBands === 'function') ? IsoBands : (((typeof IsoBands === 'object') && (typeof IsoBands.IsoBands === 'function')) ? IsoBands.IsoBands : null),
-      IsoContours: (typeof IsoContours === 'function') ? IsoContours : (((typeof IsoContours === 'object') && (typeof IsoContours.IsoContours === 'function')) ? IsoContours.IsoContours : null)
+      isoBands : (typeof isoBands === 'function') ? isoBands : (((typeof isoBands === 'object') && (typeof isoBands.isoBands === 'function')) ? isoBands.isoBands : null),
+      isoContours: (typeof isoContours === 'function') ? isoContours : (((typeof isoContours === 'object') && (typeof isoContours.isoContours === 'function')) ? isoContours.isoContours : null)
   };
 }));

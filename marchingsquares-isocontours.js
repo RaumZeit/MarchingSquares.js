@@ -1,24 +1,24 @@
 /*!
 * @license GNU Affero General Public License.
 * Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
-* v. 1.1.1
+* v. 1.2.0
 * https://github.com/RaumZeit/MarchingSquares.js
 */
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define([], function() { return { IsoContours : factory() }; })
+        define([], function() { return { isoContours : factory() }; })
     } else if (typeof module === 'object' && module.exports) {
         // Node. Does not work with strict CommonJS, but
         // only CommonJS-like environments that support module.exports,
         // like Node.
-        module.exports = { IsoContours : factory() };
+        module.exports = { isoContours : factory() };
     } else {
         // Browser globals (root is window)
         root.MarchingSquaresJS = {
-                                    IsoContours : factory(),
-                                    IsoBands : (root.MarchingSquaresJS) ? root.MarchingSquaresJS.IsoBands : null
+                                    isoContours : factory(),
+                                    isoBands : (root.MarchingSquaresJS) ? root.MarchingSquaresJS.isoBands : null
                                  };
     }
 }(this, function () {
@@ -35,7 +35,7 @@
 
   var settings = {};
 
-  function IsoContours(data, threshold, options){
+  function isoContours(data, threshold, options){
     /* process options */
     options = options ? options : {};
 
@@ -50,7 +50,7 @@
     }
 
     if(settings.verbose)
-      console.log("MarchingSquaresJS-IsoContours: computing isocontour for " + threshold);
+      console.log("MarchingSquaresJS-isoContours: computing isocontour for " + threshold);
 
     var ret = ContourGrid2Paths(computeContourGrid(data, threshold));
 
@@ -166,7 +166,7 @@
             left    = interpolateX(threshold, bl, tl);
             bottom  = interpolateX(threshold, bl, br);
           } else {
-            console.log("MarchingSquaresJS-IsoContours: Illegal cval detected: " + cval);
+            console.log("MarchingSquaresJS-isoContours: Illegal cval detected: " + cval);
           }
           ContourGrid.cells[j][i] = {
                                       cval:     cval,
@@ -348,6 +348,6 @@
     return { path: p, info: "closed" };
   }
 
-  return IsoContours;
+  return isoContours;
 
 }));
