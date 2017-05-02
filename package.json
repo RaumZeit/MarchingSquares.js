@@ -7,7 +7,7 @@
     "example": "example"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jasmine JASMINE_CONFIG_PATH=test/jasmine.json"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,10 @@
     "isoline"
   ],
   "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "@turf/helpers": "^3.6.3",
+    "@turf/point-grid": "^3.14.0",
+    "jasmine": "2.6.0"
+  }
 }
