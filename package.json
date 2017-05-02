@@ -17,7 +17,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./test/test.js"
   },
   "repository": {
     "type": "git",
@@ -33,7 +33,9 @@
   ],
   "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
   "license": "AGPL-3.0",
-  "dependencies": {
-    "rollup": "^0.60.7"
+  "devDependencies": {
+    "load-json-file": "^2.0.0",
+    "rollup": "^0.60.7",
+    "tape": "^4.9.1"
   }
 }

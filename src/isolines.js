@@ -18,6 +18,13 @@ import { extractPolygons, traceLinePaths } from './polygons.js';
 function isoLines(data, threshold, options){
   var settings = {};
 
+  /* validation */
+  if (!data) throw new Error('data is required');
+  if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
+  if (threshold === undefined || threshold === null) throw new Error('threshold is required');
+  if (isNaN(+threshold)) throw new Error('threshold must be a number');
+  if (!!options && options.constructor !== 'object') throw new Error('options must be an object');
+
   /* process options */
   options = options ? options : {};
 
