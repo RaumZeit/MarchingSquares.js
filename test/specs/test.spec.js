@@ -24,35 +24,20 @@ var testCases = fs.readdirSync(directories.in).map(function (filename) {
 });
 
 
-// var x = isoBands('string', 1, 5);
-// var e = load.sync(directories.out + testCases[0].name + '.json');
-
 describe('MarchingSquares.isoBands', function () {
 
     testCases.forEach(function (inputFile) {
-
         var name = inputFile.name;
-        var data = inputFile.data;
+        var data = inputFile.data.matrix;
         var outputfile = directories.out + name + '.json';
-        var lowerBand = data.lowerBand;
-        var upperBand = data.upperband;
+        var lowerBand = inputFile.data.lowerBand;
+        var upperBand = inputFile.data.upperBand;
 
         describe('Calculate isoband', function () {
-
             it('should return an array of array of coordinates', function () {
-                var data = [
-                    [1, 1, 1, 0],
-                    [1, 5, 5, 1],
-                    [0, 1, 1, 1]
-                ];
                 var bands = isoBands(data, lowerBand, upperBand - lowerBand);
-                // if (process.env.REGEN) {
-                //     write.sync(outputfile, bands);
-                // }
                 expect(bands).toEqual(load.sync(outputfile));
-
             });
-
         });
     });
 
