@@ -7,7 +7,8 @@
     "example": "example"
   },
   "scripts": {
-    "test": "jasmine JASMINE_CONFIG_PATH=test/jasmine.json"
+    "test": "jasmine JASMINE_CONFIG_PATH=test/jasmine.json",
+    "debug": "$NODE_DEBUG_OPTION jasmine JASMINE_CONFIG_PATH=test/jasmine.json"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,11 @@
   "devDependencies": {
     "@turf/helpers": "^3.6.3",
     "@turf/point-grid": "^3.14.0",
-    "jasmine": "2.6.0"
+    "jasmine": "2.6.0",
+    "karma": "1.6.0",
+    "karma-chrome-launcher": "2.1.0",
+    "karma-jasmine": "1.1.0",
+    "load-json-file": "^2.0.0",
+    "write-json-file": "^2.0.0"
   }
 }

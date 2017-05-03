@@ -39,7 +39,13 @@
       outline of connected polygons.
     */
   function isoBands(data, minV, bandwidth, options){
-    /* process options */
+    /* validation */
+    if (!data) throw new Error('data is required');
+    if (!Array.isArray(data)) throw new Error('data is not array');
+    if (minV === undefined || minV === null) throw new Error('lowerBand is required');
+    if (bandwidth === undefined || bandwidth === null) throw new Error('bandWidth is required');
+
+      /* process options */
     options = options ? options : {};
 
     var optionKeys = Object.keys(defaultSettings);

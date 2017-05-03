@@ -1,60 +1,70 @@
-describe("Player", function () {
-    var Player = require('../lib/Player');
-    var Song = require('../lib/Song');
-    var player;
-    var song;
+// https://jasmine.github.io/api/2.6/global
 
-    beforeEach(function () {
-        player = new Player();
-        song = new Song();
-    });
+var fs = require('fs');
+var path = require('path');
+var load = require('load-json-file');
+var write = require('write-json-file');
+// var truncate = require('@turf/truncate');
+// var point = require('@turf/helpers').point;
+// var circle = require('@turf/circle');
+// var matrixToGrid = require('./');
+var isoBands = require('../../marchingsquares.js').isoBands;
 
-    it("should be able to play a Song", function () {
-        player.play(song);
-        expect(player.currentlyPlayingSong).toEqual(song);
+var directories = {
+    in: path.join(__dirname, 'data', 'in') + path.sep,
+    out: path.join(__dirname, 'data', 'out') + path.sep
+};
 
-        //demonstrates use of custom matcher
-        expect(player).toBePlaying(song);
-    });
+var testCases = fs.readdirSync(directories.in).map(function (filename) {
+    return {
+        filename: filename,
+        name: path.parse(filename).name,
+        data: load.sync(directories.in + filename)
+    };
+});
 
-    describe("when song has been paused", function () {
-        beforeEach(function () {
-            player.play(song);
-            player.pause();
-        });
 
-        it("should indicate that the song is currently paused", function () {
-            expect(player.isPlaying).toBeFalsy();
+// var x = isoBands('string', 1, 5);
+// var e = load.sync(directories.out + testCases[0].name + '.json');
 
-            // demonstrates use of 'not' with a custom matcher
-            expect(player).not.toBePlaying(song);
-        });
+describe('MarchingSquares.isoBands', function () {
 
-        it("should be possible to resume", function () {
-            player.resume();
-            expect(player.isPlaying).toBeTruthy();
-            expect(player.currentlyPlayingSong).toEqual(song);
-        });
-    });
+    testCases.forEach(function (inputFile) {
 
-    // demonstrates use of spies to intercept and test method calls
-    it("tells the current song if the user has made it a favorite", function () {
-        spyOn(song, 'persistFavoriteStatus');
+        var name = inputFile.name;
+        var data = inputFile.data;
+        var outputfile = directories.out + name + '.json';
+        var lowerBand = data.lowerBand;
+        var upperBand = data.upperband;
 
-        player.play(song);
-        player.makeFavorite();
+        describe('Calculate isoband', function () {
 
-        expect(song.persistFavoriteStatus).toHaveBeenCalledWith(true);
-    });
+            it('should return an array of array of coordinates', function () {
+                var data = [
+                    [1, 1, 1, 0],
+                    [1, 5, 5, 1],
+                    [0, 1, 1, 1]
+                ];
+                var bands = isoBands(data, lowerBand, upperBand - lowerBand);
+                // if (process.env.REGEN) {
+                //     write.sync(outputfile, bands);
+                // }
+                expect(bands).toEqual(load.sync(outputfile));
 
-    //demonstrates use of expected exceptions
-    describe("#resume", function () {
-        it("should throw an exception if song is already playing", function () {
-            player.play(song);
+            });
 
-            expect(function () {
-                player.resume();
-            }).toThrowError("song is already playing");
         });
     });
+
+
+    describe('input validation', function () {
+        var dataArr = [[1], [2], [3]];
+        it('should throw an exception if any required argument is invalid', function () {
+            expect(function(){ isoBands(null, 0, 5) }).toThrowError('data is required');
+            expect(function(){ isoBands('string', 0, 5) }).toThrowError('data is not array');
+            expect(function(){ isoBands(dataArr, null, 5) }).toThrowError('lowerBand is required');
+            expect(function(){ isoBands(dataArr, 0, null) }).toThrowError('bandWidth is required');
+        });
+    });
+
 });
