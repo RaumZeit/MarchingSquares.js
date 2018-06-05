@@ -1726,45 +1726,45 @@
 
       case 17: /* 0101 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
+        /* should never be center_avg === 2 */
         if (center_avg === 0) {
           shapeCoordinates.triangle_bl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.triangle_tr(cell, x0, x1, x2, x3, opt);
         } else {
-          /* should never be center_avg === 2 */
           shapeCoordinates.hexagon_lt_rb(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 68: /* 1010 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
+        /* should never be center_avg === 2 */
         if (center_avg === 0) {
           shapeCoordinates.triangle_tl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.triangle_br(cell, x0, x1, x2, x3, opt);
         } else {
-          /* should never be center_avg === 2 */
           shapeCoordinates.hexagon_bl_tr(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 153: /* 2121 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
-        if (center_avg === 1) {
-          shapeCoordinates.hexagon_lt_rb(cell, x0, x1, x2, x3, opt);
-        } else {
-          /* should never be center_avg === 0 */
+        /* should never be center_avg === 0 */
+        if (center_avg === 2) {
           shapeCoordinates.triangle_bl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.triangle_tr(cell, x0, x1, x2, x3, opt);
+        } else {
+          shapeCoordinates.hexagon_lt_rb(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 102: /* 1212 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
-        if (center_avg === 1) {
-          shapeCoordinates.hexagon_bl_tr(cell, x0, x1, x2, x3, opt);
-        } else {
-          /* should never be center_avg === 0 */
+        /* should never be center_avg === 0 */
+        if (center_avg === 2) {
           shapeCoordinates.triangle_tl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.triangle_br(cell, x0, x1, x2, x3, opt);
+        } else {
+          shapeCoordinates.hexagon_bl_tr(cell, x0, x1, x2, x3, opt);
         }
         break;
 
@@ -1774,88 +1774,88 @@
       case 152: /* 2120 */
 
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
-        if (center_avg === 1) {
-          shapeCoordinates.heptagon_tr(cell, x0, x1, x2, x3, opt);
-        } else {
-          /* should never be center_avg === 0 */
+        /* should never be center_avg === 0 */
+        if (center_avg === 2) {
           shapeCoordinates.triangle_tr(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_bl(cell, x0, x1, x2, x3, opt);
+        } else {
+          shapeCoordinates.heptagon_tr(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 137: /* 2021 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
-        if (center_avg === 1) {
-          shapeCoordinates.heptagon_bl(cell, x0, x1, x2, x3, opt);
-        } else {
-          /* should never be center_avg === 0 */
+        /* should never be center_avg === 0 */
+        if (center_avg === 2) {
           shapeCoordinates.triangle_bl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_tr(cell, x0, x1, x2, x3, opt);
+        } else {
+          shapeCoordinates.heptagon_bl(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 98: /* 1202 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
-        if (center_avg === 1) {
-          shapeCoordinates.heptagon_tl(cell, x0, x1, x2, x3, opt);
-        } else {
-          /* should never be center_avg === 0 */
+        /* should never be center_avg === 0 */
+        if (center_avg === 2) {
           shapeCoordinates.triangle_tl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_br(cell, x0, x1, x2, x3, opt);
+        } else {
+          shapeCoordinates.heptagon_tl(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 38: /* 0212 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
-        if (center_avg === 1) {
-          shapeCoordinates.heptagon_br(cell, x0, x1, x2, x3, opt);
-        } else {
-          /* should never be center_avg === 0 */
+        /* should never be center_avg === 0 */
+        if (center_avg === 2) {
           shapeCoordinates.triangle_br(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_tl(cell, x0, x1, x2, x3, opt);
+        } else {
+          shapeCoordinates.heptagon_br(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 18: /* 0102 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
+        /* should never be center_avg === 2 */
         if (center_avg === 0) {
           shapeCoordinates.triangle_tr(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_bl(cell, x0, x1, x2, x3, opt);
         } else {
-          /* should never be center_avg === 2 */
           shapeCoordinates.heptagon_tr(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 33: /* 0201 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
+        /* should never be center_avg === 2 */
         if (center_avg === 0) {
           shapeCoordinates.triangle_bl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_tr(cell, x0, x1, x2, x3, opt);
         } else {
-          /* should never be center_avg === 2 */
           shapeCoordinates.heptagon_bl(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 72: /* 1020 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
+        /* should never be center_avg === 2 */
         if (center_avg === 0) {
           shapeCoordinates.triangle_tl(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_br(cell, x0, x1, x2, x3, opt);
         } else {
-          /* should never be center_avg === 2 */
           shapeCoordinates.heptagon_tl(cell, x0, x1, x2, x3, opt);
         }
         break;
 
       case 132: /* 2010 */
         center_avg = computeCenterAverage(x0, x1, x2, x3, minV, maxV);
+        /* should never be center_avg === 2 */
         if (center_avg === 0) {
           shapeCoordinates.triangle_br(cell, x0, x1, x2, x3, opt);
           shapeCoordinates.tetragon_tl(cell, x0, x1, x2, x3, opt);
         } else {
-          /* should never be center_avg === 2 */
           shapeCoordinates.heptagon_br(cell, x0, x1, x2, x3, opt);
         }
         break;
@@ -1952,11 +1952,63 @@
     return BandGrid;
   }
 
+  function entry_coordinate(x, y, mode, path) {
+    var k = x;
+    var l = y;
+
+    if (mode === 0) { /* down */
+      k += 1;
+      l += path[0][1];
+    } else if (mode === 1) { /* left */
+      k += path[0][0];
+    } else if (mode === 2) { /* up */
+      l += path[0][1];
+    } else if (mode === 3) { /* right */
+      k += path[0][0];
+      l += 1;
+    }
+
+    return [ k, l ];
+  }
+
+  function skip_coordinate(x, y, mode) {
+    var k = x;
+    var l = y;
+
+    if (mode === 0) { /* down */
+      k++;
+    } else if (mode === 1) { /* left */
+      /* do nothing */
+    } else if (mode === 2) { /* up */
+      l++;
+    } else if (mode === 3) { /* right */
+      k++;
+      l++;
+    }
+
+    return [ k, l ];
+  }
+
   function TracePaths(grid) {
     var areas = [];
     var rows = grid.rows;
     var cols = grid.cols;
     var polygons = [];
+
+    var directions    = [ "down", "left", "up", "right" ];
+    var valid_entries = [ ["rt", "rb"], /* down */
+                          ["br", "bl"], /* left */
+                          ["lb", "lt"], /* up */
+                          ["tl", "tr"]  /* right */
+                        ];
+    var add_x         = [ 0, -1, 0, 1 ];
+    var add_y         = [ -1, 0, 1, 0 ];
+    var available_starts = [ 'bl', 'lb', 'lt', 'tl', 'tr', 'rt', 'rb', 'br' ];
+    var origin_entries   =  { bl: "left", br: "left",
+                              lb: "up", lt: "up",
+                              tl: "right", tr: "right",
+                              rt: "down", rb: "down"
+                            };
 
     for (var j = 0; j < rows; j++) {
       for (var i = 0; i < cols; i++) {
@@ -1967,90 +2019,168 @@
 
           var nextedge = null;
 
-          var available_starts = [ 'bl', 'lb', 'lt', 'tl', 'tr', 'rt', 'rb', 'br' ];
-
+          /* trace paths for all available edges that go through this cell */
           for (e = 0; e < 8; e++) {
-            if (typeof cell.edges[available_starts[e]] === 'function') {
-              nextedge = available_starts[e];
-              break;
+            nextedge = available_starts[e];
+
+            if (typeof cell.edges[nextedge] === 'function') {
+
+              /* start a new, full path */
+              var path              = [];
+              var e                 = cell.edges[nextedge]();
+              var enter             = nextedge;
+              var x                 = i;
+              var y                 = j;
+              var origin            = [ i + e.path[0][0], j + e.path[0][1] ];
+              var finalized         = false;
+
+              /* add start coordinate */
+              path.push(origin);
+
+              /* start traceback */
+              while (!finalized) {
+                cc = grid.cells[y][x];
+
+                if (typeof cc.edges[enter] !== 'function') {
+                  //console.log("Entry point missing for cell " + x + "," + y + " cval: " + cc.cval + " (prev " + i + "," + j + ")");
+                  break;
+                }
+
+                e = cc.edges[enter]();
+
+                /* remove edge from cell */
+                delete cc.edges[enter];
+
+                /* add last point of edge to path arra, since we extend a polygon */
+                point = e.path[1];
+                point[0] += x;
+                point[1] += y;
+                path.push(point);
+
+                enter = e.move.enter;
+                x     = x + e.move.x;
+                y     = y + e.move.y;
+
+                if ((typeof grid.cells[y] === 'undefined') || (typeof grid.cells[y][x] === 'undefined')) {
+                  var search_entry = false;
+
+                  var start         = 0;
+                  var count         = 0;
+
+                  if (x === cols) {
+                    x--;
+                    if (typeof cc.edges.rb === 'function') {
+                      /* found re-entry in same cell */
+                      e = cc.edges.rb()
+                      path.push([ x + 1, y + e.path[0][1] ]);
+                      enter       = 'rb';
+                      found_entry = true;
+                      continue;
+                    } else {
+                      search_entry = true;
+                      start        = 0;
+                    }
+                  } else if (x < 0) {
+                    x++;
+                    if (typeof cc.edges.lt === 'function') {
+                      /* found re-entry in same cell */
+                      e = cc.edges.lt()
+                      path.push([ x, y + e.path[0][1] ]);
+                      enter       = 'lt';
+                      found_entry = true;
+                      continue;
+                    } else {
+                      search_entry = true;
+                      start        = 2;
+                    }
+                  } else if (y === rows) {
+                    y--;
+                    if (typeof cc.edges.tr === 'function') {
+                      /* found re-entry in same cell */
+                      e = cc.edges.tr()
+                      path.push([ x + e.path[0][0], y + 1]);
+                      enter       = 'tr';
+                      found_entry = true;
+                      continue;
+                    } else {
+                      search_entry = true;
+                      start = 3;
+                    }
+                  } else if (y < 0) {
+                    y++;
+                    if (typeof cc.edges.bl === 'function') {
+                      /* found re-entry in same cell */
+                      e = cc.edges.bl()
+                      path.push([ x + e.path[0][0], y]);
+                      enter = 'bl'
+                      found_entry = true;
+                      continue;
+                    } else {
+                      search_entry = true;
+                      start        = 1;
+                    }
+                  }
+
+                  if ((x === i) && (y === j) && (directions[start] === origin_entries[nextedge])) {
+                    finalized = true;
+                    enter     = nextedge;
+                    break;
+                  }
+
+                  while (search_entry) {
+                    if (count > 4) {
+                      console.log("Direction change counter overflow! This should never happen!");
+                      break;
+                    }
+
+                    cc = grid.cells[y][x];
+
+                    /* check for re-entry */
+                    for (var s = 0; s < valid_entries[start].length; s++) {
+                      var ve = valid_entries[start][s];
+                      if (typeof cc.edges[ve] === 'function') {
+                        /* found re-entry */
+                        e = cc.edges[ve]();
+                        path.push(entry_coordinate(x, y, start, e.path));
+                        enter = ve;
+                        search_entry = false;
+                        break;
+                      }
+                    }
+
+                    if (search_entry) {
+                      path.push(skip_coordinate(x, y, start));
+
+                      x += add_x[start];
+                      y += add_y[start];
+
+                      if ((typeof grid.cells[y] === 'undefined') || (typeof grid.cells[y][x] === 'undefined')) {
+                        x -= add_x[start];
+                        y -= add_y[start];
+
+                        start = (start + 1) % 4;
+                        count++;
+                      }
+
+                      if ((x === i) && (y === j) && (directions[start] === origin_entries[nextedge])) {
+                        /* we are back where we started off, so finalize the polygon */
+                        finalized = true;
+                        enter     = nextedge;
+                        break;
+                      }
+                    }
+                  }
+                }
+
+              }
+
+              polygons.push(path);
             }
-          }
-//          console.log("Cell " + i + ", " + j + "(cval: " + cell.cval + ", enter next at: " + nextedge + ")");
-          if (nextedge) {
-            /* start a new, full path */
-            var path = [];
-
-            var e = cell.edges[nextedge]();
-
-            /* remove edge from cell */
-            delete cell.edges[nextedge];
-
-            /* add edge to path array */
-//            console.log(e.path);
-            e.path.forEach(function(point) { point[0] += i; point[1] += j; path.push(point); });
-
-            var enter = e.move.enter;
-            var x     = i + e.move.x;
-            var y     = j + e.move.y;
-
-//            console.log("proceed to " + x + ", " + y + ", enter: " + enter + ", cval: " + grid.cells[y][x].cval);
-            /* start traceback */
-            while ((x >= 0) && (x < cols) && (y >= 0) && (y < rows)) {
-              cc = grid.cells[y][x];
-
-              if (typeof cc.edges[enter] !== 'function') {
-                console.log("Entry point missing for cell " + x + "," + y + " cval: " + cc.cval + "(prev " + i + "," + j + ")");
-                break;
-              }
-
-              e = cc.edges[enter]();
-
-              /* remove edge from cell */
-              delete cc.edges[enter];
-
-//              console.log(e.path);
-              /* add edge to path array */
-              point = e.path[1];
-              point[0] += x;
-              point[1] += y;
-              path.push(point);
-
-              enter = e.move.enter;
-              x     = x + e.move.x;
-              y     = y + e.move.y;
-
-//              console.log("proceed to " + x + ", " + y + ", enter: " + enter + ", cval: " + grid.cells[y][x].cval);
-
-              if (x === cols) {
-                break;
-              } else if (x < 0) {
-                break;
-              } else if (y === rows) {
-                break;
-              } else if (y < 0) {
-                break;
-              }
-
-              /* re-entry into start cell? */
-              if ((x === i) && (y === j)) {
-                if (enter !== nextedge)
-                  console.log("Enter != nextedge");
-                break;
-              }
-            }
-
-//            console.log("path");
-//            console.log(path);
-
-            polygons.push(path);
-          }
-
-//          console.log(cell);
+          } /* end forall entry sites */
         }
       }
     }
 
-//    console.log(polygons);
     return polygons;
   }
 
@@ -2059,8 +2189,6 @@
     var rows = grid.rows;
     var cols = grid.cols;
     var polygons = [];
-
-//    console.log("collecting polygons...");
 
     for (var j = 0; j < rows; j++) {
       for (var i = 0; i < cols; i++) {
