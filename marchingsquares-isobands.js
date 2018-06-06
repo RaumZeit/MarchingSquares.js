@@ -26,7 +26,37 @@
   var defaultSettings = {
     successCallback:  null,
     verbose:          false,
-    polygons:         false
+    polygons:         false,
+    polygons_full:    false,
+    interpolate:    function(a, b, minV, maxV) {
+      if (a < b) {
+        if (a < minV) {
+          return (minV - a) / (b - a);
+        } else {
+          return (maxV - a) / (b - a);
+        }
+      } else {
+        if (a > maxV) {
+          return (a - maxV) / (a - b);
+        } else {
+          return (a - minV) / (a - b);
+        }
+      }
+    },
+    interpolate_a:  function(a, b, minV, maxV) {
+      if (a < b) {
+        return (minV - a) / (b - a);
+      } else {
+        return (a - maxV) / (a - b);
+      }
+    },
+    interpolate_b:  function(a, b, minV, maxV) {
+      if (a < b) {
+        return (maxV - a) / (b - a);
+      } else {
+        return (a - minV) / (a - b);
+      }
+    }
   };
     
   var settings = {};
@@ -39,6 +69,8 @@
       outline of connected polygons.
     */
   function isoBands(data, minV, bandwidth, options){
+    var settings = {};
+
     /* process options */
     options = options ? options : {};
 
@@ -55,7 +87,10 @@
     if(settings.verbose)
       console.log("MarchingSquaresJS-isoBands: computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
 
-    var grid = computeBandGrid(data, minV, bandwidth);
+    /* restore compatibility */
+    settings.polygons_full  = !settings.polygons;
+
+    var grid = computeBandGrid(data, minV, bandwidth, settings);
 
     var ret;
     if(settings.polygons){
@@ -207,19 +242,17 @@
                   },
 
     triangle_bl:  function(cell, x0, x1, x2, x3, opt) {
-                    var bottomleft = opt.interpolate(x0, x1, opt);
-                    var leftbottom = opt.interpolate(x0, x3, opt);
+                    var bottomleft = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                    var leftbottom = opt.interpolate(x0, x3, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.lb = function() {
-                        return {
+                      cell.edges.lb = {
                           path: [ [0, leftbottom], [bottomleft, 0] ],
                           move: {
                             x:      0,
                             y:      -1,
                             enter:  'tl'
                           }
-                        };
                       };
                     }
 
@@ -228,19 +261,17 @@
                   },
 
     triangle_br:  function(cell, x0, x1, x2, x3, opt) {
-                    var bottomright = opt.interpolate(x0, x1, opt);
-                    var rightbottom = opt.interpolate(x1, x2, opt);
+                    var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                    var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.br = function() {
-                        return {
+                      cell.edges.br = {
                           path: [ [bottomright, 0], [1, rightbottom] ],
                           move: {
                             x:      1,
                             y:      0,
                             enter:  'lb'
                           }
-                        };
                       };
                     }
 
@@ -249,19 +280,17 @@
                   },
 
     triangle_tr:  function(cell, x0, x1, x2, x3, opt) {
-                    var righttop = opt.interpolate(x1, x2, opt);
-                    var topright = opt.interpolate(x3, x2, opt);
+                    var righttop = opt.interpolate(x1, x2, opt.minV, opt.maxV);
+                    var topright = opt.interpolate(x3, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.rt = function() {
-                        return {
+                      cell.edges.rt = {
                           path: [ [1, righttop], [topright, 1] ],
                           move: {
                             x:      0,
                             y:      1,
                             enter:  'br'
                           }
-                        };
                       };
                     }
 
@@ -270,19 +299,17 @@
                   },
 
     triangle_tl:  function(cell, x0, x1, x2, x3, opt) {
-                    var topleft = opt.interpolate(x3, x2, opt);
-                    var lefttop = opt.interpolate(x0, x3, opt);
+                    var topleft = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                    var lefttop = opt.interpolate(x0, x3, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.tl = function() {
-                        return {
+                      cell.edges.tl = {
                           path: [ [topleft, 1], [0, lefttop] ],
                           move: {
                             x:      -1,
                             y:      0,
                             enter:  'rt'
                           }
-                        };
                       };
                     }
 
@@ -291,19 +318,17 @@
                   },
 
     tetragon_t:   function(cell, x0, x1, x2, x3, opt) {
-                    var righttop  = opt.interpolate(x1, x2, opt);
-                    var lefttop   = opt.interpolate(x0, x3, opt);
+                    var righttop  = opt.interpolate(x1, x2, opt.minV, opt.maxV);
+                    var lefttop   = opt.interpolate(x0, x3, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.rt = function() {
-                        return {
+                      cell.edges.rt = {
                           path: [ [1, righttop], [0, lefttop] ],
                           move: {
                             x:      -1,
                             y:      0,
                             enter:  'rt'
                           }
-                        };
                       };
                     }
 
@@ -312,18 +337,16 @@
                   },
 
     tetragon_r:   function(cell, x0, x1, x2, x3, opt) {
-                    var bottomright = opt.interpolate(x0, x1, opt);
-                    var topright    = opt.interpolate(x3, x2, opt);
+                    var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                    var topright    = opt.interpolate(x3, x2, opt.minV, opt.maxV);
                     if (opt.polygons_full) {
-                      cell.edges.br = function() {
-                        return {
+                      cell.edges.br = {
                           path: [ [bottomright, 0], [topright, 1] ],
                           move: {
                             x:      0,
                             y:      1,
                             enter:  'br'
                           }
-                        };
                       };
                     }
 
@@ -332,19 +355,17 @@
                   },
 
     tetragon_b:   function(cell, x0, x1, x2, x3, opt) {
-                    var leftbottom  = opt.interpolate(x0, x3, opt);
-                    var rightbottom = opt.interpolate(x1, x2, opt);
+                    var leftbottom  = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                    var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.lb = function() {
-                        return {
+                      cell.edges.lb = {
                           path: [ [0, leftbottom], [1, rightbottom] ],
                           move: {
                             x:      1,
                             y:      0,
                             enter:  'lb'
                           }
-                        };
                       };
                     }
 
@@ -353,19 +374,17 @@
                   },
 
     tetragon_l:   function(cell, x0, x1, x2, x3, opt) {
-                    var topleft     = opt.interpolate(x3, x2, opt);
-                    var bottomleft  = opt.interpolate(x0, x1, opt);
+                    var topleft     = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                    var bottomleft  = opt.interpolate(x0, x1, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.tl = function() {
-                        return {
+                      cell.edges.tl = {
                           path: [ [topleft, 1], [bottomleft, 0] ],
                           move: {
                             x:      0,
                             y:      -1,
                             enter:  'tl'
                           }
-                        };
                       };
                     }
 
@@ -374,31 +393,27 @@
                   },
 
     tetragon_bl:  function(cell, x0, x1, x2, x3, opt) {
-                    var bottomleft  = opt.interpolate_a(x0, x1, opt);
-                    var bottomright = opt.interpolate_b(x0, x1, opt);
-                    var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                    var lefttop     = opt.interpolate_b(x0, x3, opt);
+                    var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
+                    var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                    var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                    var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.bl = function() {
-                        return {
+                      cell.edges.bl = {
                           path: [ [bottomleft, 0], [0, leftbottom] ],
                           move: {
                             x:      -1,
                             y:      0,
                             enter:  'rb'
                           }
-                        };
                       };
-                      cell.edges.lt = function() {
-                        return {
+                      cell.edges.lt = {
                           path: [ [0, lefttop], [bottomright, 0] ],
                           move: {
                             x:      0,
                             y:      -1,
                             enter:  'tr'
                           }
-                        };
                       };
                     }
 
@@ -407,31 +422,27 @@
                   },
 
     tetragon_br:  function(cell, x0, x1, x2, x3, opt) {
-                    var bottomleft  = opt.interpolate_a(x0, x1, opt);
-                    var bottomright = opt.interpolate_b(x0, x1, opt);
-                    var rightbottom = opt.interpolate_a(x1, x2, opt);
-                    var righttop    = opt.interpolate_b(x1, x2, opt);
+                    var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
+                    var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                    var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
+                    var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.bl = function() {
-                        return {
+                      cell.edges.bl = {
                           path: [ [bottomleft, 0], [1, righttop] ],
                           move: {
                             x: 1,
                             y: 0,
                             enter: 'lt'
                           }
-                        };
                       };
-                      cell.edges.rb = function() {
-                        return {
+                      cell.edges.rb = {
                           path: [ [1, rightbottom], [bottomright, 0] ],
                           move: {
                             x: 0,
                             y: -1,
                             enter: 'tr'
                           }
-                        };
                       };
                     }
 
@@ -440,31 +451,27 @@
                   },
 
     tetragon_tr:  function(cell, x0, x1, x2, x3, opt) {
-                    var topleft     = opt.interpolate_a(x3, x2, opt);
-                    var topright    = opt.interpolate_b(x3, x2, opt);
-                    var righttop    = opt.interpolate_b(x1, x2, opt);
-                    var rightbottom = opt.interpolate_a(x1, x2, opt);
+                    var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                    var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                    var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                    var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.rb = function() {
-                        return {
+                      cell.edges.rb = {
                           path: [ [1, rightbottom], [topleft, 1] ],
                           move: {
                             x: 0,
                             y: 1,
                             enter: 'bl'
                           }
-                        };
                       };
-                      cell.edges.tr = function() {
-                        return {
+                      cell.edges.tr = {
                           path: [ [topright, 1], [1, righttop] ],
                           move: {
                             x: 1,
                             y: 0,
                             enter: 'lt'
                           }
-                        };
                       };
                     }
 
@@ -473,31 +480,27 @@
                   },
 
     tetragon_tl:  function(cell, x0, x1, x2, x3, opt) {
-                    var topleft     = opt.interpolate_a(x3, x2, opt);
-                    var topright    = opt.interpolate_b(x3, x2, opt);
-                    var lefttop     = opt.interpolate_b(x0, x3, opt);
-                    var leftbottom  = opt.interpolate_a(x0, x3, opt);
+                    var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                    var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                    var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                    var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.tr = function() {
-                        return {
+                      cell.edges.tr = {
                           path: [ [topright, 1], [0, leftbottom] ],
                           move: {
                             x:      -1,
                             y:      0,
                             enter:  'rb'
                           }
-                        };
                       };
-                      cell.edges.lt = function() {
-                        return {
+                      cell.edges.lt = {
                           path: [ [0, lefttop], [topleft, 1] ],
                           move: {
                             x:      0,
                             y:      1,
                             enter:  'bl'
                           }
-                        };
                       };
                     }
 
@@ -506,32 +509,28 @@
                   },
 
     tetragon_lr:  function(cell, x0, x1, x2, x3, opt) {
-                    var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                    var lefttop     = opt.interpolate_b(x0, x3, opt);
-                    var righttop    = opt.interpolate_b(x1, x2, opt);
-                    var rightbottom = opt.interpolate_a(x1, x2, opt);
+                    var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                    var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                    var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                    var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.lt = function() {
-                        return {
+                      cell.edges.lt = {
                           path: [ [0, lefttop], [1, righttop] ],
                           move: {
                             x:      1,
                             y:      0,
                             enter:  'lt'
                           }
-                        };
                       };
-                      cell.edges.rb = function() {
-                        return {
+                      cell.edges.rb = {
                           path: [ [1, rightbottom], [0, leftbottom] ],
                           move: {
                             x:      -1,
                             y:      0,
                             enter:  'rb'
                           }
-                        };
-                      }
+                      };
                     }
 
                     if (opt.polygons)
@@ -539,31 +538,27 @@
                   },
 
     tetragon_tb:  function(cell, x0, x1, x2, x3, opt) {
-                    var topleft     = opt.interpolate_a(x3, x2, opt);
-                    var topright    = opt.interpolate_b(x3, x2, opt);
-                    var bottomright = opt.interpolate_b(x0, x1, opt);
-                    var bottomleft  = opt.interpolate_a(x0, x1, opt);
+                    var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                    var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                    var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                    var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.tr = function() {
-                        return {
+                      cell.edges.tr =  {
                           path: [ [topright, 1], [bottomright, 0] ],
                           move: {
                             x:      0,
                             y:      -1,
                             enter:  'tr'
                           }
-                        };
                       };
-                      cell.edges.bl = function() {
-                        return {
+                      cell.edges.bl = {
                           path: [ [bottomleft, 0], [topleft, 1] ],
                           move: {
                             x:      0,
                             y:      1,
                             enter:  'bl'
                           }
-                        };
                       };
                     }
 
@@ -572,19 +567,17 @@
                   },
 
     pentagon_tr:  function(cell, x0, x1, x2, x3, opt) {
-                    var topleft     = opt.interpolate(x3, x2, opt);
-                    var rightbottom = opt.interpolate(x1, x2, opt);
+                    var topleft     = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                    var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.tl = function() {
-                        return {
+                      cell.edges.tl = {
                           path: [[topleft, 1], [1, rightbottom]],
                           move: {
                             x:      1,
                             y:      0,
                             enter:  'lb'
                           }
-                        };
                       };
                     }
 
@@ -593,20 +586,18 @@
                   },
 
     pentagon_tl:  function(cell, x0, x1, x2, x3, opt) {
-                    var leftbottom  = opt.interpolate(x0, x3, opt);
-                    var topright    = opt.interpolate(x3, x2, opt);
+                    var leftbottom  = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                    var topright    = opt.interpolate(x3, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.lb = function() {
-                        return {
+                      cell.edges.lb = {
                           path: [ [0, leftbottom], [topright, 1] ],
                           move: {
                             x:      0,
                             y:      1,
                             enter:  'br'
                           }
-                        };
-                      }
+                      };
                     }
 
                     if (opt.polygons)
@@ -614,19 +605,17 @@
                   },
 
     pentagon_br:  function(cell, x0, x1, x2, x3, opt) {
-                    var bottomleft  = opt.interpolate(x0, x1, opt);
-                    var righttop    = opt.interpolate(x1, x2, opt);
+                    var bottomleft  = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                    var righttop    = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.rt = function() {
-                        return {
+                      cell.edges.rt = {
                           path: [ [1, righttop], [bottomleft, 0] ],
                           move: {
                             x:      0,
                             y:      -1,
                             enter:  'tl'
                           }
-                        };
                       };
                     }
                     if (opt.polygons)
@@ -634,19 +623,17 @@
                   },
 
     pentagon_bl:  function(cell, x0, x1, x2, x3, opt) {
-                    var lefttop     = opt.interpolate(x0, x3, opt);
-                    var bottomright = opt.interpolate(x0, x1, opt);
+                    var lefttop     = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                    var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
 
                     if (opt.polygons_full) {
-                      cell.edges.br = function() {
-                        return {
+                      cell.edges.br = {
                           path: [ [bottomright, 0], [0, lefttop] ],
                           move: {
                             x:      -1,
                             y:      0,
                             enter:  'rt'
                           }
-                        };
                       };
                     }
 
@@ -655,31 +642,27 @@
                   },
 
     pentagon_tr_rl: function(cell, x0, x1, x2, x3, opt) {
-                      var lefttop     = opt.interpolate(x0, x3, opt);
-                      var topleft     = opt.interpolate(x3, x2, opt);
-                      var righttop    = opt.interpolate_b(x1, x2, opt);
-                      var rightbottom = opt.interpolate_a(x1, x2, opt);
+                      var lefttop     = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                      var topleft     = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                      var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                      var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.tl = function() {
-                          return {
+                        cell.edges.tl = {
                             path: [ [topleft, 1], [1, righttop] ],
                             move: {
                               x:      1,
                               y:      0,
                               enter:  'lt'
                             }
-                          };
                         };
-                        cell.edges.rb = function() {
-                          return {
+                        cell.edges.rb = {
                             path: [ [1, rightbottom], [0, lefttop] ],
                             move: {
                               x:      -1,
                               y:      0,
                               enter:  'rt'
                             }
-                          };
                         };
                       }
 
@@ -688,31 +671,27 @@
                     },
 
     pentagon_rb_bt: function(cell, x0, x1, x2, x3, opt) {
-                      var righttop    = opt.interpolate(x1, x2, opt);
-                      var bottomright = opt.interpolate_b(x0, x1, opt);
-                      var bottomleft  = opt.interpolate_a(x0, x1, opt);
-                      var topright    = opt.interpolate(x3, x2, opt);
+                      var righttop    = opt.interpolate(x1, x2, opt.minV, opt.maxV);
+                      var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                      var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
+                      var topright    = opt.interpolate(x3, x2, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.rt = function() {
-                          return {
+                        cell.edges.rt = {
                             path: [ [1, righttop], [bottomright, 0] ],
                             move: {
                               x:      0,
                               y:      -1,
                               enter:  'tr'
                             }
-                          };
                         };
-                        cell.edges.bl = function() {
-                          return {
+                        cell.edges.bl = {
                             path: [ [bottomleft, 0], [topright, 1] ],
                             move: {
                               x:      0,
                               y:      1,
                               enter:  'br'
                             }
-                          };
                         };
                       }
 
@@ -721,31 +700,27 @@
                     },
 
     pentagon_bl_lr: function(cell, x0, x1, x2, x3, opt) {
-                      var bottomright = opt.interpolate(x0, x1, opt);
-                      var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                      var lefttop     = opt.interpolate_b(x0, x3, opt);
-                      var rightbottom = opt.interpolate(x1, x2, opt);
+                      var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                      var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                      var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                      var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.br = function() {
-                          return {
+                        cell.edges.br = {
                             path: [ [bottomright, 0], [0, leftbottom] ],
                             move: {
                               x:      -1,
                               y:      0,
                               enter:  'rb'
                             }
-                          };
                         };
-                        cell.edges.lt = function() {
-                          return {
+                        cell.edges.lt = {
                             path: [ [0, lefttop], [1, rightbottom] ],
                             move: {
                               x:      1,
                               y:      0,
                               enter:  'lb'
                             }
-                          };
                         };
                       }
 
@@ -754,31 +729,27 @@
                     },
 
     pentagon_lt_tb: function(cell, x0, x1, x2, x3, opt) {
-                      var leftbottom  = opt.interpolate(x0, x3, opt);
-                      var topleft     = opt.interpolate_a(x3, x2, opt);
-                      var topright    = opt.interpolate_b(x3, x2, opt);
-                      var bottomleft  = opt.interpolate(x0, x1, opt);
+                      var leftbottom  = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                      var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                      var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                      var bottomleft  = opt.interpolate(x0, x1, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.lb = function() {
-                          return {
+                        cell.edges.lb = {
                             path: [ [0, leftbottom], [topleft, 1] ],
                             move: {
                               x:      0,
                               y:      1,
                               enter:  'bl'
                             }
-                          };
                         };
-                        cell.edges.tr = function() {
-                          return {
+                        cell.edges.tr = {
                             path: [ [topright, 1], [bottomleft, 0] ],
                             move: {
                               x:      0,
                               y:      -1,
                               enter:  'tl'
                             }
-                          };
                         };
                       }
 
@@ -787,31 +758,27 @@
                     },
 
     pentagon_bl_tb: function(cell, x0, x1, x2, x3, opt) {
-                      var lefttop     = opt.interpolate(x0, x3, opt);
-                      var topleft     = opt.interpolate(x3, x2, opt);
-                      var bottomright = opt.interpolate_b(x0, x1, opt);
-                      var bottomleft  = opt.interpolate_a(x0, x1, opt);
+                      var lefttop     = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                      var topleft     = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                      var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                      var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.bl = function() {
-                          return {
+                        cell.edges.bl = {
                             path: [ [bottomleft, 0], [0, lefttop] ],
                             move: {
                               x:      -1,
                               y:      0,
                               enter:  'rt'
                             }
-                          };
                         };
-                        cell.edges.tl = function() {
-                          return {
+                        cell.edges.tl = {
                             path: [ [ topleft, 1], [bottomright, 0] ],
                             move: {
                               x:      0,
                               y:      -1,
                               enter:  'tr'
                             }
-                          };
                         };
                       }
 
@@ -820,31 +787,27 @@
                     },
 
     pentagon_lt_rl: function(cell, x0, x1, x2, x3, opt) {
-                      var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                      var lefttop     = opt.interpolate_b(x0, x3, opt);
-                      var topright    = opt.interpolate(x3, x2, opt);
-                      var righttop    = opt.interpolate(x1, x3, opt);
+                      var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                      var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                      var topright    = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                      var righttop    = opt.interpolate(x1, x3, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.lt = function() {
-                          return {
+                        cell.edges.lt = {
                             path: [ [0, lefttop], [topright, 1] ],
                             move: {
                               x:      0,
                               y:      1,
                               enter:  'br'
                             }
-                          };
                         };
-                        cell.edges.rt = function() {
-                          return {
+                        cell.edges.rt = {
                             path: [ [1, righttop], [0, leftbottom] ],
                             move: {
                               x:      -1,
                               y:      0,
                               enter:  'rb'
                             }
-                          };
                         };
                       }
 
@@ -853,31 +816,27 @@
                     },
 
     pentagon_tr_bt: function(cell, x0, x1, x2, x3, opt) {
-                      var topleft     = opt.interpolate_a(x3, x2, opt);
-                      var topright    = opt.interpolate_b(x3, x2, opt);
-                      var rightbottom = opt.interpolate(x1, x2, opt);
-                      var bottomright = opt.interpolate(x0, x1, opt);
+                      var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                      var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                      var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
+                      var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.br = function() {
-                          return {
+                        cell.edges.br = {
                             path: [ [bottomright, 0], [topleft, 1] ],
                             move: {
                               x:      0,
                               y:      1,
                               enter:  'bl'
                             }
-                          };
                         };
-                        cell.edges.tr = function() {
-                          return {
+                        cell.edges.tr = {
                             path: [ [topright, 1], [1, rightbottom] ],
                             move: {
                               x:      1,
                               y:      0,
                               enter:  'lb'
                             }
-                          };
                         };
                       }
 
@@ -886,31 +845,27 @@
                     },
 
     pentagon_rb_lr: function(cell, x0, x1, x2, x3, opt) {
-                      var leftbottom  = opt.interpolate(x0, x3, opt);
-                      var righttop    = opt.interpolate_b(x1, x2, opt);
-                      var rightbottom = opt.interpolate_a(x1, x2, opt);
-                      var bottomleft  = opt.interpolate(x0, x1, opt);
+                      var leftbottom  = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                      var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                      var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
+                      var bottomleft  = opt.interpolate(x0, x1, opt.minV, opt.maxV);
 
                       if (opt.polygons_full) {
-                        cell.edges.lb = function() {
-                          return {
+                        cell.edges.lb = {
                             path: [ [0, leftbottom], [1, righttop] ],
                             move: {
                               x:      1,
                               y:      0,
                               enter:  'lt'
                             }
-                          };
                         };
-                        cell.edges.rb = function() {
-                          return {
+                        cell.edges.rb = {
                             path: [ [1, rightbottom], [bottomleft, 0] ],
                             move: {
                               x:      0,
                               y:      -1,
                               enter:  'tl'
                             }
-                          };
                         };
                       }
                       if (opt.polygons)
@@ -918,31 +873,27 @@
                     },
 
       hexagon_lt_tr:  function(cell, x0, x1, x2, x3, opt) {
-                        var leftbottom  = opt.interpolate(x0, x3, opt);
-                        var topleft     = opt.interpolate_a(x3, x2, opt);
-                        var topright    = opt.interpolate_b(x3, x2, opt);
-                        var rightbottom = opt.interpolate(x1, x2, opt);
+                        var leftbottom  = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                        var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                        var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                        var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.lb = function() {
-                            return {
+                          cell.edges.lb = {
                               path: [ [0, leftbottom], [topleft, 1] ],
                               move: {
                                 x:      0,
                                 y:      1,
                                 enter:  'bl'
                               }
-                            };
                           };
-                          cell.edges.tr = function() {
-                            return {
+                          cell.edges.tr = {
                               path: [ [topright, 1], [1, rightbottom] ],
                               move: {
                                 x:      1,
                                 y:      0,
                                 enter:  'lb'
                               }
-                            };
                           };
                         }
 
@@ -951,31 +902,27 @@
                       },
 
       hexagon_bl_lt:  function(cell, x0, x1, x2, x3, opt) {
-                        var bottomright = opt.interpolate(x0, x1, opt);
-                        var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                        var lefttop     = opt.interpolate_b(x0, x3, opt);
-                        var topright    = opt.interpolate(x3, x2, opt);
+                        var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                        var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                        var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                        var topright    = opt.interpolate(x3, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.br = function() {
-                            return {
+                          cell.edges.br = {
                               path: [ [bottomright, 0], [0, leftbottom] ],
                               move: {
                                 x:      -1,
                                 y:      0,
                                 enter:  'rb'
                               }
-                            };
                           };
-                          cell.edges.lt = function() {
-                            return {
+                          cell.edges.lt = {
                               path: [ [0, lefttop], [topright, 1] ],
                               move: {
                                 x:      0,
                                 y:      1,
                                 enter:  'br'
                               }
-                            };
                           };
                         }
 
@@ -984,32 +931,28 @@
                       },
 
       hexagon_bl_rb:  function(cell, x0, x1, x2, x3, opt) {
-                        var bottomleft  = opt.interpolate_a(x0, x1, opt);
-                        var bottomright = opt.interpolate_b(x0, x1, opt);
-                        var lefttop     = opt.interpolate(x0, x3, opt);
-                        var righttop    = opt.interpolate(x1, x2, opt);
+                        var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
+                        var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                        var lefttop     = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                        var righttop    = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.bl = function() {
-                            return {
+                          cell.edges.bl = {
                               path: [ [bottomleft, 0], [0, lefttop] ],
                               move: {
                                 x:      -1,
                                 y:      0,
                                 enter:  'rt'
                               }
-                            };
                           };
-                          cell.edges.rt = function() {
-                            return {
+                          cell.edges.rt = {
                               path: [ [1, righttop], [bottomright, 0] ],
                               move: {
                                 x:      0,
                                 y:      -1,
                                 enter:  'tr'
                               }
-                            };
-                          }
+                          };
                         }
 
                         if (opt.polygons)
@@ -1017,31 +960,27 @@
                       },
 
       hexagon_tr_rb:  function(cell, x0, x1, x2, x3, opt) {
-                        var bottomleft  = opt.interpolate(x0, x1, opt);
-                        var topleft     = opt.interpolate(x3, x2, opt);
-                        var righttop    = opt.interpolate_b(x1, x2, opt);
-                        var rightbottom = opt.interpolate_a(x1, x2, opt);
+                        var bottomleft  = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                        var topleft     = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                        var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                        var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.tl = function() {
-                            return {
+                          cell.edges.tl = {
                               path: [ [topleft, 1], [1, righttop] ],
                               move: {
                                 x:      1,
                                 y:      0,
                                 enter:  'lt'
                               }
-                            };
                           };
-                          cell.edges.rb = function() {
-                            return {
+                          cell.edges.rb = {
                               path: [ [1, rightbottom], [bottomleft, 0] ],
                               move: {
                                 x:      0,
                                 y:      -1,
                                 enter:  'tl'
                               }
-                            };
                           };
                         }
 
@@ -1050,32 +989,28 @@
                       },
 
       hexagon_lt_rb:  function(cell, x0, x1, x2, x3, opt) {
-                        var leftbottom  = opt.interpolate(x0, x3, opt);
-                        var topright    = opt.interpolate(x3, x2, opt);
-                        var righttop    = opt.interpolate(x1, x2, opt);
-                        var bottomleft  = opt.interpolate(x0, x1, opt);
+                        var leftbottom  = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                        var topright    = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                        var righttop    = opt.interpolate(x1, x2, opt.minV, opt.maxV);
+                        var bottomleft  = opt.interpolate(x0, x1, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.lb = function() {
-                            return {
+                          cell.edges.lb = {
                               path: [ [0, leftbottom], [topright, 1] ],
                               move: {
                                 x:      0,
                                 y:      1,
                                 enter:  'br'
                               }
-                            };
                           };
-                          cell.edges.rt = function() {
-                            return {
+                          cell.edges.rt = {
                               path: [ [1, righttop], [bottomleft, 0] ],
                               move: {
                                 x:      0,
                                 y:      -1,
                                 enter:  'tl'
                               }
-                            };
-                          }
+                          };
                         }
 
                         if (opt.polygons)
@@ -1083,31 +1018,27 @@
                       },
 
       hexagon_bl_tr:  function(cell, x0, x1, x2, x3, opt) {
-                        var bottomright = opt.interpolate(x0, x1, opt);
-                        var lefttop     = opt.interpolate(x0, x3, opt);
-                        var topleft     = opt.interpolate(x3, x2, opt);
-                        var rightbottom = opt.interpolate(x1, x2, opt);
+                        var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                        var lefttop     = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                        var topleft     = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                        var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.br = function() {
-                            return {
+                          cell.edges.br = {
                               path: [ [bottomright, 0], [0, lefttop] ],
                               move: {
                                 x:      -1,
                                 y:      0,
                                 enter:  'rt'
                               }
-                            };
                           };
-                          cell.edges.tl = function() {
-                            return {
+                          cell.edges.tl = {
                               path: [ [topleft, 1], [1, rightbottom] ],
                               move: {
                                 x:      1,
                                 y:      0,
                                 enter:  'lb'
                               }
-                            };
                           };
                         }
 
@@ -1116,43 +1047,37 @@
                       },
 
       heptagon_tr:    function(cell, x0, x1, x2, x3, opt) {
-                        var bottomleft  = opt.interpolate_a(x0, x1, opt);
-                        var bottomright = opt.interpolate_b(x0, x1, opt);
-                        var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                        var lefttop     = opt.interpolate_b(x0, x3, opt);
-                        var topright    = opt.interpolate(x3, x2, opt);
-                        var righttop    = opt.interpolate(x1, x2, opt);
+                        var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
+                        var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                        var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                        var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                        var topright    = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                        var righttop    = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.bl = function() {
-                            return {
+                          cell.edges.bl = {
                               path: [ [bottomleft, 0], [0, leftbottom] ],
                               move: {
                                 x:      -1,
                                 y:      0,
                                 enter:  'rb'
                               }
-                            };
                           };
-                          cell.edges.lt = function() {
-                            return {
+                          cell.edges.lt = {
                               path: [ [0, lefttop], [topright, 1] ],
                               move: {
                                 x:      0,
                                 y:      1,
                                 enter:  'br'
                               }
-                            };
                           };
-                          cell.edges.rt = function() {
-                            return {
+                          cell.edges.rt = {
                               path: [ [1, righttop], [bottomright, 0] ],
                               move: {
                                 x:      0,
                                 y:      -1,
                                 enter:  'tr'
                               }
-                            };
                           };
                         }
 
@@ -1161,43 +1086,37 @@
                       },
 
       heptagon_bl:    function(cell, x0, x1, x2, x3, opt) {
-                        var bottomleft  = opt.interpolate(x0, x1, opt);
-                        var leftbottom  = opt.interpolate(x0, x3, opt);
-                        var topleft     = opt.interpolate_a(x3, x2, opt);
-                        var topright    = opt.interpolate_b(x3, x2, opt);
-                        var righttop    = opt.interpolate_b(x1, x2, opt);
-                        var rightbottom = opt.interpolate_a(x1, x2, opt);
+                        var bottomleft  = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                        var leftbottom  = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                        var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                        var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                        var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                        var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.lb = function() {
-                            return {
+                          cell.edges.lb = {
                               path: [ [0, leftbottom], [topleft, 1] ],
                               move: {
                                 x:      0,
                                 y:      1,
                                 enter:  'bl'
                               }
-                            };
                           };
-                          cell.edges.tr = function() {
-                            return {
+                          cell.edges.tr = {
                               path: [ [topright, 1], [1, righttop] ],
                               move: {
                                 x:      1,
                                 y:      0,
                                 enter:  'lt'
                               }
-                            };
                           };
-                          cell.edges.rb = function() {
-                            return {
+                          cell.edges.rb = {
                               path: [ [1, rightbottom], [bottomleft, 0] ],
                               move: {
                                 x:      0,
                                 y:      -1,
                                 enter:  'tl'
                               }
-                            };
                           };
                         }
 
@@ -1206,43 +1125,37 @@
                       },
 
       heptagon_tl:    function(cell, x0, x1, x2, x3, opt) {
-                        var bottomleft  = opt.interpolate_a(x0, x1, opt);
-                        var bottomright = opt.interpolate_b(x0, x1, opt);
-                        var lefttop     = opt.interpolate(x0, x3, opt);
-                        var topleft     = opt.interpolate(x3, x2, opt);
-                        var righttop    = opt.interpolate_b(x1, x2, opt);
-                        var rightbottom = opt.interpolate_a(x1, x2, opt);
+                        var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
+                        var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                        var lefttop     = opt.interpolate(x0, x3, opt.minV, opt.maxV);
+                        var topleft     = opt.interpolate(x3, x2, opt.minV, opt.maxV);
+                        var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                        var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.bl = function() {
-                            return {
+                          cell.edges.bl = {
                               path: [ [bottomleft, 0], [0, lefttop] ],
                               move: {
                                 x:      -1,
                                 y:      0,
                                 enter:  'rt'
                               }
-                            };
                           };
-                          cell.edges.tl = function() {
-                            return {
+                          cell.edges.tl = {
                               path: [ [topleft, 1], [1, righttop] ],
                               move: {
                                 x:      1,
                                 y:      0,
                                 enter:  'lt'
                               }
-                            };
                           };
-                          cell.edges.rb = function() {
-                            return {
+                          cell.edges.rb = {
                               path: [ [1, rightbottom], [bottomright, 0] ],
                               move: {
                                 x:      0,
                                 y:      -1,
                                 enter:  'tr'
                               }
-                            };
                           };
                         }
 
@@ -1251,43 +1164,37 @@
                       },
 
       heptagon_br:    function(cell, x0, x1, x2, x3, opt) {
-                        var bottomright = opt.interpolate(x0, x1, opt);
-                        var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                        var lefttop     = opt.interpolate_b(x0, x3, opt);
-                        var topleft     = opt.interpolate_a(x3, x2, opt);
-                        var topright    = opt.interpolate_b(x3, x2, opt);
-                        var rightbottom = opt.interpolate(x1, x2, opt);
+                        var bottomright = opt.interpolate(x0, x1, opt.minV, opt.maxV);
+                        var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                        var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                        var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                        var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                        var rightbottom = opt.interpolate(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.br = function() {
-                            return {
+                          cell.edges.br = {
                               path: [ [bottomright, 0], [0, leftbottom] ],
                               move: {
                                 x:      -1,
                                 y:      0,
                                 enter:  'rb'
                               }
-                            };
                           };
-                          cell.edges.lt = function() {
-                            return {
+                          cell.edges.lt = {
                               path: [ [0, lefttop], [topleft, 1] ],
                               move: {
                                 x:      0,
                                 y:      1,
                                 enter:  'bl'
                               }
-                            };
                           };
-                          cell.edges.tr = function() {
-                            return {
+                          cell.edges.tr = {
                               path: [ [topright, 1], [1, rightbottom] ],
                               move: {
                                 x:      1,
                                 y:      0,
                                 enter:  'lb'
                               }
-                            };
                           };
                         }
 
@@ -1296,55 +1203,47 @@
                       },
 
       octagon:        function(cell, x0, x1, x2, x3, opt) {
-                        var bottomleft  = opt.interpolate_a(x0, x1, opt);
-                        var bottomright = opt.interpolate_b(x0, x1, opt);
-                        var leftbottom  = opt.interpolate_a(x0, x3, opt);
-                        var lefttop     = opt.interpolate_b(x0, x3, opt);
-                        var topleft     = opt.interpolate_a(x3, x2, opt);
-                        var topright    = opt.interpolate_b(x3, x2, opt);
-                        var righttop    = opt.interpolate_b(x1, x2, opt);
-                        var rightbottom = opt.interpolate_a(x1, x2, opt);
+                        var bottomleft  = opt.interpolate_a(x0, x1, opt.minV, opt.maxV);
+                        var bottomright = opt.interpolate_b(x0, x1, opt.minV, opt.maxV);
+                        var leftbottom  = opt.interpolate_a(x0, x3, opt.minV, opt.maxV);
+                        var lefttop     = opt.interpolate_b(x0, x3, opt.minV, opt.maxV);
+                        var topleft     = opt.interpolate_a(x3, x2, opt.minV, opt.maxV);
+                        var topright    = opt.interpolate_b(x3, x2, opt.minV, opt.maxV);
+                        var righttop    = opt.interpolate_b(x1, x2, opt.minV, opt.maxV);
+                        var rightbottom = opt.interpolate_a(x1, x2, opt.minV, opt.maxV);
 
                         if (opt.polygons_full) {
-                          cell.edges.bl = function() {
-                            return {
+                          cell.edges.bl = {
                               path: [ [bottomleft, 0], [0, leftbottom] ],
                               move: {
                                 x:      -1,
                                 y:      0,
                                 enter:  'rb'
                               }
-                            };
                           };
-                          cell.edges.lt = function() {
-                            return {
+                          cell.edges.lt = {
                               path: [ [0, lefttop], [topleft, 1] ],
                               move: {
                                 x:      0,
                                 y:      1,
                                 enter:  'bl'
                               }
-                            };
                           };
-                          cell.edges.tr = function() {
-                            return {
+                          cell.edges.tr = {
                               path: [ [topright, 1], [1, righttop] ],
                               move: {
                                 x:      1,
                                 y:      0,
                                 enter:  'lt'
                               }
-                            };
                           };
-                          cell.edges.rb = function() {
-                            return {
+                          cell.edges.rb = {
                               path: [ [1, rightbottom], [bottomright, 0] ],
                               move: {
                                 x:      0,
                                 y:      -1,
                                 enter:  'tr'
                               }
-                            };
                           };
                         }
 
@@ -1423,17 +1322,11 @@
     var cell = {
       cval:         cval,
       polygons:     [],
-
       edges:        {},
-
-      bottomleft:   0.5,
-      bottomright:  0.5,
-      rightbottom:  0.5,
-      righttop:     0.5,
-      topright:     0.5,
-      topleft:      0.5,
-      lefttop:      0.5,
-      leftbottom:   0.5
+      x0:           x0,
+      x1:           x1,
+      x2:           x2,
+      x3:           x3
     };
 
     /*
@@ -1900,48 +1793,16 @@
   ####################################
   */
 
-  function computeBandGrid(data, minV, bandwidth){
+  function computeBandGrid(data, minV, bandwidth, opt){
     var rows = data.length - 1;
     var cols = data[0].length - 1;
-    var BandGrid = { rows: rows, cols: cols, cells: [] };
 
     var maxV = minV + Math.abs(bandwidth);
 
-    var opt = {
-      polygons:       true,
-      polygons_full:  true,
-      interpolate:    function(a, b, o) {
-        if (a < b) {
-          if (a < o.minV) {
-            return (o.minV - a) / (b - a);
-          } else {
-            return (o.maxV - a) / (b - a);
-          }
-        } else {
-          if (a > o.maxV) {
-            return (a - o.maxV) / (a - b);
-          } else {
-            return (a - o.minV) / (a - b);
-          }
-        }
-      },
-      interpolate_a:  function(a, b, o) {
-        if (a < b) {
-          return (o.minV - a) / (b - a);
-        } else {
-          return (a - o.maxV) / (a - b);
-        }
-      },
-      interpolate_b:  function(a, b, o) {
-        if (a < b) {
-          return (o.maxV - a) / (b - a);
-        } else {
-          return (a - o.minV) / (a - b);
-        }
-      },
-      minV:      minV,
-      maxV:      maxV
-    };
+    opt.minV          = minV;
+    opt.maxV          = maxV;
+
+    var BandGrid = { rows: rows, cols: cols, cells: [], minV: minV, maxV: maxV };
 
     for (var j = 0; j < rows; ++j) {
       BandGrid.cells[j] = [];
@@ -1995,7 +1856,13 @@
     var cols = grid.cols;
     var polygons = [];
 
-    var directions    = [ "down", "left", "up", "right" ];
+    /*
+        directions for out-of-grid moves are:
+        0 ... "down",
+        1 ... "left",
+        2 ... "up",
+        3 ... "right"
+    */
     var valid_entries = [ ["rt", "rb"], /* down */
                           ["br", "bl"], /* left */
                           ["lb", "lt"], /* up */
@@ -2004,12 +1871,48 @@
     var add_x         = [ 0, -1, 0, 1 ];
     var add_y         = [ -1, 0, 1, 0 ];
     var available_starts = [ 'bl', 'lb', 'lt', 'tl', 'tr', 'rt', 'rb', 'br' ];
-    var origin_entries   =  { bl: "left", br: "left",
-                              lb: "up", lt: "up",
-                              tl: "right", tr: "right",
-                              rt: "down", rb: "down"
-                            };
+    var entry_dir     =  { bl: 1, br: 1,
+                           lb: 2, lt: 2,
+                           tl: 3, tr: 3,
+                           rt: 0, rb: 0
+                         };
 
+    /* first, detect whether we need any outer frame */
+    var require_frame = true;
+
+    for (var j = 0; j < rows; j++) {
+      if ((grid.cells[j][0].x0 < grid.minV) ||
+          (grid.cells[j][0].x0 > grid.maxV) ||
+          (grid.cells[j][cols - 1].x1 < grid.minV) ||
+          (grid.cells[j][cols - 1].x1 > grid.maxV)) {
+        require_frame = false;
+        break;
+      }
+    }
+
+    if ((require_frame) &&
+        ((grid.cells[rows - 1][0].x3 < grid.minV) ||
+        (grid.cells[rows - 1][0].x3 > grid.maxV) ||
+        (grid.cells[rows - 1][cols - 1].x2 < grid.minV) ||
+        (grid.cells[rows - 1][cols - 1].x2 > grid.maxV))) {
+      require_frame = false;
+    }
+
+    if (require_frame)
+      for (var i = 0; i < cols - 1; i++) {
+        if ((grid.cells[0][i].x1 < grid.minV) ||
+            (grid.cells[0][i].x1 > grid.maxV) ||
+            (grid.cells[rows - 1][i].x2 < grid.minV) ||
+            (grid.cells[rows - 1][i].x2 > grid.maxV)) {
+          require_frame = false;
+          break;
+        }
+      }
+
+    if (require_frame)
+      polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0] ]);
+
+    /* finally, start tracing back first polygon(s) */
     for (var j = 0; j < rows; j++) {
       for (var i = 0; i < cols; i++) {
         if (typeof grid.cells[j][i] !== 'undefined') {
@@ -2023,111 +1926,69 @@
           for (e = 0; e < 8; e++) {
             nextedge = available_starts[e];
 
-            if (typeof cell.edges[nextedge] === 'function') {
+            if (typeof cell.edges[nextedge] === 'object') {
 
               /* start a new, full path */
               var path              = [];
-              var e                 = cell.edges[nextedge]();
+              var ee                = cell.edges[nextedge];
               var enter             = nextedge;
               var x                 = i;
               var y                 = j;
-              var origin            = [ i + e.path[0][0], j + e.path[0][1] ];
               var finalized         = false;
 
               /* add start coordinate */
-              path.push(origin);
+              path.push([ i + ee.path[0][0], j + ee.path[0][1] ]);
 
               /* start traceback */
               while (!finalized) {
                 cc = grid.cells[y][x];
 
-                if (typeof cc.edges[enter] !== 'function') {
-                  //console.log("Entry point missing for cell " + x + "," + y + " cval: " + cc.cval + " (prev " + i + "," + j + ")");
+                if (typeof cc.edges[enter] !== 'object')
                   break;
-                }
 
-                e = cc.edges[enter]();
+                ee = cc.edges[enter];
 
                 /* remove edge from cell */
                 delete cc.edges[enter];
 
                 /* add last point of edge to path arra, since we extend a polygon */
-                point = e.path[1];
+                point = ee.path[1];
                 point[0] += x;
                 point[1] += y;
                 path.push(point);
 
-                enter = e.move.enter;
-                x     = x + e.move.x;
-                y     = y + e.move.y;
+                enter = ee.move.enter;
+                x     = x + ee.move.x;
+                y     = y + ee.move.y;
 
+                /* handle out-of-grid moves */
                 if ((typeof grid.cells[y] === 'undefined') || (typeof grid.cells[y][x] === 'undefined')) {
-                  var search_entry = false;
-
-                  var start         = 0;
-                  var count         = 0;
+                  var dir   = 0;
+                  var count = 0;
 
                   if (x === cols) {
                     x--;
-                    if (typeof cc.edges.rb === 'function') {
-                      /* found re-entry in same cell */
-                      e = cc.edges.rb()
-                      path.push([ x + 1, y + e.path[0][1] ]);
-                      enter       = 'rb';
-                      found_entry = true;
-                      continue;
-                    } else {
-                      search_entry = true;
-                      start        = 0;
-                    }
+                    dir = 0;  /* move downwards */
                   } else if (x < 0) {
                     x++;
-                    if (typeof cc.edges.lt === 'function') {
-                      /* found re-entry in same cell */
-                      e = cc.edges.lt()
-                      path.push([ x, y + e.path[0][1] ]);
-                      enter       = 'lt';
-                      found_entry = true;
-                      continue;
-                    } else {
-                      search_entry = true;
-                      start        = 2;
-                    }
+                    dir = 2;  /* move upwards */
                   } else if (y === rows) {
                     y--;
-                    if (typeof cc.edges.tr === 'function') {
-                      /* found re-entry in same cell */
-                      e = cc.edges.tr()
-                      path.push([ x + e.path[0][0], y + 1]);
-                      enter       = 'tr';
-                      found_entry = true;
-                      continue;
-                    } else {
-                      search_entry = true;
-                      start = 3;
-                    }
+                    dir = 3;  /* move right */
                   } else if (y < 0) {
                     y++;
-                    if (typeof cc.edges.bl === 'function') {
-                      /* found re-entry in same cell */
-                      e = cc.edges.bl()
-                      path.push([ x + e.path[0][0], y]);
-                      enter = 'bl'
-                      found_entry = true;
-                      continue;
-                    } else {
-                      search_entry = true;
-                      start        = 1;
-                    }
+                    dir = 1;  /* move left */
                   }
 
-                  if ((x === i) && (y === j) && (directions[start] === origin_entries[nextedge])) {
+                  if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
                     finalized = true;
                     enter     = nextedge;
                     break;
                   }
 
-                  while (search_entry) {
+                  while (1) {
+                    var found_entry = false;
+
                     if (count > 4) {
                       console.log("Direction change counter overflow! This should never happen!");
                       break;
@@ -2136,33 +1997,36 @@
                     cc = grid.cells[y][x];
 
                     /* check for re-entry */
-                    for (var s = 0; s < valid_entries[start].length; s++) {
-                      var ve = valid_entries[start][s];
-                      if (typeof cc.edges[ve] === 'function') {
+                    for (var s = 0; s < valid_entries[dir].length; s++) {
+                      var ve = valid_entries[dir][s];
+                      if (typeof cc.edges[ve] === 'object') {
                         /* found re-entry */
-                        e = cc.edges[ve]();
-                        path.push(entry_coordinate(x, y, start, e.path));
+                        ee = cc.edges[ve];
+                        path.push(entry_coordinate(x, y, dir, ee.path));
                         enter = ve;
-                        search_entry = false;
+                        found_entry = true;
                         break;
                       }
                     }
 
-                    if (search_entry) {
-                      path.push(skip_coordinate(x, y, start));
+                    if (found_entry) {
+                      break;
+                    } else {
+                      path.push(skip_coordinate(x, y, dir));
 
-                      x += add_x[start];
-                      y += add_y[start];
+                      x += add_x[dir];
+                      y += add_y[dir];
 
+                      /* change direction if we'e moved out of grid again */
                       if ((typeof grid.cells[y] === 'undefined') || (typeof grid.cells[y][x] === 'undefined')) {
-                        x -= add_x[start];
-                        y -= add_y[start];
+                        x -= add_x[dir];
+                        y -= add_y[dir];
 
-                        start = (start + 1) % 4;
+                        dir = (dir + 1) % 4;
                         count++;
                       }
 
-                      if ((x === i) && (y === j) && (directions[start] === origin_entries[nextedge])) {
+                      if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
                         /* we are back where we started off, so finalize the polygon */
                         finalized = true;
                         enter     = nextedge;
@@ -2171,7 +2035,6 @@
                     }
                   }
                 }
-
               }
 
               polygons.push(path);
