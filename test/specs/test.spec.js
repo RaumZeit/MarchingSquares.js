@@ -1,13 +1,6 @@
-// https://jasmine.github.io/api/2.6/global
-
 var fs = require('fs');
 var path = require('path');
 var load = require('load-json-file');
-var write = require('write-json-file');
-// var truncate = require('@turf/truncate');
-// var point = require('@turf/helpers').point;
-// var circle = require('@turf/circle');
-// var matrixToGrid = require('./');
 var isoBands = require('../../marchingsquares.js').isoBands;
 
 var directories = {
@@ -24,7 +17,7 @@ var testCases = fs.readdirSync(directories.in).map(function (filename) {
 });
 
 
-describe('MarchingSquares.isoBands', function () {
+describe('IsoBands -', function () {
 
     testCases.forEach(function (inputFile) {
         var name = inputFile.name;
@@ -33,8 +26,8 @@ describe('MarchingSquares.isoBands', function () {
         var lowerBand = inputFile.data.lowerBand;
         var upperBand = inputFile.data.upperBand;
 
-        describe('Calculate isoband', function () {
-            it('should return an array of array of coordinates', function () {
+        describe(name, function () {
+            it('', function () {
                 var bands = isoBands(data, lowerBand, upperBand - lowerBand);
                 expect(bands).toEqual(load.sync(outputfile));
             });
@@ -42,11 +35,12 @@ describe('MarchingSquares.isoBands', function () {
     });
 
 
-    describe('input validation', function () {
+    describe('IsoBands input validation', function () {
         var dataArr = [[1], [2], [3]];
         it('should throw an exception if any required argument is invalid', function () {
             expect(function(){ isoBands(null, 0, 5) }).toThrowError('data is required');
-            expect(function(){ isoBands('string', 0, 5) }).toThrowError('data is not array');
+            expect(function(){ isoBands('string', 0, 5) }).toThrowError('data should be an array of arrays');
+            expect(function(){ isoBands([1], 0, 5) }).toThrowError('data should be an array of arrays');
             expect(function(){ isoBands(dataArr, null, 5) }).toThrowError('lowerBand is required');
             expect(function(){ isoBands(dataArr, 0, null) }).toThrowError('bandWidth is required');
         });

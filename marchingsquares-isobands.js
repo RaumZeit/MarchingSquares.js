@@ -71,6 +71,12 @@
   function isoBands(data, minV, bandwidth, options){
     var settings = {};
 
+    /* validation */
+    if (!data) throw new Error('data is required');
+    if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
+    if (minV === undefined || minV === null) throw new Error('lowerBand is required');
+    if (bandwidth === undefined || bandwidth === null) throw new Error('bandWidth is required');
+
     /* process options */
     options = options ? options : {};
 
