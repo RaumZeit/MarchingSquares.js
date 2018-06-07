@@ -29,6 +29,7 @@ describe('IsoBands -', function () {
         describe(name, function () {
             it('', function () {
                 var bands = isoBands(data, lowerBand, upperBand - lowerBand);
+                // console.log(bands)
                 expect(bands).toEqual(load.sync(outputfile));
             });
         });
