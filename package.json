@@ -2,7 +2,7 @@
   "name": "marchingsquares",
   "main": "./marchingsquares.js",
   "description": "MarchingSquaresJS - An implementation of the Marching Squares algorithm featuring Isocontour and Isoband computation.",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "directories": {
     "example": "example"
   },

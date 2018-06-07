@@ -98,11 +98,11 @@ regular 2-dimensional grid.
 #### Isocontours parameters
 The `data` parameter denotes the gridded input data.
 The `threshold` parameter denotes the threshold of value that will be encompassed by the iso-contour.
-The optional parameter `options` may be used to chane the behavior of this function (See below)
+The optional parameter `options` may be used to change the behavior of this function (See below)
 
 #### IsoBands parameters
 The `data` parameter denotes the gridded input data.
-The `lowerBand` parameter denotes the the lowest value that will be encompassed by this iso-band, while
+The `lowerBand` parameter denotes the lowest value that will be encompassed by this iso-band, while
 the `bandWidth` parameter denotes what range of values it will cover. The iso-band shown below should contain all values between `lowerBand` and `upperBand`.
 The optional parameter `options` may be used to chane the behavior of this function (See below)
 

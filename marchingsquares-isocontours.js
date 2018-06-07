@@ -1,7 +1,7 @@
 /*!
 * @license GNU Affero General Public License.
 * Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
-* v. 1.2.0
+* v. 1.2.2
 * https://github.com/RaumZeit/MarchingSquares.js
 */
 
@@ -132,10 +132,17 @@
             top     = interpolateX(threshold, tl, tr);
             right   = interpolateX(threshold, br, tr);
           } else if(cval === 5){
-            top     = interpolateX(threshold, tl, tr);
-            right   = interpolateX(threshold, br, tr);
-            bottom  = 1 - interpolateX(threshold, br, bl);
-            left    = 1 - interpolateX(threshold, tl, bl);
+            if (flipped) {
+              top     = 1- interpolateX(threshold, tl, tr);
+              right   = 1 - interpolateX(threshold, tr, br);
+              bottom  = interpolateX(threshold, bl, br);
+              left    = interpolateX(threshold, bl, tl);
+            } else {
+              top     = interpolateX(threshold, tl, tr);
+              right   = interpolateX(threshold, br, tr);
+              bottom  = 1 - interpolateX(threshold, br, bl);
+              left    = 1 - interpolateX(threshold, tl, bl);
+            }
           } else if(cval === 6){
             bottom  = interpolateX(threshold, bl, br);
             top     = interpolateX(threshold, tl, tr);
@@ -149,10 +156,17 @@
             bottom  = 1 - interpolateX(threshold, br, bl);
             top     = 1 - interpolateX(threshold, tr, tl);
           } else if(cval === 10){
-            top     = 1 - interpolateX(threshold, tr, tl);
-            right   = 1 - interpolateX(threshold, tr, br);
-            bottom  = interpolateX(threshold, bl, br);
-            left    = interpolateX(threshold, bl, tl);
+            if (flipped) {
+              top     = interpolateX(threshold, tl, tr);
+              right   = interpolateX(threshold, br, tr);
+              bottom  = 1 - interpolateX(threshold, br, bl);
+              left    = 1 - interpolateX(threshold, tl, bl);
+            } else {
+              top     = 1 - interpolateX(threshold, tr, tl);
+              right   = 1 - interpolateX(threshold, tr, br);
+              bottom  = interpolateX(threshold, bl, br);
+              left    = interpolateX(threshold, bl, tl);
+            }
           } else if(cval === 11){
             top     = 1 - interpolateX(threshold, tr, tl);
             right   = 1 - interpolateX(threshold, tr, br);
@@ -221,28 +235,7 @@
       g.forEach(function(gg, i){
         if((typeof gg !== 'undefined') && (!isSaddle(gg)) && (!isTrivial(gg))){
           var p = tracePath(grid.cells, j, i);
-          var merged = false;
-          /* we may try to merge paths at this point */
-          if(p.info === "mergeable"){
-            /*
-              search backwards through the path array to find an entry
-              that starts with where the current path ends...
-            */
-            var x = p.path[p.path.length - 1][0],
-                y = p.path[p.path.length - 1][1];
-
-            for(var k = path_idx - 1; k >= 0; k--){
-              if((Math.abs(paths[k][0][0] - x) <= epsilon) && (Math.abs(paths[k][0][1] - y) <= epsilon)){
-                for(var l = p.path.length - 2; l >= 0; --l){
-                  paths[k].unshift(p.path[l]);
-                }
-                merged = true;
-                break;
-              }
-            }
-          }
-          if(!merged)
-            paths[path_idx++] = p.path;
+          paths[path_idx++] = p.path;
         }
       });
     });
@@ -257,11 +250,75 @@
   function tracePath(grid, j, i){
     var maxj = grid.length;
     var p = [];
-    var dxContour = [0, 0, 1, 1, 0, 0, 0, 0, -1, 0, 1, 1, -1, 0, -1, 0];
-    var dyContour = [0, -1, 0, 0, 1, 1, 1, 1, 0, -1, 0, 0, 0, -1, 0, 0];
+    var dxContour = [ 0,  /* 0  a.k.a. 0000 */
+                      -1, /* 1  a.k.a. 0001 */
+                      0,  /* 2  a.k.a. 0010 */
+                      -1, /* 3  a.k.a. 0011 */
+                      1,  /* 4  a.k.a. 0100 */
+                      0,  /* 5  a.k.a. 0101 */
+                      0,  /* 6  a.k.a. 0110 */
+                      -1, /* 7  a.k.a. 0111 */
+                      0,  /* 8  a.k.a. 1000 */
+                      0,  /* 9  a.k.a. 1001 */
+                      0,  /* 10 a.k.a. 1010 */
+                      0,  /* 11 a.k.a. 1011 */
+                      1,  /* 12 a.k.a. 1100 */
+                      1,  /* 13 a.k.a. 1101 */
+                      0,  /* 14 a.k.a. 1110 */
+                      0   /* 15 a.k.a. 1111 */
+    ];
+    var dyContour = [ 0,  /* 0  a.k.a. 0000 */
+                      0,  /* 1  a.k.a. 0001 */
+                      -1, /* 2  a.k.a. 0010 */
+                      0,  /* 3  a.k.a. 0011 */
+                      0,  /* 4  a.k.a. 0100 */
+                      0,  /* 5  a.k.a. 0101 */
+                      -1, /* 6  a.k.a. 0110 */
+                      0,  /* 7  a.k.a. 0111 */
+                      1,  /* 8  a.k.a. 1000 */
+                      1,  /* 9  a.k.a. 1001 */
+                      0,  /* 10 a.k.a. 1010 */
+                      1,  /* 11 a.k.a. 1011 */
+                      0,  /* 12 a.k.a. 1100 */
+                      0,  /* 13 a.k.a. 1101 */
+                      -1, /* 14 a.k.a. 1110 */
+                      0   /* 15 a.k.a. 1111 */
+    ];
     var dx, dy;
-    var startEdge = ["none", "left", "bottom", "left", "right", "none", "bottom", "left", "top", "top", "none", "top", "right", "right", "bottom", "none"];
-    var nextEdge  = ["none", "bottom", "right", "right", "top", "top", "top", "top", "left", "bottom", "right", "right", "left", "bottom", "left", "none"];
+    var startEdge = [ "none",   /* 0  a.k.a. 0000 */
+                      "bottom", /* 1  a.k.a. 0001 */
+                      "right",  /* 2  a.k.a. 0010 */
+                      "right",  /* 3  a.k.a. 0011 */
+                      "top",    /* 4  a.k.a. 0100 */
+                      "none",   /* 5  a.k.a. 0101 */
+                      "top",    /* 6  a.k.a. 0110 */
+                      "top",    /* 7  a.k.a. 0111 */
+                      "left",   /* 8  a.k.a. 1000 */
+                      "bottom", /* 9  a.k.a. 1001 */
+                      "none",   /* 10 a.k.a. 1010 */
+                      "right",  /* 11 a.k.a. 1011 */
+                      "left",   /* 12 a.k.a. 1100 */
+                      "bottom", /* 13 a.k.a. 1101 */
+                      "left",   /* 14 a.k.a. 1110 */
+                      "none"    /* 15 a.k.a. 1111 */
+    ];
+    var nextEdge  = [ "none",   /* 0  a.k.a. 0000 */
+                      "left",   /* 1  a.k.a. 0001 */
+                      "bottom", /* 2  a.k.a. 0010 */
+                      "left",   /* 3  a.k.a. 0011 */
+                      "right",  /* 4  a.k.a. 0100 */
+                      "none",   /* 5  a.k.a. 0101 */
+                      "bottom", /* 6  a.k.a. 0110 */
+                      "left",   /* 7  a.k.a. 0111 */
+                      "top",    /* 8  a.k.a. 1000 */
+                      "top",    /* 9  a.k.a. 1001 */
+                      "none",   /* 10 a.k.a. 1010 */
+                      "top",    /* 11 a.k.a. 1011 */
+                      "right",  /* 12 a.k.a. 1100 */
+                      "right",  /* 13 a.k.a. 1101 */
+                      "bottom", /* 14 a.k.a. 1110 */
+                      "none"    /* 15 a.k.a. 1111 */
+    ];
     var edge;
 
     var startCell   = grid[j][i];
@@ -282,7 +339,8 @@
     /* now walk arround the enclosed area in clockwise-direction */
     var k = i + dxContour[cval];
     var l = j + dyContour[cval];
-    var prev_cval = cval;
+    var last_dx   = dxContour[cval];
+    var last_dy   = dyContour[cval];
 
     while((k >= 0) && (l >= 0) && (l < maxj) && ((k != i) || (l != j))){
       currentCell = grid[l][k];
@@ -294,32 +352,12 @@
       if((cval === 0) || (cval === 15)){
         return { path: p, info: "mergeable" };
       }
-      edge  = nextEdge[cval];
-      dx    = dxContour[cval];
-      dy    = dyContour[cval];
+
       if((cval === 5) || (cval === 10)){
         /* select upper or lower band, depending on previous cells cval */
         if(cval === 5){
           if(currentCell.flipped){ /* this is actually a flipped case 10 */
-            if(dyContour[prev_cval] === -1){
-              edge  = "left";
-              dx    = -1;
-              dy    = 0;
-            } else {
-              edge  = "right";
-              dx    = 1;
-              dy    = 0;
-            }
-          } else { /* real case 5 */
-            if(dxContour[prev_cval] === -1){
-              edge  = "bottom";
-              dx    = 0;
-              dy    = -1;
-            }
-          }
-        } else if(cval === 10){
-          if(currentCell.flipped){ /* this is actually a flipped case 5 */
-            if(dxContour[prev_cval] === -1){
+            if(last_dx === 1){
               edge  = "top";
               dx    = 0;
               dy    = 1;
@@ -328,21 +366,53 @@
               dx    = 0;
               dy    = -1;
             }
-          } else {  /* real case 10 */
-            if(dyContour[prev_cval] === 1){
+          } else { /* real case 5 */
+            if(last_dy === -1){
+              edge  = "left";
+              dx    = -1;
+              dy    = 0;
+            } else {
+              edge  = "right";
+              dx    = 1;
+              dy    = 0;
+            }
+          }
+        } else if(cval === 10){
+          if(currentCell.flipped){ /* this is actually a flipped case 5 */
+            if(last_dy === -1){
+              edge  = "right";
+              dx    = 1;
+              dy    = 0;
+            } else {
               edge  = "left";
               dx    = -1;
               dy    = 0;
             }
+          } else {  /* real case 10 */
+            if(last_dx === -1){
+              edge  = "top";
+              dx    = 0;
+              dy    = 1;
+            } else {
+              edge  = "bottom";
+              dx    = 0;
+              dy    = -1;
+            }
           }
         }
+      } else {
+        edge  = nextEdge[cval];
+        dx    = dxContour[cval];
+        dy    = dyContour[cval];
       }
+
       pt = getXY(currentCell, edge);
       p.push([k + pt[0], l + pt[1]]);
       clearCell(currentCell);
       k += dx;
       l += dy;
-      prev_cval = cval;
+      last_dx   = dx;
+      last_dy   = dy;
     }
 
     return { path: p, info: "closed" };
