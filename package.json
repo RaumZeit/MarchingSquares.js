@@ -7,8 +7,7 @@
     "example": "example"
   },
   "scripts": {
-    "test": "node ./test/test.js",
-    "debug": "$NODE_DEBUG_OPTION jasmine JASMINE_CONFIG_PATH=test/jasmine.json"
+    "test": "node ./test/test.js"
   },
   "repository": {
     "type": "git",
