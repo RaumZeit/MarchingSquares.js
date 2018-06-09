@@ -118,7 +118,7 @@ var data = [
     [18, 13, 10,  9, 10, 13, 18]
 ];
 
-var bandWidth = upperBand - lowerBandmin;
+var bandWidth = upperBand - lowerBand;
 var band = MarchingSquaresJS.isoBands(data, lowerBand, bandWidth, options);
 ```
 
