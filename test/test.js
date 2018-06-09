@@ -19,7 +19,7 @@ var testCases = fs.readdirSync(directories.in).map(function (filename) {
 });
 
 
-test('IsoBands -', function (t) {
+test('isoBands output', function (t) {
     testCases.forEach(function (inputFile) {
         var name = inputFile.name;
         var data = inputFile.data.matrix;
@@ -36,7 +36,7 @@ test('IsoBands -', function (t) {
 });
 
 
-test('IsoBands input validation', function (t) {
+test('isoBands input validation', function (t) {
     var dataArr = [[1], [2], [3]];
 
     t.throws(function(){isoBands(null, 0, 5)}, /data is required/, 'missing data');

@@ -26,12 +26,12 @@ The above code creates an object `MarchingSquaresJS` with two function attribute
 ```javascript
 MarchingSquaresJS = {
     isoContours : function(data, threshold, options){},
-    isoBands : function(data, minV, bandwidth, options){}
+    isoBands : function(data, lowerBand, bandwidth, options){}
 };
 ```
 
 It is possible to require only one of the implementations, `isoContours` or `isoBands`,
-by requiring the correpsonding implementation directly, e.g.:
+by requiring the corresponding implementation directly, e.g.:
 
 ```javascript
 var MarchingSquaresJS = require('./marchingsquares-isobands.js');
@@ -60,7 +60,7 @@ to retrieve an object with `isoContours` and/or `isoBands` function attributes:
 ```javascript
 MarchingSquaresJS = {
     isoContours : function(data, threshold, options){},
-    isoBands : function(data, minV, bandwidth, options){}
+    isoBands : function(data, lowerBand, bandwidth, options){}
 };
 ```
 
@@ -83,7 +83,7 @@ attributes:
 ```javascript
 MarchingSquaresJS = {
     isoContours : function(data, threshold, options){},
-    isoBands : function(data, minV, bandwidth, options){}
+    isoBands : function(data, lowerBand, bandwidth, options){}
 };
 ```
 
@@ -118,7 +118,7 @@ var data = [
     [18, 13, 10,  9, 10, 13, 18]
 ];
 
-var bandWidth = upperBand - lowerBand;
+var bandWidth = upperBand - lowerBandmin;
 var band = MarchingSquaresJS.isoBands(data, lowerBand, bandWidth, options);
 ```
 
