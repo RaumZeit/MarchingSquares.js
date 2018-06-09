@@ -43,7 +43,7 @@
     if (isNaN(+threshold)) throw new Error('threshold must be a number');
     if (!!options && options.constructor !== 'object') throw new Error('options must be an object');
 
-      /* process options */
+    /* process options */
     options = options ? options : {};
 
     var optionKeys = Object.keys(defaultSettings);
