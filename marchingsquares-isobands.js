@@ -28,6 +28,7 @@
     verbose:          false,
     polygons:         false,
     polygons_full:    false,
+    linearRing:       true,
     interpolate:    function(a, b, minV, maxV) {
       if (a < b) {
         if (a < minV) {
@@ -96,11 +97,11 @@
     if(settings.polygons){
       if (settings.verbose)
         console.log("MarchingSquaresJS-isoBands: returning single polygons for each grid cell");
-      ret = GetPolygons(grid);
+      ret = GetPolygons(grid, settings);
     } else {
       if (settings.verbose)
         console.log("MarchingSquaresJS-isoBands: returning polygon paths for entire data grid");
-      ret = TracePaths(grid);
+      ret = TracePaths(grid, settings);
     }
 
     if(typeof settings.successCallback === 'function')
@@ -1850,7 +1851,7 @@
     return [ k, l ];
   }
 
-  function TracePaths(grid) {
+  function TracePaths(grid, settings) {
     var areas = [];
     var rows = grid.rows;
     var cols = grid.cols;
@@ -1909,8 +1910,12 @@
         }
       }
 
-    if (require_frame)
-      polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0] ]);
+    if (require_frame) {
+      if (settings.linearRing)
+        polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0], [0, 0] ]);
+      else
+        polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0] ]);
+    }
 
     /* finally, start tracing back first polygon(s) */
     for (var j = 0; j < rows; j++) {
@@ -1935,9 +1940,10 @@
               var x                 = i;
               var y                 = j;
               var finalized         = false;
+              var origin            = [ i + ee.path[0][0], j + ee.path[0][1] ];
 
               /* add start coordinate */
-              path.push([ i + ee.path[0][0], j + ee.path[0][1] ]);
+              path.push(origin);
 
               /* start traceback */
               while (!finalized) {
@@ -2037,6 +2043,11 @@
                 }
               }
 
+              if ((settings.linearRing) &&
+                  ((path[path.length - 1][0] !== origin[0]) ||
+                  (path[path.length - 1][1] !== origin[1])))
+                path.push(origin);
+
               polygons.push(path);
             }
           } /* end forall entry sites */
@@ -2047,7 +2058,7 @@
     return polygons;
   }
 
-  function GetPolygons(grid) {
+  function GetPolygons(grid, settings) {
     var areas = [];
     var rows = grid.rows;
     var cols = grid.cols;
@@ -2065,6 +2076,10 @@
               pp[0] += i;
               pp[1] += j;
             });
+
+            if (settings.linearRing)
+              p.push(p[0]);
+
             polygons.push(p);
           });
         }

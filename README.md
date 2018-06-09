@@ -157,6 +157,7 @@ The object has the following fields:
 
 `polygons`: *bool* - if `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons. Default `false`.
 
+`linearRing`: *bool* - if `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Default `true`.
 
 ----
 
