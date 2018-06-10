@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IsoBands example</title>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="../marchingsquares-isobands.js"></script>
+    <script src="../marchingsquares-isocontours.js"></script>
+
+    <style>
+div.tooltip {
+  position: absolute;
+    text-align: center;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: #ededee;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+}
+    </style>
+</head>
+<body>
+
+<div id="vienna"></div>
+
+<script src="vienna_data.js"></script>
+<script>
+
+    var intervals = []
+    for (var i = 0; i <= 256; i+=16)
+      intervals.push(i);
+
+    data = d3.transpose(vienna_basin);
+    var xs = d3.range(0, data[0].length);
+    var ys = d3.range(0, data.length);
+
+    var isoBands = [];
+    for (var i = 1; i < intervals.length; i++) {
+        var lowerBand = intervals[i - 1];
+        var upperBand = intervals[i];
+        var band = MarchingSquaresJS.isoBands(
+                data,
+                lowerBand,
+                upperBand - lowerBand
+        );
+        isoBands.push({"coords": band, "level": i, "val": intervals[i]});
+    }
+
+    iso_lines_array = [];
+
+    var intervals_lines = []
+    for (var i = 16; i < 256; i+=16)
+      intervals_lines.push(i);
+
+    var intervals_lines2 = []
+    for (var i = 8; i < 256; i+=16)
+      intervals_lines2.push(i);
+
+    var isoLines = [];
+    for (var i = 0; i < intervals_lines.length; i++) {
+        var contour = MarchingSquaresJS.isoContours(
+                data,
+                intervals_lines[i],
+                {
+                    linearRing: false
+                }
+        );
+        isoLines.push({"coords": contour, "level": i, "val": intervals_lines[i]});
+    }
+
+    var isoLines2 = [];
+    for (var i = 0; i < intervals_lines2.length; i++) {
+        var contour = MarchingSquaresJS.isoContours(
+                data,
+                intervals_lines2[i],
+                {
+                    linearRing: false
+                }
+        );
+        isoLines2.push({"coords": contour, "level": i, "val": intervals_lines2[i]});
+    }
+
+    iso_lines_array.push({
+      intervals: intervals_lines2,
+      coords:    isoLines2
+    },{
+      intervals: intervals_lines,
+      coords:    isoLines
+    });
+
+    drawLines('#vienna', isoBands, intervals, iso_lines_array);
+
+    var div = d3.select("#vienna").append("div")
+          .attr("class", "tooltip")
+          .style("opacity", 0);
+
+    // helper function
+    function drawLines(divId, bands, intervals, isolines) {
+
+        var marginBottomLabel = 0;
+
+        var width = 800;
+        var height = width * (ys.length / xs.length);
+
+        var xScale = d3.scale.linear()
+                .range([0, width])
+                .domain([Math.min.apply(null, xs), Math.max.apply(null, xs)]);
+
+        var yScale = d3.scale.linear()
+                .range([0, height])
+                .domain([Math.min.apply(null, ys), Math.max.apply(null, ys)]);
+
+        var colours = d3.scale.linear().domain([intervals[0], intervals[2], intervals[4], intervals[intervals.length - 1]])
+                .range(["blue", "darkgreen", "green", "grey"]);
+
+        var svg = d3.select(divId)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height + marginBottomLabel);
+
+        svg.selectAll("path.bands")
+                .data(bands)
+                .enter().append("path")
+                .style("fill", function (d) {
+                    return colours(d.val);
+                })
+                .style("stroke", "none")
+                .style('opacity', 1.0)
+                .attr("d", function (d) {
+                    var p = "";
+                    d.coords.forEach(function (aa) {
+                        p += (d3.svg.line()
+                            .x(function (dat) {
+                                return xScale(dat[0]);
+                            })
+                            .y(function (dat) {
+                                return yScale(dat[1]);
+                            })
+                            .interpolate("linear")
+                        )(aa) + "Z";
+                    });
+                    return p;
+                })
+                .on('mouseover', function () {
+                    d3.select(this).style('fill', d3.rgb(204, 185, 116));
+                })
+                .on('mouseout', function () {
+                    d3.select(this).style('fill', function (d1) {
+                        return colours(d1.val);
+                    })
+                });
+
+        isolines.forEach(function(l, i) {
+          var intervals = l.intervals;
+          var lines     = l.coords;
+
+          svg.selectAll("path.lines_" + i)
+                .data(lines)
+                .enter().append("path")
+                .style("fill", "none")
+                .style("stroke", "black")
+                .style("stroke-width", i + 0.5)
+                .style("stroke-dasharray", i == 0 ? "4,4" : "none")
+                .style('opacity', 1.0)
+                .attr("d", function (d) {
+                    var p = "";
+                    d.coords.forEach(function (aa) {
+                        p += (d3.svg.line()
+                            .x(function (dat) {
+                                return xScale(dat[0]);
+                            })
+                            .y(function (dat) {
+                                return yScale(dat[1]);
+                            })
+                            .interpolate("linear")
+                        )(aa);
+                    });
+                    return p;
+                })
+                .on('mouseover', function (d) {
+                    div.transition()
+                    .duration(50)
+                    .style("opacity", .97);
+                    div.html("Height: " + d.val + " of 255")
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY - 30) + "px");
+                })
+                .on('mouseout', function () {
+                    d3.select(this)
+                    .style('stroke', "black")
+                    .style("stroke-width", 1);
+                    div.transition()
+                    .duration(800)
+                    .style("opacity", 0);
+                });
+          });
+    }
+
+</script>
+</body>
+</html>
