@@ -161,4 +161,4 @@ The object has the following fields:
 
 ----
 
-Copyright (c) 2015, 2015 Ronny Lorenz <ronny@tbi.univie.ac.at>
+Copyright (c) 2015-2018 Ronny Lorenz <ronny@tbi.univie.ac.at>
