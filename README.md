@@ -93,7 +93,7 @@ Again, it is possible to omit one of the script tags to load only one of the imp
 ### Usage
 
 For both implementations, `isoContours` and `isoBands`, the input data must be formatted as a
-regular 2-dimensional grid.
+regular 2-dimensional grid. All grid values must be defined.
 
 #### Isocontours parameters
 The `data` parameter denotes the gridded input data.
@@ -157,7 +157,7 @@ The object has the following fields:
 
 `polygons`: *bool* - if `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons. Default `false`.
 
-`linearRing`: *bool* - if `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Default `true`.
+`linearRing`: *bool* - if `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoContour` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths. Default `true`.
 
 ----
 
