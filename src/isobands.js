@@ -26,7 +26,7 @@ function isoBands(data, minV, bandwidth, options){
   if (bandwidth === undefined || bandwidth === null) throw new Error('bandWidth is required');
   if (isNaN(+minV)) throw new Error('lowerBand must be a number');
   if (isNaN(+bandwidth)) throw new Error('bandWidth must be a number');
-  if (!!options && options.constructor !== 'object') throw new Error('options must be an object');
+  if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
   /* process options */
   options = options ? options : {};
