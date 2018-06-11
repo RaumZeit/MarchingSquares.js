@@ -7,7 +7,7 @@
     "example": "example"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./test/test.js"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,9 @@
     "isoline"
   ],
   "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "devDependencies": {
+    "load-json-file": "^2.0.0",
+    "tape": "4.9.1"
+  }
 }
