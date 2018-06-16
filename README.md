@@ -47,7 +47,7 @@ The above code creates an object `MarchingSquaresJS` with two function attribute
 ```javascript
 MarchingSquaresJS = {
     isoLines : function(data, threshold, options){},
-    isoBands : function(data, lowerBand, bandwidth, options){}
+    isoBands : function(data, lowerBound, bandwidth, options){}
 };
 ```
 
@@ -81,7 +81,7 @@ to retrieve an object with `isoLines` and/or `isoBands` function attributes:
 ```javascript
 MarchingSquaresJS = {
     isoLines : function(data, threshold, options){},
-    isoBands : function(data, lowerBand, bandwidth, options){}
+    isoBands : function(data, lowerBound, bandwidth, options){}
 };
 ```
 
@@ -104,7 +104,7 @@ attributes:
 ```javascript
 MarchingSquaresJS = {
     isoLines : function(data, threshold, options){},
-    isoBands : function(data, lowerBand, bandwidth, options){}
+    isoBands : function(data, lowerBound, bandwidth, options){}
 };
 ```
 
@@ -117,18 +117,76 @@ library that provides both functions in a single file.
 For both implementations, `isoLines` and `isoBands`, the input data must be formatted as a
 regular 2-dimensional grid. All grid values must be defined.
 
-#### Iso Lines parameters
-The `data` parameter denotes the gridded input data.
-The `threshold` parameter denotes the threshold of value that will be encompassed by the *iso line*.
-The optional parameter `options` may be used to change the behavior of this function (See below)
+#### Computing Iso Lines
 
-#### Iso Bands parameters
-The `data` parameter denotes the gridded input data.
-The `lowerBand` parameter denotes the lowest value that will be encompassed by this *iso band*, while
-the `bandWidth` parameter denotes what range of values it will cover. The *iso band* shown below should contain all values between `lowerBand` and `upperBand`.
-The optional parameter `options` may be used to chane the behavior of this function (See below)
+##### Prototype:
 
 ```javascript
+function isoLines(data, threshold, options)
+```
+
+##### Parameters:
+
+`data`: 2-dimensional input data (scalar field). This parameter is `mandatory`.
+
+`threshold`: The constant numerical value that defines the curve function for the *iso line(s)*. This parameter is `mandatory`
+
+`options`: An object with attributes allowing for changes in the behavior of this function (See below). This parameter is `optional`.
+
+##### Returns:
+
+An array of paths representing the *iso lines* for the given `threshold` and input `data`. The paths themselves are
+arrays of coordinates where each coordinate, again, is an array with two entries `[ x, y ]` denoting the `x` and `y`
+position, respectively.
+
+Note, that the paths resemble *linear Rings* by default, i.e. they are closed and have identical first and last
+coordinates. (see the `options` parameter to change the output)
+
+#### Computing Iso Bands
+
+##### Prototype
+
+```javascript
+isoBands(data, lowerBound, bandWidth, options)
+```
+
+##### Parameters:
+
+`data`: 2-dimensional input data (scalar field). This parameter is `mandatory`.
+
+`lowerBound`: The constant numerical value that defines the lower bound of the *iso band*. This parameter is `mandatory`.
+
+`bandWidth`:  The width of the *iso band* with lower bound `lowerBound`, i.e. the range of values.
+
+`options`: An object with attributes allowing for changes in the behavior of this function (See below). This parameter is `optional`.
+
+##### Returns:
+
+An array of paths representing the *iso lines* that enclose the *iso band* of size `bandWidth`. The paths themselves are
+arrays of coordinates where each coordinate, again, is an array with two entries `[ x, y ]` denoting the `x` and `y`
+position, respectively.
+
+
+#### The Options Object
+
+The `options` object may have the following fields:
+
+`options.successCallback`: *function* - called at the end of the process with the band array passed as argument; default `null`.
+
+`options.verbose`: *bool* - logs info messages before each major step of the algorithm; default `false`.
+
+`options.polygons`: *bool* - if `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons. Default `false`.
+
+`options.linearRing`: *bool* - if `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths. Default `true`.
+
+
+#### Example
+
+The *iso band* shown below should contain all values between `lowerBound` and `upperBound`.
+ 
+```javascript
+var lowerBound = 2;
+var upperBound = 3;
 var data = [
     [18, 13, 10,  9, 10, 13, 18],
     [13,  8,  5,  4,  5,  8, 13],
@@ -140,11 +198,11 @@ var data = [
     [18, 13, 10,  9, 10, 13, 18]
 ];
 
-var bandWidth = upperBand - lowerBand;
-var band = MarchingSquaresJS.isoBands(data, lowerBand, bandWidth, options);
+var bandWidth = upperBound - lowerBound;
+var band = MarchingSquaresJS.isoBands(data, lowerBound, bandWidth);
 ```
 
-The return value, `band`, is an array of closed polygons which includes all the point of the grid with values between the limiting *iso lines*:
+The return value, `band`, is an array of closed polygons which includes all the points of the grid with values between the limiting *iso lines*:
 
 ```text
 [Array[21], Array[5]]
@@ -169,28 +227,16 @@ The return value, `band`, is an array of closed polygons which includes all the 
   __proto__: Array[0]
 ```
 
-### Options
-
-The `option` object may have the following fields:
-
-`options.successCallback`: *function* - called at the end of the process with the band array passed as argument; default `null`.
-
-`options.verbose`: *bool* - logs info messages before each major step of the algorithm; default `false`.
-
-`options.polygons`: *bool* - if `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons. Default `false`.
-
-`options.linearRing`: *bool* - if `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths. Default `true`.
-
+You can find more examples in the [examples/](examples/) directory.
 
 ### Misc
 
 #### Deprecation Warnings
 
-_The `isoContour` function was renamed to `isoLines` with `1.3.0` but still remains for backward compatibility reasons!_
-
+The `isoContour` function was renamed to `isoLines` with version `1.3.0` but still remains for backward compatibility reasons!
 Note, that by default both functions return closed polygons, i.e. `options.linearRing = true`. If simple paths are
 required, e.g. when *iso lines* continue outside the grid, `options.linearRing = false` must be passed to the `isoLines`
-or `isoContour` functions.
+or `isoContour` function.
 
 
 ----
