@@ -1,4 +1,4 @@
-define(['d3', 'marchingsquares'], function (d3, MarchingSquaresJS) {
+define(['d3', 'dist/marchingsquares'], function (d3, MarchingSquaresJS) {
 
     var intervals = [0, 4.5, 9, 13.5, 18];
 
