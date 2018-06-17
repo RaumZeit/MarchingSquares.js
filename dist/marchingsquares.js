@@ -1120,9 +1120,9 @@
     /* validation */
     if (!data) throw new Error('data is required');
     if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
-    if (minV === undefined || minV === null) throw new Error('lowerBand is required');
+    if (minV === undefined || minV === null) throw new Error('lowerBound is required');
     if (bandwidth === undefined || bandwidth === null) throw new Error('bandWidth is required');
-    if (isNaN(+minV)) throw new Error('lowerBand must be a number');
+    if (isNaN(+minV)) throw new Error('lowerBound must be a number');
     if (isNaN(+bandwidth)) throw new Error('bandWidth must be a number');
     if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 

@@ -1,20 +1,15 @@
 {
   "name": "marchingsquares",
-  "main": "./src/main.js",
   "description": "MarchingSquaresJS - An implementation of the Marching Squares algorithm featuring Isocontour and Isoband computation.",
   "version": "1.2.3",
+  "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
+  "license": "AGPL-3.0",
+  "main": "./dist/marchingsquares.js",
+  "module": "./dist/marchingsquares-esm.js",
   "directories": {
     "example": "./example",
     "dist": "./dist"
   },
-  "browser": "dist/marchingsquares.js",
-  "files": [
-    "src/main.js",
-    "dist/marchingsquares.js",
-    "dist/marchingsquares-isobands.js",
-    "dist/marchingsquares-isocontours.js",
-    "dist/marchingsquares-isolines.js"
-  ],
   "scripts": {
     "build": "rollup -c",
     "test": "node ./test/test.js"
@@ -22,6 +17,9 @@
   "repository": {
     "type": "git",
     "url": "git@krios.tbi.univie.ac.at:ronny/MarchingSquaresJS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RaumZeit/MarchingSquares.js/issues"
   },
   "keywords": [
     "marchingsquares",
@@ -31,8 +29,6 @@
     "isoband",
     "isoline"
   ],
-  "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
-  "license": "AGPL-3.0",
   "devDependencies": {
     "load-json-file": "^2.0.0",
     "rollup": "^0.60.7",

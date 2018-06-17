@@ -6,13 +6,16 @@ featuring IsoLines and IsoBand computation.
 The implementation computes *iso lines* (*iso contours*) or *iso bands* for gridded scalar
 fields and returns an array of (closed) paths that enclose the respective threshold(s).
 
+----
 
-### Availability
+## Availability
 
 The source code of this module is available through [github](https://github.com/RaumZeit/MarchingSquares.js).
 This module is also available as an [npm package](https://www.npmjs.com/package/marchingsquares).
 
-### INSTALL
+----
+
+### Installation
 
 This module is developed as `ECMAScript 6 module` and uses [rollup.js](https://rollupjs.org) to bundle the final
 javascript libraries. To provide maximum compatibility, the library is wrapped in a
@@ -227,17 +230,27 @@ The return value, `band`, is an array of closed polygons which includes all the 
   __proto__: Array[0]
 ```
 
-You can find more examples in the [examples/](examples/) directory.
+You can find more examples in the [example/](example/) directory.
+
+----
 
 ### Misc
 
 #### Deprecation Warnings
 
 The `isoContour` function was renamed to `isoLines` with version `1.3.0` but still remains for backward compatibility reasons!
-Note, that by default both functions return closed polygons, i.e. `options.linearRing = true`. If simple paths are
-required, e.g. when *iso lines* continue outside the grid, `options.linearRing = false` must be passed to the `isoLines`
-or `isoContour` function.
 
+----
+
+## License
+
+MarchingSquaresJS is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+MarchingSquaresJS grants additional permissions under GNU Affero General
+Public License version 3 section 7. See [LICENSE.md](LICENSE.md) for details.
 
 ----
 

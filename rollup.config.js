@@ -18,6 +18,15 @@ export default [
   {
     input: 'src/main.js',
     output: {
+      name: 'MarchingSquaresJS',
+      file: 'dist/marchingsquares-esm.js',
+      format: 'es',
+      banner: license
+    }
+  },
+  {
+    input: 'src/main.js',
+    output: {
       extend: true,
       name: 'MarchingSquaresJS',
       file: 'dist/marchingsquares.js',
