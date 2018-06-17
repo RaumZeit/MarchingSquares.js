@@ -24,10 +24,9 @@
         [10, 5, 2, 1, 2, 5, 10],
         [13, 8, 5, 4, 5, 8, 13],
         [18, 13, 10, 9, 10, 13, 18],
-        [18, 13, 10, 9, 10, 13, 18]
+        [18, 13, 10, 1, 10, 13, 18]
     ];
 
-    data = d3.transpose(data);
     var xs = d3.range(0, data[0].length);
     var ys = d3.range(0, data.length);
 
@@ -42,7 +41,8 @@
                 {
                     successCallback: function (band) {
                         console.log('Band' + i + ':', band)
-                    }
+                    },
+                    verbose: true
                 }
         );
         isoBands.push({"coords": band, "level": i, "val": intervals[i]});

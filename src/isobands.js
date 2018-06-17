@@ -1,6 +1,7 @@
 
 import { optIsoBands } from './options.js';
 import { extractPolygons, traceBandPaths } from './polygons.js';
+import { quadTree } from './quadtree.js';
 
 
 /*
@@ -45,6 +46,14 @@ function isoBands(data, minV, bandwidth, options){
 
   settings.minV = minV;
   settings.maxV = maxV;
+
+  var tree = quadTree(data, {});
+
+  var cellList = tree.getCells(minV, maxV);
+
+  cellList.forEach(function(cccc) {
+    console.log(cccc);
+  });
 
   var grid = {
     rows: data.length - 1,
