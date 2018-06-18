@@ -1,5 +1,5 @@
 
-import * as interpolate from './interpolation'
+import * as interpolate from './interpolation';
 
 
 function options() {
@@ -9,20 +9,25 @@ function options() {
   this.polygons         = false;
   this.polygons_full    = false;
   this.linearRing       = true;
+  this.quadTree         = false;
 }
 
 
 /* Compose settings specific to IsoBands algorithm */
 function isoBandOptions(userSettings) {
-  var bandOptions = new options();
+  var i,
+      key,
+      val,
+      bandOptions,
+      optionKeys;
 
-  userSettings = userSettings ? userSettings : {};
+  bandOptions   = new options();
+  userSettings  = userSettings ? userSettings : {};
+  optionKeys    = Object.keys(bandOptions);
 
-  var optionKeys = Object.keys(bandOptions);
-
-  for(var i = 0; i < optionKeys.length; i++){
-    var key = optionKeys[i];
-    var val = userSettings[key];
+  for(i = 0; i < optionKeys.length; i++){
+    key = optionKeys[i];
+    val = userSettings[key];
     if ((typeof val !== 'undefined') && (val !== null))
       bandOptions[key] = val;
   }
@@ -41,26 +46,30 @@ function isoBandOptions(userSettings) {
 
 /* Compose settings specific to IsoLines algorithm */
 function isoLineOptions(userSettings) {
-  var LineOptions = new options();
+  var i,
+      key,
+      val,
+      lineOptions,
+      optionKeys;
 
-  userSettings = userSettings ? userSettings : {};
+  lineOptions   = new options();
+  userSettings  = userSettings ? userSettings : {};
+  optionKeys    = Object.keys(lineOptions);
 
-  var optionKeys = Object.keys(LineOptions);
-
-  for(var i = 0; i < optionKeys.length; i++){
-    var key = optionKeys[i];
-    var val = userSettings[key];
+  for(i = 0; i < optionKeys.length; i++){
+    key = optionKeys[i];
+    val = userSettings[key];
     if ((typeof val !== 'undefined') && (val !== null))
-      LineOptions[key] = val;
+      lineOptions[key] = val;
   }
 
   /* restore compatibility */
-  LineOptions.polygons_full  = !LineOptions.polygons;
+  lineOptions.polygons_full  = !lineOptions.polygons;
 
   /* add interpolation functions (not yet user customizable) */
-  LineOptions.interpolate   = interpolate.linear;
+  lineOptions.interpolate   = interpolate.linear;
 
-  return LineOptions;
+  return lineOptions;
 }
 
 

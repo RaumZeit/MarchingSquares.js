@@ -508,4 +508,7 @@ function prepareCell(grid, x, y, settings) {
 }
 
 
-export default isoLines;
+export {
+  isoLines as isoLines,
+  isoLines as isoContours
+};

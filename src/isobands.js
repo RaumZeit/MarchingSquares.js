@@ -12,6 +12,15 @@ import { quadTree } from './quadtree.js';
   outline of connected polygons.
 */
 function isoBands(input, minV, bandWidth, options){
+  var i,
+      j,
+      settings,
+      tree      = null,
+      root      = null, 
+      data      = null,
+      cellGrid  = null,
+      multiBand = false,
+      bandPolygons = [];
 
   /* basic input validation */
   if (!input) throw new Error('data is required');
@@ -19,21 +28,7 @@ function isoBands(input, minV, bandWidth, options){
   if (bandWidth === undefined || bandWidth === null) throw new Error('bandWidth is required');
   if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
-  var settings = optIsoBands(options);
-
-  if(settings.verbose)
-    console.log("MarchingSquaresJS-isoBands: computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
-
-  var i,
-      j,
-      b,
-      c,
-      tree      = null,
-      root      = null, 
-      data      = null,
-      cellGrid  = null,
-      multiBand = false,
-      bandPolygons = [];
+  settings = optIsoBands(options);
 
   /* check for input data */
   if (data instanceof quadTree) {
@@ -106,15 +101,15 @@ function isoBands(input, minV, bandWidth, options){
   var ret = [];
 
   /* loop over all minV values */
-  for (b = 0; b < minV.length; b++) {
+  minV.forEach(function(lowerBound, b) {
     bandPolygons = [];
 
     /* store bounds for current computation in settings object */
-    settings.minV = minV[b];
-    settings.maxV = minV[b] + bandWidth[b];
+    settings.minV = lowerBound;
+    settings.maxV = lowerBound + bandWidth[b];
 
     if(settings.verbose)
-      console.log("MarchingSquaresJS-isoBands: computing isobands for [" + minV + ":" + (minV + bandWidth) + "]");
+      console.log("MarchingSquaresJS-isoBands: computing isobands for [" + lowerBound + ":" + (lowerBound + bandWidth[b]) + "]");
 
     if (settings.polygons) {
       /* compose list of polygons for each single cell */
@@ -137,7 +132,7 @@ function isoBands(input, minV, bandWidth, options){
       } else {
         /* go through entire array of input data */
         for (j = 0; j < data.length - 1; ++j) {
-          for (var i = 0; i < data[0].length - 1; ++i)
+          for (i = 0; i < data[0].length - 1; ++i)
             bandPolygons  = bandPolygons.concat(
                               cell2Polygons(
                                 prepareCell(data,
@@ -189,7 +184,7 @@ function isoBands(input, minV, bandWidth, options){
       ret.push(bandPolygons);
     else
       ret = bandPolygons;
-  }
+  });
 
   if(typeof settings.successCallback === 'function')
     settings.successCallback(ret);
@@ -1871,4 +1866,7 @@ function prepareCell(grid, x, y, opt) {
 }
 
 
-export default isoBands;
+export {
+  isoBands as isoBands,
+  quadTree as prepareData
+};

@@ -1,6 +1,6 @@
 
-import isoLines from './isolines.js';
-import isoBands from './isobands.js';
+import { isoLines } from './isolines.js';
+import { isoBands } from './isobands.js';
 import { quadTree } from './quadtree.js';
 
 export {

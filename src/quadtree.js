@@ -154,6 +154,14 @@ treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
  * range of [lowerbound, upperbound] limits.
  */
 function quadTree(data) {
+  /* do some input checking */
+  if (!data)
+    throw new Error('data is required');
+  if (!Array.isArray(data) ||
+      !Array.isArray(data[0]))
+    throw new Error('data must be scalar field, i.e. array of arrays');
+
+  /* create pre-processing object */
   this.data = data;
   /* root node, i.e. entry to the data */
   this.root = new treeNode(data, 0, 0, data[0].length - 1, data.length - 1);

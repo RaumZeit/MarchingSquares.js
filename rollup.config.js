@@ -48,7 +48,7 @@ export default [
     ]
   },
   {
-    input: 'src/main_isobands.js',
+    input: 'src/isobands.js',
     output: {
       name: 'MarchingSquaresJS',
       file: 'dist/marchingsquares-isobands.js',
@@ -58,7 +58,7 @@ export default [
     }
   },
   {
-    input: 'src/main_isobands.js',
+    input: 'src/isobands.js',
     output: {
       name: 'MarchingSquaresJS',
       file: 'dist/marchingsquares-isobands.min.js',
@@ -71,7 +71,7 @@ export default [
     ]
   },
   {
-    input: 'src/main_isolines.js',
+    input: 'src/isolines.js',
     output: {
       name: 'MarchingSquaresJS',
       file: 'dist/marchingsquares-isolines.js',
@@ -81,7 +81,7 @@ export default [
     }
   },
   {
-    input: 'src/main_isolines.js',
+    input: 'src/isolines.js',
     output: {
       name: 'MarchingSquaresJS',
       file: 'dist/marchingsquares-isolines.min.js',
@@ -94,7 +94,7 @@ export default [
     ]
   },
   {
-    input: 'src/main_isolines.js',
+    input: 'src/isolines.js',
     output: {
       name: 'MarchingSquaresJS',
       file: 'dist/marchingsquares-isocontours.js',
@@ -104,7 +104,7 @@ export default [
     }
   },
   {
-    input: 'src/main_isolines.js',
+    input: 'src/isolines.js',
     output: {
       name: 'MarchingSquaresJS',
       file: 'dist/marchingsquares-isocontours.min.js',
