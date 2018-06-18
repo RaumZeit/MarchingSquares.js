@@ -21,7 +21,10 @@
    *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
    */
   function linear(a, b, v) {
-    return (a < b) ? ((v - a) / (b - a)) : ((a - v) / (a - b));
+    if (a < b)
+      return (v - a) / (b - a);
+
+    return (a - v) / (a - b);
   }
 
 
@@ -35,24 +38,24 @@
    *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
    */
   function linear_ab(a, b, v0, v1) {
-      if (v0 > v1) {
-        v0 = v1;
-        v1 = v0;
-      }
+    var tmp;
 
-      if (a < b) {
-        if (a < v0) {
-          return (v0 - a) / (b - a);
-        } else {
-          return (v1 - a) / (b - a);
-        }
-      } else {
-        if (a > v1) {
-          return (a - v1) / (a - b);
-        } else {
-          return (a - v0) / (a - b);
-        }
-      }
+    if (v0 > v1) {
+      tmp = v0;
+      v0  = v1;
+      v1  = tmp;
+    }
+
+    if (a < b) {
+      if (a < v0)
+        return (v0 - a) / (b - a);
+      else
+        return (v1 - a) / (b - a);
+    } else if (a > v1) {
+      return (a - v1) / (a - b);
+    }
+
+    return (a - v0) / (a - b);
   }
 
 
@@ -65,11 +68,10 @@
    *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
    */
   function linear_a(a, b, minV, maxV) {
-      if (a < b) {
+      if (a < b)
         return (minV - a) / (b - a);
-      } else {
-        return (a - maxV) / (a - b);
-      }
+
+      return (a - maxV) / (a - b);
   }
 
 
@@ -82,37 +84,81 @@
    *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
    */
   function linear_b(a, b, minV, maxV) {
-      if (a < b) {
+      if (a < b)
         return (maxV - a) / (b - a);
-      } else {
-        return (a - minV) / (a - b);
-      }
+
+      return (a - minV) / (a - b);
   }
 
-  /* Settings common to all implemented algorithms */
-  var commonSettings = {
-    successCallback:  null,
-    verbose:          false,
-    polygons:         false,
-    polygons_full:    false,
-    linearRing:       true,
-  };
+  function options() {
+    /* Settings common to all implemented algorithms */
+    this.successCallback  = null;
+    this.verbose          = false;
+    this.polygons         = false;
+    this.polygons_full    = false;
+    this.linearRing       = true;
+    this.quadTree         = false;
+  }
 
 
   /* Compose settings specific to IsoBands algorithm */
-  var optIsoBands = Object.assign(
-  {
-    interpolate:   linear_ab,
-    interpolate_a: linear_a,
-    interpolate_b: linear_b
-  }, commonSettings);
+  function isoBandOptions(userSettings) {
+    var i,
+        key,
+        val,
+        bandOptions,
+        optionKeys;
+
+    bandOptions   = new options();
+    userSettings  = userSettings ? userSettings : {};
+    optionKeys    = Object.keys(bandOptions);
+
+    for(i = 0; i < optionKeys.length; i++){
+      key = optionKeys[i];
+      val = userSettings[key];
+      if ((typeof val !== 'undefined') && (val !== null))
+        bandOptions[key] = val;
+    }
+
+    /* restore compatibility */
+    bandOptions.polygons_full  = !bandOptions.polygons;
+
+    /* add interpolation functions (not yet user customizable) */
+    bandOptions.interpolate   = linear_ab;
+    bandOptions.interpolate_a = linear_a;
+    bandOptions.interpolate_b = linear_b;
+
+    return bandOptions;
+  }
 
 
-  /* Compose settings specific to IsoBands algorithm */
-  var optIsoLines = Object.assign(
-  {
-    interpolate: linear
-  }, commonSettings);
+  /* Compose settings specific to IsoLines algorithm */
+  function isoLineOptions(userSettings) {
+    var i,
+        key,
+        val,
+        lineOptions,
+        optionKeys;
+
+    lineOptions   = new options();
+    userSettings  = userSettings ? userSettings : {};
+    optionKeys    = Object.keys(lineOptions);
+
+    for(i = 0; i < optionKeys.length; i++){
+      key = optionKeys[i];
+      val = userSettings[key];
+      if ((typeof val !== 'undefined') && (val !== null))
+        lineOptions[key] = val;
+    }
+
+    /* restore compatibility */
+    lineOptions.polygons_full  = !lineOptions.polygons;
+
+    /* add interpolation functions (not yet user customizable) */
+    lineOptions.interpolate   = linear;
+
+    return lineOptions;
+  }
 
   function extractPolygons(grid, settings) {
     var rows = grid.rows;
@@ -122,19 +168,14 @@
     for (var j = 0; j < rows; j++) {
       for (var i = 0; i < cols; i++) {
         if (typeof grid.cells[j][i] !== 'undefined') {
-          var cell = grid.cells[j][i];
-
-          cell.polygons.forEach(function(p) {
-            p.forEach(function(pp) {
-              pp[0] += i;
-              pp[1] += j;
-            });
-
-            if (settings.linearRing)
-              p.push(p[0]);
-
-            polygons.push(p);
-          });
+          polygons  = polygons.concat(
+                        cell2Polygons(
+                          grid.cells[j][i],
+                          i,
+                          j,
+                          settings
+                        )
+          );
         }
       }
     }
@@ -142,6 +183,24 @@
     return polygons;
   }
 
+
+  function cell2Polygons(cell, x, y, settings) {
+    var polygons = [];
+
+    cell.polygons.forEach(function(p) {
+      p.forEach(function(pp) {
+        pp[0] += x;
+        pp[1] += y;
+      });
+
+      if (settings.linearRing)
+        p.push(p[0]);
+
+      polygons.push(p);
+    });
+
+    return polygons;
+  }
 
   function entry_coordinate(x, y, mode, path) {
     var k = x;
@@ -180,10 +239,48 @@
   }
 
 
-  function traceBandPaths(grid, settings) {
-    var rows = grid.rows;
-    var cols = grid.cols;
+  function requireFrame(data, lowerBound, upperBound) {
+    var frameRequired = true;
+    var cols          = data[0].length;
+    var rows          = data.length;
+
+    for (var j = 0; j < rows; j++) {
+      if ((data[j][0] < lowerBound) ||
+          (data[j][0] > upperBound) ||
+          (data[j][cols - 1] < lowerBound) ||
+          (data[j][cols - 1] > upperBound)) {
+        frameRequired = false;
+        break;
+      }
+    }
+
+    if ((frameRequired) &&
+        ((data[rows - 1][0] < lowerBound) ||
+        (data[rows - 1][0] > upperBound) ||
+        (data[rows - 1][cols - 1] < lowerBound) ||
+        (data[rows - 1][cols - 1] > upperBound))) {
+      frameRequired = false;
+    }
+
+    if (frameRequired)
+      for (var i = 0; i < cols - 1; i++) {
+        if ((data[0][i] < lowerBound) ||
+            (data[0][i] > upperBound) ||
+            (data[rows - 1][i] < lowerBound) ||
+            (data[rows - 1][i] > upperBound)) {
+          frameRequired = false;
+          break;
+        }
+      }
+
+
+    return frameRequired;
+  }
+
+  function traceBandPaths(data, cellGrid, settings) {
     var polygons = [];
+    var rows = data.length - 1;
+    var cols = data[0].length - 1;
 
     /*
         directions for out-of-grid moves are:
@@ -206,182 +303,159 @@
                            rt: 0, rb: 0
                          };
 
-    /* first, detect whether we need any outer frame */
-    var require_frame = true;
-
-    for (var j = 0; j < rows; j++) {
-      if ((grid.cells[j][0].x0 < grid.minV) ||
-          (grid.cells[j][0].x0 > grid.maxV) ||
-          (grid.cells[j][cols - 1].x1 < grid.minV) ||
-          (grid.cells[j][cols - 1].x1 > grid.maxV)) {
-        require_frame = false;
-        break;
-      }
-    }
-
-    if ((require_frame) &&
-        ((grid.cells[rows - 1][0].x3 < grid.minV) ||
-        (grid.cells[rows - 1][0].x3 > grid.maxV) ||
-        (grid.cells[rows - 1][cols - 1].x2 < grid.minV) ||
-        (grid.cells[rows - 1][cols - 1].x2 > grid.maxV))) {
-      require_frame = false;
-    }
-
-    if (require_frame)
-      for (var i = 0; i < cols - 1; i++) {
-        if ((grid.cells[0][i].x1 < grid.minV) ||
-            (grid.cells[0][i].x1 > grid.maxV) ||
-            (grid.cells[rows - 1][i].x2 < grid.minV) ||
-            (grid.cells[rows - 1][i].x2 > grid.maxV)) {
-          require_frame = false;
-          break;
-        }
-      }
-
-    if (require_frame) {
+    if (requireFrame(data, settings.minV, settings.maxV)) {
       if (settings.linearRing)
         polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0], [0, 0] ]);
       else
         polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0] ]);
     }
+    var nextedge,
+        path,
+        ee,
+        enter,
+        x,
+        y,
+        finalized,
+        origin,
+        cc,
+        dir,
+        count,
+        point;
 
-    /* finally, start tracing back first polygon(s) */
-    for (var j = 0; j < rows; j++) {
-      for (var i = 0; i < cols; i++) {
-        if (typeof grid.cells[j][i] !== 'undefined') {
-          var cell = grid.cells[j][i];
-          if ((cell.cval === 0) || (cell.cval === 85) || (cell.cval === 170))
-            continue;
+    cellGrid.forEach(function(a, i) {
+      a.forEach(function(cell, j) {
 
-          var nextedge = null;
+      //if ((cell.cval === 0) || (cell.cval === 85) || (cell.cval === 170))
+      //  continue;
 
-          /* trace paths for all available edges that go through this cell */
-          for (var e = 0; e < 8; e++) {
-            nextedge = available_starts[e];
+      nextedge = null;
 
-            if (typeof cell.edges[nextedge] === 'object') {
+      /* trace paths for all available edges that go through this cell */
+      for (var e = 0; e < 8; e++) {
+        nextedge = available_starts[e];
 
-              /* start a new, full path */
-              var path              = [];
-              var ee                = cell.edges[nextedge];
-              var enter             = nextedge;
-              var x                 = i;
-              var y                 = j;
-              var finalized         = false;
-              var origin            = [ i + ee.path[0][0], j + ee.path[0][1] ];
+        if (typeof cell.edges[nextedge] !== 'object')
+          continue;
 
-              /* add start coordinate */
-              path.push(origin);
+        /* start a new, full path */
+        path              = [];
+        ee                = cell.edges[nextedge];
+        enter             = nextedge;
+        x                 = i;
+        y                 = j;
+        finalized         = false;
+        origin            = [ i + ee.path[0][0], j + ee.path[0][1] ];
 
-              /* start traceback */
-              while (!finalized) {
-                var cc = grid.cells[y][x];
+        /* add start coordinate */
+        path.push(origin);
 
-                if (typeof cc.edges[enter] !== 'object')
+        /* start traceback */
+        while (!finalized) {
+          cc = cellGrid[x][y];
+
+          if (typeof cc.edges[enter] !== 'object')
+            break;
+
+          ee = cc.edges[enter];
+
+          /* remove edge from cell */
+          delete cc.edges[enter];
+
+          /* add last point of edge to path arra, since we extend a polygon */
+          point = ee.path[1];
+          point[0] += x;
+          point[1] += y;
+          path.push(point);
+
+          enter = ee.move.enter;
+          x     = x + ee.move.x;
+          y     = y + ee.move.y;
+
+          /* handle out-of-grid moves */
+          if ((typeof cellGrid[x] === 'undefined') || (typeof cellGrid[x][y] === 'undefined')) {
+            dir   = 0;
+            count = 0;
+
+            if (x === cols) {
+              x--;
+              dir = 0;  /* move downwards */
+            } else if (x < 0) {
+              x++;
+              dir = 2;  /* move upwards */
+            } else if (y === rows) {
+              y--;
+              dir = 3;  /* move right */
+            } else if (y < 0) {
+              y++;
+              dir = 1;  /* move left */
+            }
+
+            if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
+              finalized = true;
+              enter     = nextedge;
+              break;
+            }
+
+            while (1) {
+              var found_entry = false;
+
+              if (count > 4) {
+                console.log("Direction change counter overflow! This should never happen!");
+                break;
+              }
+
+              cc = cellGrid[x][y];
+
+              /* check for re-entry */
+              for (var s = 0; s < valid_entries[dir].length; s++) {
+                var ve = valid_entries[dir][s];
+                if (typeof cc.edges[ve] === 'object') {
+                  /* found re-entry */
+                  ee = cc.edges[ve];
+                  path.push(entry_coordinate(x, y, dir, ee.path));
+                  enter = ve;
+                  found_entry = true;
                   break;
-
-                var ee = cc.edges[enter];
-
-                /* remove edge from cell */
-                delete cc.edges[enter];
-
-                /* add last point of edge to path arra, since we extend a polygon */
-                var point = ee.path[1];
-                point[0] += x;
-                point[1] += y;
-                path.push(point);
-
-                enter = ee.move.enter;
-                x     = x + ee.move.x;
-                y     = y + ee.move.y;
-
-                /* handle out-of-grid moves */
-                if ((typeof grid.cells[y] === 'undefined') || (typeof grid.cells[y][x] === 'undefined')) {
-                  var dir   = 0;
-                  var count = 0;
-
-                  if (x === cols) {
-                    x--;
-                    dir = 0;  /* move downwards */
-                  } else if (x < 0) {
-                    x++;
-                    dir = 2;  /* move upwards */
-                  } else if (y === rows) {
-                    y--;
-                    dir = 3;  /* move right */
-                  } else if (y < 0) {
-                    y++;
-                    dir = 1;  /* move left */
-                  }
-
-                  if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
-                    finalized = true;
-                    enter     = nextedge;
-                    break;
-                  }
-
-                  while (1) {
-                    var found_entry = false;
-
-                    if (count > 4) {
-                      console.log("Direction change counter overflow! This should never happen!");
-                      break;
-                    }
-
-                    cc = grid.cells[y][x];
-
-                    /* check for re-entry */
-                    for (var s = 0; s < valid_entries[dir].length; s++) {
-                      var ve = valid_entries[dir][s];
-                      if (typeof cc.edges[ve] === 'object') {
-                        /* found re-entry */
-                        ee = cc.edges[ve];
-                        path.push(entry_coordinate(x, y, dir, ee.path));
-                        enter = ve;
-                        found_entry = true;
-                        break;
-                      }
-                    }
-
-                    if (found_entry) {
-                      break;
-                    } else {
-                      path.push(skip_coordinate(x, y, dir));
-
-                      x += add_x[dir];
-                      y += add_y[dir];
-
-                      /* change direction if we'e moved out of grid again */
-                      if ((typeof grid.cells[y] === 'undefined') || (typeof grid.cells[y][x] === 'undefined')) {
-                        x -= add_x[dir];
-                        y -= add_y[dir];
-
-                        dir = (dir + 1) % 4;
-                        count++;
-                      }
-
-                      if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
-                        /* we are back where we started off, so finalize the polygon */
-                        finalized = true;
-                        enter     = nextedge;
-                        break;
-                      }
-                    }
-                  }
                 }
               }
 
-              if ((settings.linearRing) &&
-                  ((path[path.length - 1][0] !== origin[0]) ||
-                  (path[path.length - 1][1] !== origin[1])))
-                path.push(origin);
+              if (found_entry) {
+                break;
+              } else {
+                path.push(skip_coordinate(x, y, dir));
 
-              polygons.push(path);
+                x += add_x[dir];
+                y += add_y[dir];
+
+                /* change direction if we'e moved out of grid again */
+                if ((typeof cellGrid[x] === 'undefined') || (typeof cellGrid[x][y] === 'undefined')) {
+                  x -= add_x[dir];
+                  y -= add_y[dir];
+
+                  dir = (dir + 1) % 4;
+                  count++;
+                }
+
+                if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
+                  /* we are back where we started off, so finalize the polygon */
+                  finalized = true;
+                  enter     = nextedge;
+                  break;
+                }
+              }
             }
-          } /* end forall entry sites */
+          }
         }
-      }
-    }
+
+        if ((settings.linearRing) &&
+            ((path[path.length - 1][0] !== origin[0]) ||
+            (path[path.length - 1][1] !== origin[1])))
+            path.push(origin);
+
+          polygons.push(path);
+      } /* end forall entry sites */
+    }); /* end foreach i */
+    }); /* end foreach j */
 
     return polygons;
   }
@@ -595,8 +669,6 @@
   */
 
   function isoLines(data, threshold, options){
-    var settings = {};
-
     /* validation */
       if (!data) throw new Error('data is required');
       if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
@@ -605,23 +677,10 @@
       if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
     /* process options */
-    options = options ? options : {};
-
-    var optionKeys = Object.keys(optIsoLines);
-
-    for(var i = 0; i < optionKeys.length; i++){
-      var key = optionKeys[i];
-      var val = options[key];
-      val = ((typeof val !== 'undefined') && (val !== null)) ? val : optIsoLines[key];
-
-      settings[key] = val;
-    }
+    var settings = isoLineOptions(options);
 
     if(settings.verbose)
       console.log("MarchingSquaresJS-isoContours: computing isocontour for " + threshold);
-
-    /* restore compatibility */
-    settings.polygons_full  = !settings.polygons;
 
     var grid = {
       rows:       data.length - 1,
@@ -1107,73 +1166,34 @@
     return cell;
   }
 
-  var treeNode = {
-      /* minimum value in subtree under this node */
-      lowerBound: null,
-      /* maximum value in subtree under this node */
-      upperBound: null,
+  /* quadTree node constructor */
+  function treeNode(data, x, y, dx, dy) {
+    /* left-bottom corner of current quadrant */
+    this.x = x;
+    this.y = y;
 
-      /*
-       *  child nodes are layed out in the following way:
-       *
-       *  (x, y + 1) ---- (x + 1, y + 1)
-       *  |             |              |
-       *  |      D      |      C       |
-       *  |             |              |
-       *  |----------------------------|
-       *  |             |              |
-       *  |      A      |      B       |
-       *  |             |              |
-       *  (x, y) ------------ (x + 1, y)
-       */
-      childA: null,
-      childB: null,
-      childC: null,
-      childD: null
-  };
+    /* minimum value in subtree under this node */
+    this.lowerBound = null;
+    /* maximum value in subtree under this node */
+    this.upperBound = null;
 
-
-  treeNode.getCells = function(lowerBound, upperBound) {
-    var cells = [];
-
-    if ((this.lowerBound > upperBound) || (this.upperBound < lowerBound))
-      return cells;
-
-    if (!(this.childA || this.childB || this.childC || this.childD)) {
-      if ((this.lowerBound <= lowerBound) ||
-          (this.upperBound >= upperBound)) {
-        cells.push({
-          x: this.x,
-          y: this.y
-        });
-      }
-    } else {
-      if (this.childA)
-        cells = cells.concat(this.childA.getCells(lowerBound, upperBound));
-
-      if (this.childB)
-        cells = cells.concat(this.childB.getCells(lowerBound, upperBound));
-
-      if (this.childC)
-        cells = cells.concat(this.childC.getCells(lowerBound, upperBound));
-
-      if (this.childD)
-        cells = cells.concat(this.childD.getCells(lowerBound, upperBound));
-    }
-
-    //console.log(cells);
-
-    return cells;
-  };
-
-  function constructTree(data, x, y, dx, dy) {
-
-    var node = Object.assign({
-      x: x,
-      y: y,
-      dx: dx,
-      dy: dy
-    }, treeNode);
+    /*
+     *  child nodes are layed out in the following way:
+     *
+     *  (x, y + 1) ---- (x + 1, y + 1)
+     *  |             |              |
+     *  |      D      |      C       |
+     *  |             |              |
+     *  |----------------------------|
+     *  |             |              |
+     *  |      A      |      B       |
+     *  |             |              |
+     *  (x, y) ------------ (x + 1, y)
+     */
+    this.childA = null;
+    this.childB = null;
+    this.childC = null;
+    this.childD = null;
 
     var dx_tmp = dx,
         dy_tmp = dy,
@@ -1182,13 +1202,13 @@
 
     if ((dx === 1) && (dy === 1)) {
       /* do not further subdivision */
-      node.lowerBound = Math.min(
+      this.lowerBound = Math.min(
                           data[y][x],
                           data[y][x + 1],
                           data[y + 1][x + 1],
                           data[y + 1][x]
                         );
-      node.upperBound = Math.max(
+      this.upperBound = Math.max(
                           data[y][x],
                           data[y][x + 1],
                           data[y + 1][x + 1],
@@ -1221,31 +1241,77 @@
         dy_tmp = 1 << (msb_y - 1);
       }
 
-      node.childA = constructTree(data, x, y, dx_tmp, dy_tmp);
-      node.lowerBound = node.childA.lowerBound;
-      node.upperBound = node.childA.upperBound;
+      this.childA = new treeNode(data, x, y, dx_tmp, dy_tmp);
+      this.lowerBound = this.childA.lowerBound;
+      this.upperBound = this.childA.upperBound;
 
       if (dx - dx_tmp > 0) {
-        node.childB = constructTree(data, x + dx_tmp, y, dx - dx_tmp, dy_tmp);
-        node.lowerBound = Math.min(node.lowerBound, node.childB.lowerBound);
-        node.upperBound = Math.max(node.upperBound, node.childB.upperBound);
+        this.childB = new treeNode(data, x + dx_tmp, y, dx - dx_tmp, dy_tmp);
+        this.lowerBound = Math.min(this.lowerBound, this.childB.lowerBound);
+        this.upperBound = Math.max(this.upperBound, this.childB.upperBound);
 
         if (dy - dy_tmp > 0) {
-          node.childC = constructTree(data, x + dx_tmp, y + dy_tmp, dx - dx_tmp, dy - dy_tmp);
-          node.lowerBound = Math.min(node.lowerBound, node.childC.lowerBound);
-          node.upperBound = Math.max(node.upperBound, node.childC.upperBound);
+          this.childC = new treeNode(data, x + dx_tmp, y + dy_tmp, dx - dx_tmp, dy - dy_tmp);
+          this.lowerBound = Math.min(this.lowerBound, this.childC.lowerBound);
+          this.upperBound = Math.max(this.upperBound, this.childC.upperBound);
         }
       }
 
       if (dy - dy_tmp > 0) {
-        node.childD = constructTree(data, x, y + dy_tmp, dx_tmp, dy - dy_tmp);
-        node.lowerBound = Math.min(node.lowerBound, node.childD.lowerBound);
-        node.upperBound = Math.max(node.upperBound, node.childD.upperBound);
+        this.childD = new treeNode(data, x, y + dy_tmp, dx_tmp, dy - dy_tmp);
+        this.lowerBound = Math.min(this.lowerBound, this.childD.lowerBound);
+        this.upperBound = Math.max(this.upperBound, this.childD.upperBound);
       }
     }
-
-    return node;
   }
+
+
+  /**
+   *  Retrieve a list of cells within a particular range of values by
+   *  recursivly traversing the quad tree to it's leaves.
+   *
+   *  @param  subsumed  If 'true' include all cells that are completely
+   *                    subsumed within the specified range. Otherwise,
+   *                    return only cells where at least one corner is
+   *                    outside the specified range.
+   *
+   *  @return   An array of objects 'o' where each object has exactly two
+   *            properties: 'o.x' and 'o.y' denoting the left-bottom corner
+   *            of the corresponding cell.
+   */
+  treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
+    var cells = [];
+
+    subsumed = subsumed || true;
+
+    if ((this.lowerBound > upperBound) || (this.upperBound < lowerBound))
+      return cells;
+
+    if (!(this.childA || this.childB || this.childC || this.childD)) {
+      if ((subsumed) ||
+          (this.lowerBound <= lowerBound) ||
+          (this.upperBound >= upperBound)) {
+        cells.push({
+          x: this.x,
+          y: this.y
+        });
+      }
+    } else {
+      if (this.childA)
+        cells = cells.concat(this.childA.cellsInBand(lowerBound, upperBound, subsumed));
+
+      if (this.childB)
+        cells = cells.concat(this.childB.cellsInBand(lowerBound, upperBound, subsumed));
+
+      if (this.childC)
+        cells = cells.concat(this.childC.cellsInBand(lowerBound, upperBound, subsumed));
+
+      if (this.childD)
+        cells = cells.concat(this.childD.cellsInBand(lowerBound, upperBound, subsumed));
+    }
+
+    return cells;
+  };
 
 
   /*
@@ -1254,11 +1320,18 @@
    * field where values are within a particular
    * range of [lowerbound, upperbound] limits.
    */
-  function quadTree(data, options) {
-    /* root node, i.e. entry to the data */
-    var root = constructTree(data, 0, 0, data[0].length - 1, data.length - 1);
+  function quadTree(data) {
+    /* do some input checking */
+    if (!data)
+      throw new Error('data is required');
+    if (!Array.isArray(data) ||
+        !Array.isArray(data[0]))
+      throw new Error('data must be scalar field, i.e. array of arrays');
 
-    return root;
+    /* create pre-processing object */
+    this.data = data;
+    /* root node, i.e. entry to the data */
+    this.root = new treeNode(data, 0, 0, data[0].length - 1, data.length - 1);
   }
 
   /*
@@ -1268,77 +1341,180 @@
     either for individual polygons within each grid cell, or the
     outline of connected polygons.
   */
-  function isoBands(data, minV, bandwidth, options){
-    var settings = {};
+  function isoBands(input, minV, bandWidth, options){
+    var i,
+        j,
+        settings,
+        tree      = null,
+        root      = null, 
+        data      = null,
+        cellGrid  = null,
+        multiBand = false,
+        bandPolygons = [];
 
-    /* validation */
-    if (!data) throw new Error('data is required');
-    if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
+    /* basic input validation */
+    if (!input) throw new Error('data is required');
     if (minV === undefined || minV === null) throw new Error('lowerBound is required');
-    if (bandwidth === undefined || bandwidth === null) throw new Error('bandWidth is required');
-    if (isNaN(+minV)) throw new Error('lowerBound must be a number');
-    if (isNaN(+bandwidth)) throw new Error('bandWidth must be a number');
+    if (bandWidth === undefined || bandWidth === null) throw new Error('bandWidth is required');
     if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
-    /* process options */
-    options = options ? options : {};
+    settings = isoBandOptions(options);
 
-    var optionKeys = Object.keys(optIsoBands);
-
-    for(var i = 0; i < optionKeys.length; i++){
-      var key = optionKeys[i];
-      var val = options[key];
-      val = ((typeof val !== 'undefined') && (val !== null)) ? val : optIsoBands[key];
-
-      settings[key] = val;
-    }
-
-    if(settings.verbose)
-      console.log("MarchingSquaresJS-isoBands: computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
-
-    /* restore compatibility */
-    settings.polygons_full  = !settings.polygons;
-
-    var maxV = minV + Math.abs(bandwidth);
-
-    settings.minV = minV;
-    settings.maxV = maxV;
-
-    var tree = quadTree(data, {});
-
-    var cellList = tree.getCells(minV, maxV);
-
-    cellList.forEach(function(cccc) {
-      console.log(cccc);
-    });
-
-    var grid = {
-      rows: data.length - 1,
-      cols: data[0].length - 1,
-      cells: [],
-      minV: minV,
-      maxV: maxV
-    };
-
-    for (var j = 0; j < grid.rows; ++j) {
-      grid.cells[j] = [];
-      for (var i = 0; i < grid.cols; ++i)
-        grid.cells[j][i] = prepareCell$1(data, i, j, settings);
-    }
-
-    var ret;
-
-    if(settings.polygons){
-      if (settings.verbose)
-        console.log("MarchingSquaresJS-isoBands: returning single polygons for each grid cell");
-
-      ret = extractPolygons(grid, settings);
+    /* check for input data */
+    if (data instanceof quadTree) {
+      tree = input;
+      root = input.root;
+      data = input.data;
+    } else if (Array.isArray(input) && Array.isArray(input[0])) {
+      data = input;
     } else {
-      if (settings.verbose)
+      throw new Error("input is neither array of arrays nor object retrieved from 'prepareData()'");
+    }
+
+    /* check and prepare input thresholds */
+    if (Array.isArray(minV)) {
+      multiBand = true;
+
+      /* check if all minV are numbers */
+      for (i = 0; i < minV.length; i++)
+        if (isNaN(+minV[i]))
+          throw new Error('lowerBound[' + i + '] is not a number');
+
+      if (Array.isArray(bandWidth)) {
+        if (minV.length !== bandWidth.length)
+          throw new Error("lowerBound and bandWidth have unequal lengths");
+
+        /* check bandwidth values */
+        for (i = 0; i < bandWidth.length; i++)
+          if (isNaN(+bandWidth[i]))
+            throw new Error('bandWidth[' + i + '] is not a number');
+      } else {
+        if (isNaN(+bandWidth))
+          throw new Error('bandWidth must be a number');
+
+        var bw = [];
+        for (i = 0; i < minV.length; i++) {
+          bw.push(bandWidth);
+        }
+        bandWidth = bw;
+      }
+    } else {
+      if (isNaN(+minV))
+        throw new Error('lowerBound must be a number');
+
+      minV = [ minV ];
+
+      if (isNaN(+bandWidth))
+        throw new Error('bandWidth must be a number');
+
+      bandWidth = [ bandWidth ];
+    }
+
+    /* create quadTree root node if not already present */
+    if ((settings.quadTree) && (!root)) {
+      tree = new quadTree(data);
+      root = tree.root;
+      data = tree.data;
+    }
+
+    if (settings.verbose) {
+      if(settings.polygons)
+        console.log("MarchingSquaresJS-isoBands: returning single polygons for each grid cell");
+      else
         console.log("MarchingSquaresJS-isoBands: returning polygon paths for entire data grid");
 
-      ret = traceBandPaths(grid, settings);
+      if (multiBand)
+        console.log("MarchingSquaresJS-isoBands: multiple bands requested, returning array of band polygons instead of polygons for a single band");
     }
+
+    /* Done with all input validation, now let's start computing stuff */
+    var ret = [];
+
+    /* loop over all minV values */
+    minV.forEach(function(lowerBound, b) {
+      bandPolygons = [];
+
+      /* store bounds for current computation in settings object */
+      settings.minV = lowerBound;
+      settings.maxV = lowerBound + bandWidth[b];
+
+      if(settings.verbose)
+        console.log("MarchingSquaresJS-isoBands: computing isobands for [" + lowerBound + ":" + (lowerBound + bandWidth[b]) + "]");
+
+      if (settings.polygons) {
+        /* compose list of polygons for each single cell */
+        if (settings.quadTree) {
+          /* go through list of cells retrieved from quadTree */
+          root
+          .cellsInBand(settings.minV, settings.maxV, settings.polygons ? true : false)
+          .forEach(function(c) {
+            bandPolygons  = bandPolygons.concat(
+                              cell2Polygons(
+                                prepareCell$1(data,
+                                            c.x,
+                                            c.y,
+                                            settings),
+                                c.x,
+                                c.y,
+                                settings
+                            ));
+          });
+        } else {
+          /* go through entire array of input data */
+          for (j = 0; j < data.length - 1; ++j) {
+            for (i = 0; i < data[0].length - 1; ++i)
+              bandPolygons  = bandPolygons.concat(
+                                cell2Polygons(
+                                  prepareCell$1(data,
+                                              i,
+                                              j,
+                                              settings),
+                                i,
+                                j,
+                                settings
+                              ));
+          }
+        }
+      } else {
+        /* sparse grid of input data cells */
+        cellGrid = [];
+
+        /* compose list of polygons for entire input grid */
+        if (settings.quadTree) {
+          /* collect the cells */
+          root
+          .cellsInBand(settings.minV, settings.maxV, settings.polygons ? true : false)
+          .forEach(function(c) {
+            if (typeof cellGrid[c.x] === 'undefined')
+              cellGrid[c.x] = [];
+
+            cellGrid[c.x][c.y] = prepareCell$1(data,
+                                             c.x,
+                                             c.y,
+                                             settings);
+          });
+        } else {
+          /* prepare cells */
+          for (i = 0; i < data[0].length - 1; ++i) {
+            cellGrid[i] = [];
+            for (j = 0; j < data.length - 1; ++j) {
+              cellGrid[i][j]  = prepareCell$1(data,
+                                            i,
+                                            j,
+                                            settings);
+            }
+          }
+        }
+
+        bandPolygons = traceBandPaths(data, cellGrid, settings);
+      }
+
+      /* finally, add polygons to output array */
+      if (multiBand)
+        ret.push(bandPolygons);
+      else
+        ret = bandPolygons;
+    });
 
     if(typeof settings.successCallback === 'function')
       settings.successCallback(ret);
@@ -2557,7 +2733,9 @@
       x0:           x0,
       x1:           x1,
       x2:           x2,
-      x3:           x3
+      x3:           x3,
+      x:            x,
+      y:            y
     };
 
     /*
@@ -3020,6 +3198,7 @@
   exports.isoLines = isoLines;
   exports.isoBands = isoBands;
   exports.isoContours = isoLines;
+  exports.prepareData = quadTree;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

@@ -21,98 +21,50 @@
    *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
    */
   function linear(a, b, v) {
-    return (a < b) ? ((v - a) / (b - a)) : ((a - v) / (a - b));
+    if (a < b)
+      return (v - a) / (b - a);
+
+    return (a - v) / (a - b);
+  }
+
+  function options() {
+    /* Settings common to all implemented algorithms */
+    this.successCallback  = null;
+    this.verbose          = false;
+    this.polygons         = false;
+    this.polygons_full    = false;
+    this.linearRing       = true;
+    this.quadTree         = false;
   }
 
 
-  /*
-   *  Compute the distance of a pair of values ('v0', 'v1') from 'a' through linear interpolation
-   *  between the values of 'a' and 'b'
-   *
-   *  This function assumes that exactly one value, 'v0' or 'v1', is actually located
-   *  between 'a' and 'b', and choses the right one automagically
-   *
-   *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
-   */
-  function linear_ab(a, b, v0, v1) {
-      if (v0 > v1) {
-        v0 = v1;
-        v1 = v0;
-      }
+  /* Compose settings specific to IsoLines algorithm */
+  function isoLineOptions(userSettings) {
+    var i,
+        key,
+        val,
+        lineOptions,
+        optionKeys;
 
-      if (a < b) {
-        if (a < v0) {
-          return (v0 - a) / (b - a);
-        } else {
-          return (v1 - a) / (b - a);
-        }
-      } else {
-        if (a > v1) {
-          return (a - v1) / (a - b);
-        } else {
-          return (a - v0) / (a - b);
-        }
-      }
+    lineOptions   = new options();
+    userSettings  = userSettings ? userSettings : {};
+    optionKeys    = Object.keys(lineOptions);
+
+    for(i = 0; i < optionKeys.length; i++){
+      key = optionKeys[i];
+      val = userSettings[key];
+      if ((typeof val !== 'undefined') && (val !== null))
+        lineOptions[key] = val;
+    }
+
+    /* restore compatibility */
+    lineOptions.polygons_full  = !lineOptions.polygons;
+
+    /* add interpolation functions (not yet user customizable) */
+    lineOptions.interpolate   = linear;
+
+    return lineOptions;
   }
-
-
-  /*
-   *  Compute the distance of a pair of values ('v0', 'v1') from 'a' through linear interpolation
-   *  between the values of 'a' and 'b'
-   *
-   *  This function automagically choses the value 'vN' that is closer to 'a'
-   *
-   *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
-   */
-  function linear_a(a, b, minV, maxV) {
-      if (a < b) {
-        return (minV - a) / (b - a);
-      } else {
-        return (a - maxV) / (a - b);
-      }
-  }
-
-
-  /*
-   *  Compute the distance of a pair of values ('v0', 'v1') from 'a' through linear interpolation
-   *  between the values of 'a' and 'b'
-   *
-   *  This function automagically choses the value 'vN' that is closer to 'b'
-   *
-   *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
-   */
-  function linear_b(a, b, minV, maxV) {
-      if (a < b) {
-        return (maxV - a) / (b - a);
-      } else {
-        return (a - minV) / (a - b);
-      }
-  }
-
-  /* Settings common to all implemented algorithms */
-  var commonSettings = {
-    successCallback:  null,
-    verbose:          false,
-    polygons:         false,
-    polygons_full:    false,
-    linearRing:       true,
-  };
-
-
-  /* Compose settings specific to IsoBands algorithm */
-  var optIsoBands = Object.assign(
-  {
-    interpolate:   linear_ab,
-    interpolate_a: linear_a,
-    interpolate_b: linear_b
-  }, commonSettings);
-
-
-  /* Compose settings specific to IsoBands algorithm */
-  var optIsoLines = Object.assign(
-  {
-    interpolate: linear
-  }, commonSettings);
 
   function extractPolygons(grid, settings) {
     var rows = grid.rows;
@@ -122,19 +74,14 @@
     for (var j = 0; j < rows; j++) {
       for (var i = 0; i < cols; i++) {
         if (typeof grid.cells[j][i] !== 'undefined') {
-          var cell = grid.cells[j][i];
-
-          cell.polygons.forEach(function(p) {
-            p.forEach(function(pp) {
-              pp[0] += i;
-              pp[1] += j;
-            });
-
-            if (settings.linearRing)
-              p.push(p[0]);
-
-            polygons.push(p);
-          });
+          polygons  = polygons.concat(
+                        cell2Polygons(
+                          grid.cells[j][i],
+                          i,
+                          j,
+                          settings
+                        )
+          );
         }
       }
     }
@@ -142,6 +89,24 @@
     return polygons;
   }
 
+
+  function cell2Polygons(cell, x, y, settings) {
+    var polygons = [];
+
+    cell.polygons.forEach(function(p) {
+      p.forEach(function(pp) {
+        pp[0] += x;
+        pp[1] += y;
+      });
+
+      if (settings.linearRing)
+        p.push(p[0]);
+
+      polygons.push(p);
+    });
+
+    return polygons;
+  }
 
   function entry_coordinate(x, y, mode, path) {
     var k = x;
@@ -388,8 +353,6 @@
   */
 
   function isoLines(data, threshold, options){
-    var settings = {};
-
     /* validation */
       if (!data) throw new Error('data is required');
       if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
@@ -398,23 +361,10 @@
       if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
     /* process options */
-    options = options ? options : {};
-
-    var optionKeys = Object.keys(optIsoLines);
-
-    for(var i = 0; i < optionKeys.length; i++){
-      var key = optionKeys[i];
-      var val = options[key];
-      val = ((typeof val !== 'undefined') && (val !== null)) ? val : optIsoLines[key];
-
-      settings[key] = val;
-    }
+    var settings = isoLineOptions(options);
 
     if(settings.verbose)
       console.log("MarchingSquaresJS-isoContours: computing isocontour for " + threshold);
-
-    /* restore compatibility */
-    settings.polygons_full  = !settings.polygons;
 
     var grid = {
       rows:       data.length - 1,
