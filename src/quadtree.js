@@ -99,7 +99,20 @@ function treeNode(data, x, y, dx, dy) {
 }
 
 
-treeNode.prototype.cellInBand = function(lowerBound, upperBound, subsumed) {
+/**
+ *  Retrieve a list of cells within a particular range of values by
+ *  recursivly traversing the quad tree to it's leaves.
+ *
+ *  @param  subsumed  If 'true' include all cells that are completely
+ *                    subsumed within the specified range. Otherwise,
+ *                    return only cells where at least one corner is
+ *                    outside the specified range.
+ *
+ *  @return   An array of objects 'o' where each object has exactly two
+ *            properties: 'o.x' and 'o.y' denoting the left-bottom corner
+ *            of the corresponding cell.
+ */
+treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
   var cells = [];
 
   subsumed = subsumed || true;
@@ -118,16 +131,16 @@ treeNode.prototype.cellInBand = function(lowerBound, upperBound, subsumed) {
     }
   } else {
     if (this.childA)
-      cells = cells.concat(this.childA.cellInBand(lowerBound, upperBound, subsumed));
+      cells = cells.concat(this.childA.cellsInBand(lowerBound, upperBound, subsumed));
 
     if (this.childB)
-      cells = cells.concat(this.childB.cellInBand(lowerBound, upperBound, subsumed));
+      cells = cells.concat(this.childB.cellsInBand(lowerBound, upperBound, subsumed));
 
     if (this.childC)
-      cells = cells.concat(this.childC.cellInBand(lowerBound, upperBound, subsumed));
+      cells = cells.concat(this.childC.cellsInBand(lowerBound, upperBound, subsumed));
 
     if (this.childD)
-      cells = cells.concat(this.childD.cellInBand(lowerBound, upperBound, subsumed));
+      cells = cells.concat(this.childD.cellsInBand(lowerBound, upperBound, subsumed));
   }
 
   return cells;
@@ -141,8 +154,9 @@ treeNode.prototype.cellInBand = function(lowerBound, upperBound, subsumed) {
  * range of [lowerbound, upperbound] limits.
  */
 function quadTree(data) {
+  this.data = data;
   /* root node, i.e. entry to the data */
-  return new treeNode(data, 0, 0, data[0].length - 1, data.length - 1);
+  this.root = new treeNode(data, 0, 0, data[0].length - 1, data.length - 1);
 }
 
 
