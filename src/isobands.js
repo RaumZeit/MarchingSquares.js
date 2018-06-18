@@ -1,6 +1,6 @@
 
 import { optIsoBands } from './options.js';
-import { extractPolygons, traceBandPaths } from './polygons.js';
+import { cell2Polygons, traceBandPaths } from './polygons.js';
 import { quadTree } from './quadtree.js';
 
 
@@ -11,17 +11,15 @@ import { quadTree } from './quadtree.js';
   either for individual polygons within each grid cell, or the
   outline of connected polygons.
 */
-function isoBands(data, minV, bandwidth, options){
+function isoBands(input, minV, bandWidth, options){
   var settings = {};
 
-  /* validation */
-  if (!data) throw new Error('data is required');
-  if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
+  /* basic input validation */
+  if (!input) throw new Error('data is required');
   if (minV === undefined || minV === null) throw new Error('lowerBound is required');
-  if (bandwidth === undefined || bandwidth === null) throw new Error('bandWidth is required');
-  if (isNaN(+minV)) throw new Error('lowerBound must be a number');
-  if (isNaN(+bandwidth)) throw new Error('bandWidth must be a number');
+  if (bandWidth === undefined || bandWidth === null) throw new Error('bandWidth is required');
   if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
+
 
   /* process options */
   options = options ? options : {};
@@ -36,51 +34,175 @@ function isoBands(data, minV, bandwidth, options){
     settings[key] = val;
   }
 
-  if(settings.verbose)
-    console.log("MarchingSquaresJS-isoBands: computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
-
   /* restore compatibility */
   settings.polygons_full  = !settings.polygons;
 
-  var maxV = minV + Math.abs(bandwidth);
 
-  settings.minV = minV;
-  settings.maxV = maxV;
+  var i,
+      j,
+      b,
+      c,
+      tree      = null,
+      root      = null, 
+      data      = null,
+      cellGrid  = null,
+      multiBand = false,
+      bandPolygons = [];
 
-  var tree = quadTree(data, {});
-
-  var cellList = tree.getCells(minV, maxV);
-
-  cellList.forEach(function(cccc) {
-    console.log(cccc);
-  });
-
-  var grid = {
-    rows: data.length - 1,
-    cols: data[0].length - 1,
-    cells: [],
-    minV: minV,
-    maxV: maxV
-  };
-
-  for (var j = 0; j < grid.rows; ++j) {
-    grid.cells[j] = [];
-    for (var i = 0; i < grid.cols; ++i)
-      grid.cells[j][i] = prepareCell(data, i, j, settings);
+  /* check for input data */
+  if (data instanceof quadTree) {
+    tree = input;
+    root = input.root;
+    data = input.data;
+  } else if (Array.isArray(input) && Array.isArray(input[0])) {
+    data = input;
+  } else {
+    throw new Error("input is neither array of arrays nor object retrieved from 'prepareData()'");
   }
 
-  var ret;
+  /* check and prepare input thresholds */
+  if (Array.isArray(minV)) {
+    multiBand = true;
 
-  if(settings.polygons){
-    if (settings.verbose)
-      console.log("MarchingSquaresJS-isoBands: returning single polygons for each grid cell");
+    /* check if all minV are numbers */
+    for (i = 0; i < minV.length; i++)
+      if (isNaN(+minV[i]))
+        throw new Error('lowerBound[' + i + '] is not a number');
 
-    ret = extractPolygons(grid, settings);
+    if (Array.isArray(bandWidth)) {
+      if (minV.length !== bandWidth.length)
+        throw new Error("lowerBound and bandWidth have unequal lengths");
+
+      /* check bandwidth values */
+      for (i = 0; i < bandWidth.length; i++)
+        if (isNaN(+bandWidth[i]))
+          throw new Error('bandWidth[' + i + '] is not a number');
+    } else {
+      if (isNaN(+bandWidth))
+        throw new Error('bandWidth must be a number');
+
+      var bw = [];
+      for (i = 0; i < minV.length; i++) {
+        bw.push(bandWidth);
+      }
+      bandWidth = bw;
+    }
   } else {
-    if (settings.verbose)
+    if (isNaN(+minV))
+      throw new Error('lowerBound must be a number');
+
+    minV = [ minV ];
+
+    if (isNaN(+bandWidth))
+      throw new Error('bandWidth must be a number');
+
+    bandWidth = [ bandWidth ];
+  }
+
+  /* create quadTree root node if not already present */
+  if ((settings.quadTree) && (!root)) {
+    tree = new quadTree(data);
+    root = tree.root;
+    data = tree.data;
+  }
+
+  if (settings.verbose) {
+    if(settings.polygons)
+      console.log("MarchingSquaresJS-isoBands: returning single polygons for each grid cell");
+    else
       console.log("MarchingSquaresJS-isoBands: returning polygon paths for entire data grid");
 
-    ret = traceBandPaths(grid, settings);
+    if (multiBand)
+      console.log("MarchingSquaresJS-isoBands: multiple bands requested, returning array of band polygons instead of polygons for a single band");
+  }
+
+  /* Done with all input validation, now let's start computing stuff */
+  var ret = [];
+
+  /* loop over all minV values */
+  for (b = 0; b < minV.length; b++) {
+    bandPolygons = [];
+
+    /* store bounds for current computation in settings object */
+    settings.minV = minV[b];
+    settings.maxV = minV[b] + bandWidth[b];
+
+    if(settings.verbose)
+      console.log("MarchingSquaresJS-isoBands: computing isobands for [" + minV + ":" + (minV + bandWidth) + "]");
+
+    if (settings.polygons) {
+      /* compose list of polygons for each single cell */
+      if (settings.quadTree) {
+        /* go through list of cells retrieved from quadTree */
+        root
+        .cellsInBand(settings.minV, settings.maxV, settings.polygons ? true : false)
+        .forEach(function(c) {
+          bandPolygons  = bandPolygons.concat(
+                            cell2Polygons(
+                              prepareCell(data,
+                                          c.x,
+                                          c.y,
+                                          settings),
+                              c.x,
+                              c.y,
+                              settings
+                          ));
+        });
+      } else {
+        /* go through entire array of input data */
+        for (j = 0; j < data.length - 1; ++j) {
+          for (var i = 0; i < data[0].length - 1; ++i)
+            bandPolygons  = bandPolygons.concat(
+                              cell2Polygons(
+                                prepareCell(data,
+                                            i,
+                                            j,
+                                            settings),
+                              i,
+                              j,
+                              settings
+                            ));
+        }
+      }
+    } else {
+      /* sparse grid of input data cells */
+      cellGrid = [];
+
+      /* compose list of polygons for entire input grid */
+      if (settings.quadTree) {
+        /* collect the cells */
+        root
+        .cellsInBand(settings.minV, settings.maxV, settings.polygons ? true : false)
+        .forEach(function(c) {
+          if (typeof cellGrid[c.x] === 'undefined')
+            cellGrid[c.x] = [];
+
+          cellGrid[c.x][c.y] = prepareCell(data,
+                                           c.x,
+                                           c.y,
+                                           settings);
+        });
+      } else {
+        /* prepare cells */
+        for (i = 0; i < data[0].length - 1; ++i) {
+          cellGrid[i] = [];
+          for (j = 0; j < data.length - 1; ++j) {
+            cellGrid[i][j]  = prepareCell(data,
+                                          i,
+                                          j,
+                                          settings);
+          }
+        }
+      }
+
+      bandPolygons = traceBandPaths(data, cellGrid, settings);
+    }
+
+    /* finally, add polygons to output array */
+    if (multiBand)
+      ret.push(bandPolygons);
+    else
+      ret = bandPolygons;
   }
 
   if(typeof settings.successCallback === 'function')
@@ -1300,7 +1422,9 @@ function prepareCell(grid, x, y, opt) {
     x0:           x0,
     x1:           x1,
     x2:           x2,
-    x3:           x3
+    x3:           x3,
+    x:            x,
+    y:            y
   };
 
   /*
