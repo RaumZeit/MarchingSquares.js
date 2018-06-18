@@ -12,7 +12,6 @@ import { quadTree } from './quadtree.js';
   outline of connected polygons.
 */
 function isoBands(input, minV, bandWidth, options){
-  var settings = {};
 
   /* basic input validation */
   if (!input) throw new Error('data is required');
@@ -20,23 +19,10 @@ function isoBands(input, minV, bandWidth, options){
   if (bandWidth === undefined || bandWidth === null) throw new Error('bandWidth is required');
   if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
+  var settings = optIsoBands(options);
 
-  /* process options */
-  options = options ? options : {};
-
-  var optionKeys = Object.keys(optIsoBands);
-
-  for(var i = 0; i < optionKeys.length; i++){
-    var key = optionKeys[i];
-    var val = options[key];
-    val = ((typeof val !== 'undefined') && (val !== null)) ? val : optIsoBands[key];
-
-    settings[key] = val;
-  }
-
-  /* restore compatibility */
-  settings.polygons_full  = !settings.polygons;
-
+  if(settings.verbose)
+    console.log("MarchingSquaresJS-isoBands: computing isobands for [" + minV + ":" + (minV + bandwidth) + "]");
 
   var i,
       j,

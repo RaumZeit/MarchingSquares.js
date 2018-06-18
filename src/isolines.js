@@ -10,8 +10,6 @@ import { extractPolygons, traceLinePaths } from './polygons.js';
 */
 
 function isoLines(data, threshold, options){
-  var settings = {};
-
   /* validation */
     if (!data) throw new Error('data is required');
     if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
@@ -20,23 +18,10 @@ function isoLines(data, threshold, options){
     if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
   /* process options */
-  options = options ? options : {};
-
-  var optionKeys = Object.keys(optIsoLines);
-
-  for(var i = 0; i < optionKeys.length; i++){
-    var key = optionKeys[i];
-    var val = options[key];
-    val = ((typeof val !== 'undefined') && (val !== null)) ? val : optIsoLines[key];
-
-    settings[key] = val;
-  }
+  var settings = optIsoLines(options);
 
   if(settings.verbose)
     console.log("MarchingSquaresJS-isoContours: computing isocontour for " + threshold);
-
-  /* restore compatibility */
-  settings.polygons_full  = !settings.polygons;
 
   var grid = {
     rows:       data.length - 1,
