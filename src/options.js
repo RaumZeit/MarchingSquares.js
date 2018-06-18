@@ -17,7 +17,8 @@ var optIsoBands = Object.assign(
 {
   interpolate:   interpolate.linear_ab,
   interpolate_a: interpolate.linear_a,
-  interpolate_b: interpolate.linear_b
+  interpolate_b: interpolate.linear_b,
+  quadTree:      false
 }, commonSettings);
 
 
