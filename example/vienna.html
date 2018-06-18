@@ -29,24 +29,53 @@ div.tooltip {
 <script>
 
     var intervals = []
-    for (var i = 0; i <= 256; i+=16)
+    var bandWidths = []
+    for (var i = 0; i <= 256; i+=8) {
       intervals.push(i);
+      bandWidths.push(8);
+    }
 
     data = d3.transpose(vienna_basin);
     var xs = d3.range(0, data[0].length);
     var ys = d3.range(0, data.length);
 
     var isoBands = [];
-    for (var i = 1; i < intervals.length; i++) {
+    if (1) {
+      intervals.pop(intervals.length - 1);
+      bandWidths.pop(bandWidths.length - 1);
+      var bands = MarchingSquaresJS.isoBands(
+                    data,
+                    intervals,
+                    bandWidths,
+                    {
+                      quadTree: true
+                    }
+      );
+      bands.forEach(function(b, i) {
+        isoBands.push({
+          "coords": b,
+          "level": i + 1,
+          "val": intervals[i] + bandWidths[i]
+        });
+      });
+    } else {
+      for (var i = 1; i < intervals.length; i++) {
         var lowerBand = intervals[i - 1];
         var upperBand = intervals[i];
         var band = MarchingSquaresJS.isoBands(
                 data,
                 lowerBand,
-                upperBand - lowerBand
+                upperBand - lowerBand,
+                {
+                  polygons: false,
+                  quadTree: false
+                }
         );
         isoBands.push({"coords": band, "level": i, "val": intervals[i]});
+      }
     }
+
+    console.log(isoBands);
 
     iso_lines_array = [];
 
@@ -112,8 +141,8 @@ div.tooltip {
                 .range([0, height])
                 .domain([Math.min.apply(null, ys), Math.max.apply(null, ys)]);
 
-        var colours = d3.scale.linear().domain([intervals[0], intervals[2], intervals[4], intervals[intervals.length - 1]])
-                .range(["blue", "darkgreen", "green", "grey"]);
+        var colours = d3.scale.linear().domain([intervals[0], intervals[2], intervals[4], intervals[Math.floor(intervals.length / 2)], intervals[intervals.length - 1]])
+                .range(["blue", "darkgreen", "green", "brown", "grey"]);
 
         var svg = d3.select(divId)
                 .append("svg")
