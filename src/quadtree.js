@@ -1,71 +1,32 @@
 
-var treeNode = {
-    /* minimum value in subtree under this node */
-    lowerBound: null,
-    /* maximum value in subtree under this node */
-    upperBound: null,
+/* quadTree node constructor */
+function treeNode(data, x, y, dx, dy) {
+  /* left-bottom corner of current quadrant */
+  this.x = x;
+  this.y = y;
 
-    /*
-     *  child nodes are layed out in the following way:
-     *
-     *  (x, y + 1) ---- (x + 1, y + 1)
-     *  |             |              |
-     *  |      D      |      C       |
-     *  |             |              |
-     *  |----------------------------|
-     *  |             |              |
-     *  |      A      |      B       |
-     *  |             |              |
-     *  (x, y) ------------ (x + 1, y)
-     */
-    childA: null,
-    childB: null,
-    childC: null,
-    childD: null
-};
+  /* minimum value in subtree under this node */
+  this.lowerBound = null;
+  /* maximum value in subtree under this node */
+  this.upperBound = null;
 
-
-treeNode.getCells = function(lowerBound, upperBound) {
-  var cells = [];
-
-  if ((this.lowerBound > upperBound) || (this.upperBound < lowerBound))
-    return cells;
-
-  if (!(this.childA || this.childB || this.childC || this.childD)) {
-    if ((this.lowerBound <= lowerBound) ||
-        (this.upperBound >= upperBound)) {
-      cells.push({
-        x: this.x,
-        y: this.y
-      });
-    }
-  } else {
-    if (this.childA)
-      cells = cells.concat(this.childA.getCells(lowerBound, upperBound));
-
-    if (this.childB)
-      cells = cells.concat(this.childB.getCells(lowerBound, upperBound));
-
-    if (this.childC)
-      cells = cells.concat(this.childC.getCells(lowerBound, upperBound));
-
-    if (this.childD)
-      cells = cells.concat(this.childD.getCells(lowerBound, upperBound));
-  }
-
-  //console.log(cells);
-
-  return cells;
-};
-
-function constructTree(data, x, y, dx, dy) {
-
-  var node = Object.assign({
-    x: x,
-    y: y,
-    dx: dx,
-    dy: dy
-  }, treeNode);
+  /*
+   *  child nodes are layed out in the following way:
+   *
+   *  (x, y + 1) ---- (x + 1, y + 1)
+   *  |             |              |
+   *  |      D      |      C       |
+   *  |             |              |
+   *  |----------------------------|
+   *  |             |              |
+   *  |      A      |      B       |
+   *  |             |              |
+   *  (x, y) ------------ (x + 1, y)
+   */
+  this.childA = null;
+  this.childB = null;
+  this.childC = null;
+  this.childD = null;
 
   var dx_tmp = dx,
       dy_tmp = dy,
@@ -74,13 +35,13 @@ function constructTree(data, x, y, dx, dy) {
 
   if ((dx === 1) && (dy === 1)) {
     /* do not further subdivision */
-    node.lowerBound = Math.min(
+    this.lowerBound = Math.min(
                         data[y][x],
                         data[y][x + 1],
                         data[y + 1][x + 1],
                         data[y + 1][x]
                       );
-    node.upperBound = Math.max(
+    this.upperBound = Math.max(
                         data[y][x],
                         data[y][x + 1],
                         data[y + 1][x + 1],
@@ -113,31 +74,64 @@ function constructTree(data, x, y, dx, dy) {
       dy_tmp = 1 << (msb_y - 1);
     }
 
-    node.childA = constructTree(data, x, y, dx_tmp, dy_tmp);
-    node.lowerBound = node.childA.lowerBound;
-    node.upperBound = node.childA.upperBound;
+    this.childA = new treeNode(data, x, y, dx_tmp, dy_tmp);
+    this.lowerBound = this.childA.lowerBound;
+    this.upperBound = this.childA.upperBound;
 
     if (dx - dx_tmp > 0) {
-      node.childB = constructTree(data, x + dx_tmp, y, dx - dx_tmp, dy_tmp);
-      node.lowerBound = Math.min(node.lowerBound, node.childB.lowerBound);
-      node.upperBound = Math.max(node.upperBound, node.childB.upperBound);
+      this.childB = new treeNode(data, x + dx_tmp, y, dx - dx_tmp, dy_tmp);
+      this.lowerBound = Math.min(this.lowerBound, this.childB.lowerBound);
+      this.upperBound = Math.max(this.upperBound, this.childB.upperBound);
 
       if (dy - dy_tmp > 0) {
-        node.childC = constructTree(data, x + dx_tmp, y + dy_tmp, dx - dx_tmp, dy - dy_tmp);
-        node.lowerBound = Math.min(node.lowerBound, node.childC.lowerBound);
-        node.upperBound = Math.max(node.upperBound, node.childC.upperBound);
+        this.childC = new treeNode(data, x + dx_tmp, y + dy_tmp, dx - dx_tmp, dy - dy_tmp);
+        this.lowerBound = Math.min(this.lowerBound, this.childC.lowerBound);
+        this.upperBound = Math.max(this.upperBound, this.childC.upperBound);
       }
     }
 
     if (dy - dy_tmp > 0) {
-      node.childD = constructTree(data, x, y + dy_tmp, dx_tmp, dy - dy_tmp);
-      node.lowerBound = Math.min(node.lowerBound, node.childD.lowerBound);
-      node.upperBound = Math.max(node.upperBound, node.childD.upperBound);
+      this.childD = new treeNode(data, x, y + dy_tmp, dx_tmp, dy - dy_tmp);
+      this.lowerBound = Math.min(this.lowerBound, this.childD.lowerBound);
+      this.upperBound = Math.max(this.upperBound, this.childD.upperBound);
     }
   }
-
-  return node;
 }
+
+
+treeNode.prototype.cellInBand = function(lowerBound, upperBound, subsumed) {
+  var cells = [];
+
+  subsumed = subsumed || true;
+
+  if ((this.lowerBound > upperBound) || (this.upperBound < lowerBound))
+    return cells;
+
+  if (!(this.childA || this.childB || this.childC || this.childD)) {
+    if ((subsumed) ||
+        (this.lowerBound <= lowerBound) ||
+        (this.upperBound >= upperBound)) {
+      cells.push({
+        x: this.x,
+        y: this.y
+      });
+    }
+  } else {
+    if (this.childA)
+      cells = cells.concat(this.childA.cellInBand(lowerBound, upperBound, subsumed));
+
+    if (this.childB)
+      cells = cells.concat(this.childB.cellInBand(lowerBound, upperBound, subsumed));
+
+    if (this.childC)
+      cells = cells.concat(this.childC.cellInBand(lowerBound, upperBound, subsumed));
+
+    if (this.childD)
+      cells = cells.concat(this.childD.cellInBand(lowerBound, upperBound, subsumed));
+  }
+
+  return cells;
+};
 
 
 /*
@@ -146,11 +140,9 @@ function constructTree(data, x, y, dx, dy) {
  * field where values are within a particular
  * range of [lowerbound, upperbound] limits.
  */
-function quadTree(data, options) {
+function quadTree(data) {
   /* root node, i.e. entry to the data */
-  var root = constructTree(data, 0, 0, data[0].length - 1, data.length - 1);
-
-  return root;
+  return new treeNode(data, 0, 0, data[0].length - 1, data.length - 1);
 }
 
 
