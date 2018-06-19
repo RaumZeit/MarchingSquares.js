@@ -1,11 +1,5 @@
 
-import {isoLines} from './isolines.js';
-import {isoBands} from './isobands.js';
-import {quadTree} from './quadtree.js';
-
-export {
-  isoLines as isoLines,
-  isoBands as isoBands,
-  isoLines as isoContours,
-  quadTree as prepareData
-};
+export * from './isolines.js';
+export {isoLines as isoContours} from './isolines.js';
+export * from './isobands.js';
+export * from './quadtree.js';
