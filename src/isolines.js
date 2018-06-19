@@ -38,7 +38,7 @@ function isoLines(input, threshold, options) {
   } else if (Array.isArray(input) && Array.isArray(input[0])) {
     data = input;
   } else {
-    throw new Error('input is neither array of arrays nor object retrieved from \'prepareData()\'');
+    throw new Error('input is neither array of arrays nor object retrieved from \'quadTree()\'');
   }
 
   /* check and prepare input threshold(s) */
