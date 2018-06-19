@@ -38,6 +38,7 @@ Thumbs.db
 *.tar
 *.zip
 
-# npm generated content
+# generated content
 package-lock.json
+dist/
 
