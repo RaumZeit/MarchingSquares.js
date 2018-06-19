@@ -115,7 +115,7 @@ function treeNode(data, x, y, dx, dy) {
 treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
   var cells = [];
 
-  subsumed = subsumed || true;
+  subsumed = (typeof subsumed === 'undefined') ? true : subsumed;
 
   if ((this.lowerBound > upperBound) || (this.upperBound < lowerBound))
     return cells;
@@ -141,6 +141,40 @@ treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
 
     if (this.childD)
       cells = cells.concat(this.childD.cellsInBand(lowerBound, upperBound, subsumed));
+  }
+
+  return cells;
+};
+
+
+treeNode.prototype.cellsBelowThreshold = function(threshold, subsumed) {
+  var cells = [];
+
+  subsumed = (typeof subsumed === 'undefined') ? true : subsumed;
+
+  if (this.lowerBound > threshold)
+    return cells;
+
+  if (!(this.childA || this.childB || this.childC || this.childD)) {
+    if ((subsumed) ||
+        (this.upperBound >= threshold)) {
+      cells.push({
+        x: this.x,
+        y: this.y
+      });
+    }
+  } else {
+    if (this.childA)
+      cells = cells.concat(this.childA.cellsBelowThreshold(threshold, subsumed));
+
+    if (this.childB)
+      cells = cells.concat(this.childB.cellsBelowThreshold(threshold, subsumed));
+
+    if (this.childC)
+      cells = cells.concat(this.childC.cellsBelowThreshold(threshold, subsumed));
+
+    if (this.childD)
+      cells = cells.concat(this.childD.cellsBelowThreshold(threshold, subsumed));
   }
 
   return cells;

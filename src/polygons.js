@@ -1,30 +1,4 @@
 
-
-function extractPolygons(grid, settings) {
-  var areas = [];
-  var rows = grid.rows;
-  var cols = grid.cols;
-  var polygons = [];
-
-  for (var j = 0; j < rows; j++) {
-    for (var i = 0; i < cols; i++) {
-      if (typeof grid.cells[j][i] !== 'undefined') {
-        polygons  = polygons.concat(
-          cell2Polygons(
-            grid.cells[j][i],
-            i,
-            j,
-            settings
-          )
-        );
-      }
-    }
-  }
-
-  return polygons;
-}
-
-
 function cell2Polygons(cell, x, y, settings) {
   var polygons = [];
 
@@ -44,50 +18,50 @@ function cell2Polygons(cell, x, y, settings) {
 }
 
 function entry_coordinate(x, y, mode, path) {
-  var k = x;
-  var l = y;
-
   if (mode === 0) { /* down */
-    k += 1;
-    l += path[0][1];
+    x += 1;
+    y += path[0][1];
   } else if (mode === 1) { /* left */
-    k += path[0][0];
+    x += path[0][0];
   } else if (mode === 2) { /* up */
-    l += path[0][1];
+    y += path[0][1];
   } else if (mode === 3) { /* right */
-    k += path[0][0];
-    l += 1;
+    x += path[0][0];
+    y += 1;
   }
 
-  return [ k, l ];
+  return [ x, y ];
 }
 
 
 function skip_coordinate(x, y, mode) {
-  var k = x;
-  var l = y;
-
   if (mode === 0) { /* down */
-    k++;
+    x++;
   } else if (mode === 1) { /* left */
     /* do nothing */
   } else if (mode === 2) { /* up */
-    l++;
+    y++;
   } else if (mode === 3) { /* right */
-    k++;
-    l++;
+    x++;
+    y++;
   }
 
-  return [ k, l ];
+  return [ x, y ];
 }
 
 
 function requireFrame(data, lowerBound, upperBound) {
-  var frameRequired = true;
-  var cols          = data[0].length;
-  var rows          = data.length;
+  var frameRequired,
+    cols,
+    rows,
+    i,
+    j;
 
-  for (var j = 0; j < rows; j++) {
+  frameRequired = true;
+  cols          = data[0].length;
+  rows          = data.length;
+
+  for (j = 0; j < rows; j++) {
     if ((data[j][0] < lowerBound) ||
         (data[j][0] > upperBound) ||
         (data[j][cols - 1] < lowerBound) ||
@@ -106,7 +80,7 @@ function requireFrame(data, lowerBound, upperBound) {
   }
 
   if (frameRequired)
-    for (var i = 0; i < cols - 1; i++) {
+    for (i = 0; i < cols - 1; i++) {
       if ((data[0][i] < lowerBound) ||
           (data[0][i] > upperBound) ||
           (data[rows - 1][i] < lowerBound) ||
@@ -120,7 +94,63 @@ function requireFrame(data, lowerBound, upperBound) {
   return frameRequired;
 }
 
+
+function requireLineFrame(data, threshold) {
+  var frameRequired,
+    cols,
+    rows,
+    i,
+    j;
+
+  frameRequired = true;
+  cols          = data[0].length;
+  rows          = data.length;
+
+  for (j = 0; j < rows; j++) {
+    if ((data[j][0] >= threshold) ||
+        (data[j][cols - 1] >= threshold)) {
+      frameRequired = false;
+      break;
+    }
+  }
+
+  if ((frameRequired) &&
+      ((data[rows - 1][0] >= threshold) ||
+      (data[rows - 1][cols - 1] >= threshold))) {
+    frameRequired = false;
+  }
+
+  if (frameRequired)
+    for (i = 0; i < cols - 1; i++) {
+      if ((data[0][i] >= threshold) ||
+          (data[rows - 1][i] > threshold)) {
+        frameRequired = false;
+        break;
+      }
+    }
+
+  return frameRequired;
+}
+
+
 function traceBandPaths(data, cellGrid, settings) {
+  var nextedge,
+    path,
+    e,
+    ee,
+    s,
+    ve,
+    enter,
+    x,
+    y,
+    finalized,
+    origin,
+    cc,
+    dir,
+    count,
+    point,
+    found_entry;
+
   var polygons = [];
   var rows = data.length - 1;
   var cols = data[0].length - 1;
@@ -155,33 +185,12 @@ function traceBandPaths(data, cellGrid, settings) {
   }
 
   /* finally, start tracing back first polygon(s) */
-  var keys = Object.keys(cellList);
-  var nextedge,
-    path,
-    ee,
-    enter,
-    x,
-    y,
-    finalized,
-    origin,
-    key,
-    cc,
-    dir,
-    count,
-    point;
-
   cellGrid.forEach(function(a, i) {
     a.forEach(function(cell, j) {
-
-    /*
-     *if ((cell.cval === 0) || (cell.cval === 85) || (cell.cval === 170))
-     *  continue;
-     */
-
       nextedge = null;
 
       /* trace paths for all available edges that go through this cell */
-      for (var e = 0; e < 8; e++) {
+      for (e = 0; e < 8; e++) {
         nextedge = available_starts[e];
 
         if (typeof cell.edges[nextedge] !== 'object')
@@ -247,18 +256,16 @@ function traceBandPaths(data, cellGrid, settings) {
             }
 
             while (1) {
-              var found_entry = false;
+              found_entry = false;
 
-              if (count > 4) {
-                console.log('Direction change counter overflow! This should never happen!');
-                break;
-              }
+              if (count > 4)
+                throw new Error('Direction change counter overflow! This should never happen!');
 
               cc = cellGrid[x][y];
 
               /* check for re-entry */
-              for (var s = 0; s < valid_entries[dir].length; s++) {
-                var ve = valid_entries[dir][s];
+              for (s = 0; s < valid_entries[dir].length; s++) {
+                ve = valid_entries[dir][s];
                 if (typeof cc.edges[ve] === 'object') {
                 /* found re-entry */
                   ee = cc.edges[ve];
@@ -311,11 +318,26 @@ function traceBandPaths(data, cellGrid, settings) {
 }
 
 
-function traceLinePaths(grid, settings) {
-  var areas = [];
-  var rows = grid.rows;
-  var cols = grid.cols;
+function traceLinePaths(data, cellGrid, settings) {
+  var nextedge,
+    e,
+    ee,
+    cc,
+    path,
+    enter,
+    x,
+    y,
+    finalized,
+    origin,
+    point,
+    dir,
+    count,
+    found_entry,
+    ve;
+
   var polygons = [];
+  var rows = data.length - 1;
+  var cols = data[0].length - 1;
 
   /*
    * directions for out-of-grid moves are:
@@ -339,32 +361,7 @@ function traceLinePaths(grid, settings) {
   };
 
   /* first, detect whether we need any outer frame */
-  var require_frame = true;
-
-  for (var j = 0; j < rows; j++) {
-    if ((grid.cells[j][0].x0 >= grid.threshold) ||
-        (grid.cells[j][cols - 1].x1 >= grid.threshold)) {
-      require_frame = false;
-      break;
-    }
-  }
-
-  if ((require_frame) &&
-      ((grid.cells[rows - 1][0].x3 >=  grid.threshold) ||
-      (grid.cells[rows - 1][cols - 1].x2 >= grid.threshold))) {
-    require_frame = false;
-  }
-
-  if (require_frame)
-    for (var i = 0; i < cols - 1; i++) {
-      if ((grid.cells[0][i].x1 >= grid.threshold) ||
-          (grid.cells[rows - 1][i].x2 > grid.threshold)) {
-        require_frame = false;
-        break;
-      }
-    }
-
-  if (require_frame) {
+  if (requireLineFrame(data, settings.minV, settings.maxV)) {
     if (settings.linearRing)
       polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0], [0, 0] ]);
     else
@@ -372,147 +369,142 @@ function traceLinePaths(grid, settings) {
   }
 
   /* finally, start tracing back first polygon(s) */
-  for (var j = 0; j < rows; j++) {
-    for (var i = 0; i < cols; i++) {
-      if (typeof grid.cells[j][i] !== 'undefined') {
-        var cell = grid.cells[j][i];
-        if (cell.cval === 15)
+
+  cellGrid.forEach(function(a, i) {
+    a.forEach(function(cell, j) {
+      nextedge = null;
+
+      /* trace paths for all available edges that go through this cell */
+      for (e = 0; e < 4; e++) {
+        nextedge = valid_entries[e];
+
+        if (typeof cell.edges[nextedge] !== 'object')
           continue;
 
-        var nextedge = null;
+        /* start a new, full path */
+        path              = [];
+        ee                = cell.edges[nextedge];
+        enter             = nextedge;
+        x                 = i;
+        y                 = j;
+        finalized         = false;
+        origin            = [ i + ee.path[0][0], j + ee.path[0][1] ];
 
-        /* trace paths for all available edges that go through this cell */
-        for (var e = 0; e < 4; e++) {
-          nextedge = valid_entries[e];
+        /* add start coordinate */
+        path.push(origin);
 
-          if (typeof cell.edges[nextedge] === 'object') {
-            /* start a new, full path */
-            var path              = [];
-            var ee                = cell.edges[nextedge];
-            var enter             = nextedge;
-            var x                 = i;
-            var y                 = j;
-            var finalized         = false;
-            var origin            = [ i + ee.path[0][0], j + ee.path[0][1] ];
+        /* start traceback */
+        while (!finalized) {
+          cc = cellGrid[x][y];
 
-            /* add start coordinate */
-            path.push(origin);
+          if (typeof cc.edges[enter] !== 'object')
+            break;
 
-            /* start traceback */
-            while (!finalized) {
-              var cc = grid.cells[y][x];
+          ee = cc.edges[enter];
 
-              if (typeof cc.edges[enter] !== 'object')
+          /* remove edge from cell */
+          delete cc.edges[enter];
+
+          /* add last point of edge to path arra, since we extend a polygon */
+          point = ee.path[1];
+          point[0] += x;
+          point[1] += y;
+          path.push(point);
+
+          enter = ee.move.enter;
+          x     = x + ee.move.x;
+          y     = y + ee.move.y;
+
+          /* handle out-of-grid moves */
+          if ((typeof cellGrid[x] === 'undefined') ||
+              (typeof cellGrid[x][y] === 'undefined')) {
+
+            if (!settings.linearRing)
+              break;
+
+            dir   = 0;
+            count = 0;
+
+            if (x === cols) {
+              x--;
+              dir = 0;  /* move downwards */
+            } else if (x < 0) {
+              x++;
+              dir = 2;  /* move upwards */
+            } else if (y === rows) {
+              y--;
+              dir = 3;  /* move right */
+            } else if (y < 0) {
+              y++;
+              dir = 1;  /* move left */
+            }
+
+            if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
+              finalized = true;
+              enter     = nextedge;
+              break;
+            }
+
+            while (1) {
+              found_entry = false;
+
+              if (count > 4)
+                throw new Error('Direction change counter overflow! This should never happen!');
+
+              cc = cellGrid[x][y];
+
+              /* check for re-entry */
+              ve = valid_entries[dir];
+              if (typeof cc.edges[ve] === 'object') {
+                /* found re-entry */
+                ee = cc.edges[ve];
+                path.push(entry_coordinate(x, y, dir, ee.path));
+                enter = ve;
+                found_entry = true;
                 break;
+              }
 
-              var ee = cc.edges[enter];
+              if (found_entry) {
+                break;
+              } else {
+                path.push(skip_coordinate(x, y, dir));
 
-              /* remove edge from cell */
-              delete cc.edges[enter];
+                x += add_x[dir];
+                y += add_y[dir];
 
-              /* add last point of edge to path arra, since we extend a polygon */
-              var point = ee.path[1];
-              point[0] += x;
-              point[1] += y;
-              path.push(point);
+                /* change direction if we'e moved out of grid again */
+                if ((typeof cellGrid[x] === 'undefined') ||
+                  (typeof cellGrid[x][y] === 'undefined')) {
+                  x -= add_x[dir];
+                  y -= add_y[dir];
 
-              enter = ee.move.enter;
-              x     = x + ee.move.x;
-              y     = y + ee.move.y;
-
-              /* handle out-of-grid moves */
-              if ((typeof grid.cells[y] === 'undefined') ||
-                  (typeof grid.cells[y][x] === 'undefined')) {
-
-                if (!settings.linearRing)
-                  break;
-
-                var dir   = 0;
-                var count = 0;
-
-                if (x === cols) {
-                  x--;
-                  dir = 0;  /* move downwards */
-                } else if (x < 0) {
-                  x++;
-                  dir = 2;  /* move upwards */
-                } else if (y === rows) {
-                  y--;
-                  dir = 3;  /* move right */
-                } else if (y < 0) {
-                  y++;
-                  dir = 1;  /* move left */
+                  dir = (dir + 1) % 4;
+                  count++;
                 }
 
                 if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
+                  /* we are back where we started off, so finalize the polygon */
                   finalized = true;
                   enter     = nextedge;
                   break;
                 }
-
-                while (1) {
-                  var found_entry = false;
-
-                  if (count > 4) {
-                    console.log('Direction change counter overflow! This should never happen!');
-                    break;
-                  }
-
-                  cc = grid.cells[y][x];
-
-                  /* check for re-entry */
-                  var ve = valid_entries[dir];
-                  if (typeof cc.edges[ve] === 'object') {
-                    /* found re-entry */
-                    ee = cc.edges[ve];
-                    path.push(entry_coordinate(x, y, dir, ee.path));
-                    enter = ve;
-                    found_entry = true;
-                    break;
-                  }
-
-                  if (found_entry) {
-                    break;
-                  } else {
-                    path.push(skip_coordinate(x, y, dir));
-
-                    x += add_x[dir];
-                    y += add_y[dir];
-
-                    /* change direction if we'e moved out of grid again */
-                    if ((typeof grid.cells[y] === 'undefined') || (typeof grid.cells[y][x] === 'undefined')) {
-                      x -= add_x[dir];
-                      y -= add_y[dir];
-
-                      dir = (dir + 1) % 4;
-                      count++;
-                    }
-
-                    if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
-                      /* we are back where we started off, so finalize the polygon */
-                      finalized = true;
-                      enter     = nextedge;
-                      break;
-                    }
-                  }
-                }
               }
             }
-
-            if ((settings.linearRing) &&
-                ((path[path.length - 1][0] !== origin[0]) ||
-                (path[path.length - 1][1] !== origin[1])))
-              path.push(origin);
-
-            polygons.push(path);
           }
         }
-      }
-    }
-  }
+
+        if ((settings.linearRing) &&
+            ((path[path.length - 1][0] !== origin[0]) ||
+            (path[path.length - 1][1] !== origin[1])))
+          path.push(origin);
+
+        polygons.push(path);
+      } /* end forall entry sites */
+    }); /* end foreach i */
+  }); /* end foreach j */
 
   return polygons;
 }
 
 
-export {extractPolygons, cell2Polygons, traceBandPaths, traceLinePaths};
+export {cell2Polygons, traceBandPaths, traceLinePaths};

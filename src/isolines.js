@@ -1,6 +1,7 @@
 
 import {optIsoLines} from './options.js';
-import {extractPolygons, traceLinePaths} from './polygons.js';
+import {cell2Polygons, traceLinePaths} from './polygons.js';
+import {quadTree} from './quadtree.js';
 
 
 /*
@@ -9,48 +10,154 @@ import {extractPolygons, traceLinePaths} from './polygons.js';
  * Algorithm. The function returns a list of path coordinates
  */
 
-function isoLines(data, threshold, options) {
+function isoLines(input, threshold, options) {
+  var settings,
+    i,
+    j,
+    multiLine = false,
+    tree      = null,
+    root      = null,
+    data      = null,
+    cellGrid  = null,
+    linePolygons  = null,
+    ret           = [];
+
   /* validation */
-  if (!data) throw new Error('data is required');
-  if (!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('data should be an array of arrays');
+  if (!input) throw new Error('data is required');
   if (threshold === undefined || threshold === null) throw new Error('threshold is required');
-  if (isNaN(+threshold)) throw new Error('threshold must be a number');
   if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
   /* process options */
-  var settings = optIsoLines(options);
+  settings = optIsoLines(options);
 
-  if(settings.verbose)
-    console.log('MarchingSquaresJS-isoContours: computing isocontour for ' + threshold);
-
-  var grid = {
-    rows:       data.length - 1,
-    cols:       data[0].length - 1,
-    cells:      [],
-    threshold:  threshold
-  };
-
-  settings.threshold = threshold;
-
-  for (var j = 0; j < grid.rows; ++j) {
-    grid.cells[j] = [];
-    for (var i = 0; i < grid.cols; ++i)
-      grid.cells[j][i] = prepareCell(data, i, j, settings);
-  }
-
-  var ret;
-
-  if(settings.polygons) {
-    if (settings.verbose)
-      console.log('MarchingSquaresJS-isoContours: returning single polygons for each grid cell');
-
-    ret = extractPolygons(grid, settings);
+  /* check for input data */
+  if (input instanceof quadTree) {
+    tree = input;
+    root = input.root;
+    data = input.data;
+  } else if (Array.isArray(input) && Array.isArray(input[0])) {
+    data = input;
   } else {
-    if (settings.verbose)
-      console.log('MarchingSquaresJS-isoContours: returning iso lines (polygon paths) for entire data grid');
-
-    ret = traceLinePaths(grid, settings);
+    throw new Error('input is neither array of arrays nor object retrieved from \'prepareData()\'');
   }
+
+  /* check and prepare input threshold(s) */
+  if (Array.isArray(threshold)) {
+    multiLine = true;
+
+    /* check if all minV are numbers */
+    for (i = 0; i < threshold.length; i++)
+      if (isNaN(+threshold[i]))
+        throw new Error('threshold[' + i + '] is not a number');
+  } else {
+    if (isNaN(+threshold))
+      throw new Error('threshold must be a number or array of numbers');
+
+    threshold = [ threshold ];
+  }
+
+  /* create quadTree root node if not already present */
+  if ((settings.quadTree) && (!root)) {
+    tree = new quadTree(data);
+    root = tree.root;
+    data = tree.data;
+  }
+
+  if (settings.verbose) {
+    if(settings.polygons)
+      console.log('MarchingSquaresJS-isoLines: returning single lines (polygons) for each grid cell');
+    else
+      console.log('MarchingSquaresJS-isoLines: returning line paths (polygons) for entire data grid');
+
+    if (multiLine)
+      console.log('MarchingSquaresJS-isoLines: multiple lines requested, returning array of line paths instead of lines for a single threshold');
+  }
+
+  /* Done with all input validation, now let's start computing stuff */
+
+  /* loop over all threhsold values */
+  threshold.forEach(function(t, i) {
+    linePolygons = [];
+
+    /* store bounds for current computation in settings object */
+    settings.threshold = t;
+
+    if(settings.verbose)
+      console.log('MarchingSquaresJS-isoLines: computing iso lines for threshold ' + t);
+
+    if (settings.polygons) {
+      /* compose list of polygons for each single cell */
+      if (settings.quadTree) {
+        /* go through list of cells retrieved from quadTree */
+        root
+          .cellsBelowThreshold(settings.threshold, true)
+          .forEach(function(c) {
+            linePolygons  = linePolygons.concat(
+              cell2Polygons(
+                prepareCell(data,
+                  c.x,
+                  c.y,
+                  settings),
+                c.x,
+                c.y,
+                settings
+              ));
+          });
+      } else {
+        /* go through entire array of input data */
+        for (j = 0; j < data.length - 1; ++j) {
+          for (i = 0; i < data[0].length - 1; ++i)
+            linePolygons  = linePolygons.concat(
+              cell2Polygons(
+                prepareCell(data,
+                  i,
+                  j,
+                  settings),
+                i,
+                j,
+                settings
+              ));
+        }
+      }
+    } else {
+      /* sparse grid of input data cells */
+      cellGrid = [];
+
+      /* compose list of polygons for entire input grid */
+      if (settings.quadTree) {
+        /* collect the cells */
+        root
+          .cellsBelowThreshold(settings.threshold, settings.linearRing ? true : false)
+          .forEach(function(c) {
+            if (typeof cellGrid[c.x] === 'undefined')
+              cellGrid[c.x] = [];
+            cellGrid[c.x][c.y] = prepareCell(data,
+              c.x,
+              c.y,
+              settings);
+          });
+      } else {
+        /* prepare cells */
+        for (i = 0; i < data[0].length - 1; ++i) {
+          cellGrid[i] = [];
+          for (j = 0; j < data.length - 1; ++j) {
+            cellGrid[i][j]  = prepareCell(data,
+              i,
+              j,
+              settings);
+          }
+        }
+      }
+
+      linePolygons = traceLinePaths(data, cellGrid, settings);
+    }
+
+    /* finally, add polygons to output array */
+    if (multiLine)
+      ret.push(linePolygons);
+    else
+      ret = linePolygons;
+  });
 
   if(typeof settings.successCallback === 'function')
     settings.successCallback(ret);
@@ -70,6 +177,13 @@ function isoLines(data, threshold, options) {
  */
 
 function prepareCell(grid, x, y, settings) {
+  var left,
+    right,
+    top,
+    bottom,
+    average,
+    cell;
+
   var cval      = 0;
   var x3        = grid[y + 1][x];
   var x2        = grid[y + 1][x + 1];
@@ -125,7 +239,8 @@ function prepareCell(grid, x, y, settings) {
   /* make sure cval is a number */
   cval = +cval;
 
-  var cell = {
+  /* compose the cell object */
+  cell = {
     cval:         cval,
     polygons:     [],
     edges:        {},
@@ -152,8 +267,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 14: /* 1110 */
-    var left    = settings.interpolate(x0, x3, threshold);
-    var bottom  = settings.interpolate(x0, x1, threshold);
+    left    = settings.interpolate(x0, x3, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
 
     if (settings.polygons_full) {
       cell.edges.left = {
@@ -172,8 +287,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 13: /* 1101 */
-    var bottom  = settings.interpolate(x0, x1, threshold);
-    var right   = settings.interpolate(x1, x2, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
+    right   = settings.interpolate(x1, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.bottom = {
@@ -192,8 +307,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 11: /* 1011 */
-    var right = settings.interpolate(x1, x2, threshold);
-    var top   = settings.interpolate(x3, x2, threshold);
+    right = settings.interpolate(x1, x2, threshold);
+    top   = settings.interpolate(x3, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.right = {
@@ -212,8 +327,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 7: /* 0111 */
-    var left  = settings.interpolate(x0, x3, threshold);
-    var top   = settings.interpolate(x3, x2, threshold);
+    left  = settings.interpolate(x0, x3, threshold);
+    top   = settings.interpolate(x3, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.top = {
@@ -232,8 +347,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 1: /* 0001 */
-    var left    = settings.interpolate(x0, x3, threshold);
-    var bottom  = settings.interpolate(x0, x1, threshold);
+    left    = settings.interpolate(x0, x3, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
 
     if (settings.polygons_full) {
       cell.edges.bottom = {
@@ -252,8 +367,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 2: /* 0010 */
-    var bottom  = settings.interpolate(x0, x1, threshold);
-    var right   = settings.interpolate(x1, x2, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
+    right   = settings.interpolate(x1, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.right = {
@@ -272,8 +387,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 4: /* 0100 */
-    var right = settings.interpolate(x1, x2, threshold);
-    var top   = settings.interpolate(x3, x2, threshold);
+    right = settings.interpolate(x1, x2, threshold);
+    top   = settings.interpolate(x3, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.top = {
@@ -292,8 +407,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 8: /* 1000 */
-    var left  = settings.interpolate(x0, x3, threshold);
-    var top   = settings.interpolate(x3, x2, threshold);
+    left  = settings.interpolate(x0, x3, threshold);
+    top   = settings.interpolate(x3, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.left = {
@@ -312,8 +427,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 12: /* 1100 */
-    var left  = settings.interpolate(x0, x3, threshold);
-    var right = settings.interpolate(x1, x2, threshold);
+    left  = settings.interpolate(x0, x3, threshold);
+    right = settings.interpolate(x1, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.left = {
@@ -332,8 +447,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 9: /* 1001 */
-    var bottom  = settings.interpolate(x0, x1, threshold);
-    var top     = settings.interpolate(x3, x2, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
+    top     = settings.interpolate(x3, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.bottom = {
@@ -352,8 +467,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 3: /* 0011 */
-    var left  = settings.interpolate(x0, x3, threshold);
-    var right = settings.interpolate(x1, x2, threshold);
+    left  = settings.interpolate(x0, x3, threshold);
+    right = settings.interpolate(x1, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.right = {
@@ -372,8 +487,8 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 6: /* 0110 */
-    var bottom  = settings.interpolate(x0, x1, threshold);
-    var top     = settings.interpolate(x3, x2, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
+    top     = settings.interpolate(x3, x2, threshold);
 
     if (settings.polygons_full) {
       cell.edges.top = {
@@ -392,11 +507,11 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 10: /* 1010 */
-    var left    = settings.interpolate(x0, x3, threshold);
-    var right   = settings.interpolate(x1, x2, threshold);
-    var bottom  = settings.interpolate(x0, x1, threshold);
-    var top     = settings.interpolate(x3, x2, threshold);
-    var average = (x0 + x1 + x2 + x3) / 4;
+    left    = settings.interpolate(x0, x3, threshold);
+    right   = settings.interpolate(x1, x2, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
+    top     = settings.interpolate(x3, x2, threshold);
+    average = (x0 + x1 + x2 + x3) / 4;
 
     if (settings.polygons_full) {
       if (average < threshold) {
@@ -448,11 +563,11 @@ function prepareCell(grid, x, y, settings) {
     break;
 
   case 5: /* 0101 */
-    var left    = settings.interpolate(x0, x3, threshold);
-    var right   = settings.interpolate(x1, x2, threshold);
-    var bottom  = settings.interpolate(x0, x1, threshold);
-    var top     = settings.interpolate(x3, x2, threshold);
-    var average = (x0 + x1 + x2 + x3) / 4;
+    left    = settings.interpolate(x0, x3, threshold);
+    right   = settings.interpolate(x1, x2, threshold);
+    bottom  = settings.interpolate(x0, x1, threshold);
+    top     = settings.interpolate(x3, x2, threshold);
+    average = (x0 + x1 + x2 + x3) / 4;
 
     if (settings.polygons_full) {
       if (average < threshold) {
