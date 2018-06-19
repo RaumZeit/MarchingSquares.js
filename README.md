@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/RaumZeit/MarchingSquares.js.svg?branch=master)](https://travis-ci.org/RaumZeit/MarchingSquares.js)
+
 # MarchingSquaresJS
 
 A JavaScript implementation of the [Marching Squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm

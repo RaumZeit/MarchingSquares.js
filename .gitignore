@@ -38,5 +38,6 @@ Thumbs.db
 *.tar
 *.zip
 
-# project folders
-sandbox/
+# npm generated content
+package-lock.json
+
