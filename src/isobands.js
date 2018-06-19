@@ -5,312 +5,6 @@ import {quadTree} from './quadtree.js';
 
 
 /*
- * Compute isobands(s) for a scalar 2D field given a certain
- * threshold and a bandwidth by applying the Marching Squares
- * Algorithm. The function returns a list of path coordinates
- * either for individual polygons within each grid cell, or the
- * outline of connected polygons.
- */
-function isoBands(input, minV, bandWidth, options) {
-  var i,
-    j,
-    settings,
-    tree          = null,
-    root          = null,
-    data          = null,
-    cellGrid      = null,
-    multiBand     = false,
-    bw            = [],
-    bandPolygons  = [],
-    ret           = [];
-
-  /* basic input validation */
-  if (!input) throw new Error('data is required');
-  if (minV === undefined || minV === null) throw new Error('lowerBound is required');
-  if (bandWidth === undefined || bandWidth === null) throw new Error('bandWidth is required');
-  if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
-
-  settings = optIsoBands(options);
-
-  /* check for input data */
-  if (data instanceof quadTree) {
-    tree = input;
-    root = input.root;
-    data = input.data;
-  } else if (Array.isArray(input) && Array.isArray(input[0])) {
-    data = input;
-  } else {
-    throw new Error('input is neither array of arrays nor object retrieved from \'prepareData()\'');
-  }
-
-  /* check and prepare input thresholds */
-  if (Array.isArray(minV)) {
-    multiBand = true;
-
-    /* check if all minV are numbers */
-    for (i = 0; i < minV.length; i++)
-      if (isNaN(+minV[i]))
-        throw new Error('lowerBound[' + i + '] is not a number');
-
-    if (Array.isArray(bandWidth)) {
-      if (minV.length !== bandWidth.length)
-        throw new Error('lowerBound and bandWidth have unequal lengths');
-
-      /* check bandwidth values */
-      for (i = 0; i < bandWidth.length; i++)
-        if (isNaN(+bandWidth[i]))
-          throw new Error('bandWidth[' + i + '] is not a number');
-    } else {
-      if (isNaN(+bandWidth))
-        throw new Error('bandWidth must be a number');
-
-      bw = [];
-      for (i = 0; i < minV.length; i++) {
-        bw.push(bandWidth);
-      }
-      bandWidth = bw;
-    }
-  } else {
-    if (isNaN(+minV))
-      throw new Error('lowerBound must be a number');
-
-    minV = [ minV ];
-
-    if (isNaN(+bandWidth))
-      throw new Error('bandWidth must be a number');
-
-    bandWidth = [ bandWidth ];
-  }
-
-  /* create quadTree root node if not already present */
-  if ((settings.quadTree) && (!root)) {
-    tree = new quadTree(data);
-    root = tree.root;
-    data = tree.data;
-  }
-
-  if (settings.verbose) {
-    if(settings.polygons)
-      console.log('MarchingSquaresJS-isoBands: returning single polygons for each grid cell');
-    else
-      console.log('MarchingSquaresJS-isoBands: returning polygon paths for entire data grid');
-
-    if (multiBand)
-      console.log('MarchingSquaresJS-isoBands: multiple bands requested, returning array of band polygons instead of polygons for a single band');
-  }
-
-  /* Done with all input validation, now let's start computing stuff */
-
-  /* loop over all minV values */
-  minV.forEach(function(lowerBound, b) {
-    bandPolygons = [];
-
-    /* store bounds for current computation in settings object */
-    settings.minV = lowerBound;
-    settings.maxV = lowerBound + bandWidth[b];
-
-    if(settings.verbose)
-      console.log('MarchingSquaresJS-isoBands: computing isobands for [' + lowerBound + ':' + (lowerBound + bandWidth[b]) + ']');
-
-    if (settings.polygons) {
-      /* compose list of polygons for each single cell */
-      if (settings.quadTree) {
-        /* go through list of cells retrieved from quadTree */
-        root
-          .cellsInBand(settings.minV, settings.maxV, settings.polygons ? true : false)
-          .forEach(function(c) {
-            bandPolygons  = bandPolygons.concat(
-              cell2Polygons(
-                prepareCell(data,
-                  c.x,
-                  c.y,
-                  settings),
-                c.x,
-                c.y,
-                settings
-              ));
-          });
-      } else {
-        /* go through entire array of input data */
-        for (j = 0; j < data.length - 1; ++j) {
-          for (i = 0; i < data[0].length - 1; ++i)
-            bandPolygons  = bandPolygons.concat(
-              cell2Polygons(
-                prepareCell(data,
-                  i,
-                  j,
-                  settings),
-                i,
-                j,
-                settings
-              ));
-        }
-      }
-    } else {
-      /* sparse grid of input data cells */
-      cellGrid = [];
-
-      /* compose list of polygons for entire input grid */
-      if (settings.quadTree) {
-        /* collect the cells */
-        root
-          .cellsInBand(settings.minV, settings.maxV, settings.polygons ? true : false)
-          .forEach(function(c) {
-            if (typeof cellGrid[c.x] === 'undefined')
-              cellGrid[c.x] = [];
-
-            cellGrid[c.x][c.y] = prepareCell(data,
-              c.x,
-              c.y,
-              settings);
-          });
-      } else {
-        /* prepare cells */
-        for (i = 0; i < data[0].length - 1; ++i) {
-          cellGrid[i] = [];
-          for (j = 0; j < data.length - 1; ++j) {
-            cellGrid[i][j]  = prepareCell(data,
-              i,
-              j,
-              settings);
-          }
-        }
-      }
-
-      bandPolygons = traceBandPaths(data, cellGrid, settings);
-    }
-
-    /* finally, add polygons to output array */
-    if (multiBand)
-      ret.push(bandPolygons);
-    else
-      ret = bandPolygons;
-  });
-
-  if(typeof settings.successCallback === 'function')
-    settings.successCallback(ret);
-
-  return ret;
-}
-
-/*
- * Thats all for the public interface, below follows the actual
- * implementation
- */
-
-/*
- *  For isoBands, each square is defined by the three states
- * of its corner points. However, since computers use power-2
- * values, we use 2bits per trit, i.e.:
- *
- * 00 ... below minV
- * 01 ... between minV and maxV
- * 10 ... above maxV
- *
- * Hence we map the 4-trit configurations as follows:
- *
- * 0000 => 0
- * 0001 => 1
- * 0002 => 2
- * 0010 => 4
- * 0011 => 5
- * 0012 => 6
- * 0020 => 8
- * 0021 => 9
- * 0022 => 10
- * 0100 => 16
- * 0101 => 17
- * 0102 => 18
- * 0110 => 20
- * 0111 => 21
- * 0112 => 22
- * 0120 => 24
- * 0121 => 25
- * 0122 => 26
- * 0200 => 32
- * 0201 => 33
- * 0202 => 34
- * 0210 => 36
- * 0211 => 37
- * 0212 => 38
- * 0220 => 40
- * 0221 => 41
- * 0222 => 42
- * 1000 => 64
- * 1001 => 65
- * 1002 => 66
- * 1010 => 68
- * 1011 => 69
- * 1012 => 70
- * 1020 => 72
- * 1021 => 73
- * 1022 => 74
- * 1100 => 80
- * 1101 => 81
- * 1102 => 82
- * 1110 => 84
- * 1111 => 85
- * 1112 => 86
- * 1120 => 88
- * 1121 => 89
- * 1122 => 90
- * 1200 => 96
- * 1201 => 97
- * 1202 => 98
- * 1210 => 100
- * 1211 => 101
- * 1212 => 102
- * 1220 => 104
- * 1221 => 105
- * 1222 => 106
- * 2000 => 128
- * 2001 => 129
- * 2002 => 130
- * 2010 => 132
- * 2011 => 133
- * 2012 => 134
- * 2020 => 136
- * 2021 => 137
- * 2022 => 138
- * 2100 => 144
- * 2101 => 145
- * 2102 => 146
- * 2110 => 148
- * 2111 => 149
- * 2112 => 150
- * 2120 => 152
- * 2121 => 153
- * 2122 => 154
- * 2200 => 160
- * 2201 => 161
- * 2202 => 162
- * 2210 => 164
- * 2211 => 165
- * 2212 => 166
- * 2220 => 168
- * 2221 => 169
- * 2222 => 170
- */
-
-/*
- * ####################################
- * Some small helper functions
- * ####################################
- */
-
-function computeCenterAverage(bl, br, tr, tl, minV, maxV) {
-  var average = (tl + tr + br + bl) / 4;
-
-  if (average > maxV)
-    return 2; /* above isoband limits */
-
-  if (average < minV)
-    return 0; /* below isoband limits */
-
-  return 1; /* within isoband limits */
-}
-
-/*
  * lookup table to generate polygon paths or edges required to
  * trace the full polygon(s)
  */
@@ -1331,7 +1025,318 @@ var shapeCoordinates = {
   }
 };
 
+
+/*
+ * Compute isobands(s) for a scalar 2D field given a certain
+ * threshold and a bandwidth by applying the Marching Squares
+ * Algorithm. The function returns a list of path coordinates
+ * either for individual polygons within each grid cell, or the
+ * outline of connected polygons.
+ */
+function isoBands(input, minV, bandWidth, options) {
+  var i,
+    j,
+    settings,
+    tree          = null,
+    root          = null,
+    data          = null,
+    cellGrid      = null,
+    multiBand     = false,
+    bw            = [],
+    bandPolygons  = [],
+    ret           = [];
+
+  /* basic input validation */
+  if (!input) throw new Error('data is required');
+  if (minV === undefined || minV === null) throw new Error('lowerBound is required');
+  if (bandWidth === undefined || bandWidth === null) throw new Error('bandWidth is required');
+  if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
+
+  settings = optIsoBands(options);
+
+  /* check for input data */
+  if (input instanceof quadTree) {
+    tree = input;
+    root = input.root;
+    data = input.data;
+  } else if (Array.isArray(input) && Array.isArray(input[0])) {
+    data = input;
+  } else {
+    throw new Error('input is neither array of arrays nor object retrieved from \'prepareData()\'');
+  }
+
+  /* check and prepare input thresholds */
+  if (Array.isArray(minV)) {
+    multiBand = true;
+
+    /* check if all minV are numbers */
+    for (i = 0; i < minV.length; i++)
+      if (isNaN(+minV[i]))
+        throw new Error('lowerBound[' + i + '] is not a number');
+
+    if (Array.isArray(bandWidth)) {
+      if (minV.length !== bandWidth.length)
+        throw new Error('lowerBound and bandWidth have unequal lengths');
+
+      /* check bandwidth values */
+      for (i = 0; i < bandWidth.length; i++)
+        if (isNaN(+bandWidth[i]))
+          throw new Error('bandWidth[' + i + '] is not a number');
+    } else {
+      if (isNaN(+bandWidth))
+        throw new Error('bandWidth must be a number');
+
+      bw = [];
+      for (i = 0; i < minV.length; i++) {
+        bw.push(bandWidth);
+      }
+      bandWidth = bw;
+    }
+  } else {
+    if (isNaN(+minV))
+      throw new Error('lowerBound must be a number');
+
+    minV = [ minV ];
+
+    if (isNaN(+bandWidth))
+      throw new Error('bandWidth must be a number');
+
+    bandWidth = [ bandWidth ];
+  }
+
+  /* create quadTree root node if not already present */
+  if ((settings.quadTree) && (!root)) {
+    tree = new quadTree(data);
+    root = tree.root;
+    data = tree.data;
+  }
+
+  if (settings.verbose) {
+    if(settings.polygons)
+      console.log('MarchingSquaresJS-isoBands: returning single polygons for each grid cell');
+    else
+      console.log('MarchingSquaresJS-isoBands: returning polygon paths for entire data grid');
+
+    if (multiBand)
+      console.log('MarchingSquaresJS-isoBands: multiple bands requested, returning array of band polygons instead of polygons for a single band');
+  }
+
+  /* Done with all input validation, now let's start computing stuff */
+
+  /* loop over all minV values */
+  minV.forEach(function(lowerBound, b) {
+    bandPolygons = [];
+
+    /* store bounds for current computation in settings object */
+    settings.minV = lowerBound;
+    settings.maxV = lowerBound + bandWidth[b];
+
+    if(settings.verbose)
+      console.log('MarchingSquaresJS-isoBands: computing isobands for [' + lowerBound + ':' + (lowerBound + bandWidth[b]) + ']');
+
+    if (settings.polygons) {
+      /* compose list of polygons for each single cell */
+      if (settings.quadTree) {
+        /* go through list of cells retrieved from quadTree */
+        root
+          .cellsInBand(settings.minV, settings.maxV, true)
+          .forEach(function(c) {
+            bandPolygons  = bandPolygons.concat(
+              cell2Polygons(
+                prepareCell(data,
+                  c.x,
+                  c.y,
+                  settings),
+                c.x,
+                c.y,
+                settings
+              ));
+          });
+      } else {
+        /* go through entire array of input data */
+        for (j = 0; j < data.length - 1; ++j) {
+          for (i = 0; i < data[0].length - 1; ++i)
+            bandPolygons  = bandPolygons.concat(
+              cell2Polygons(
+                prepareCell(data,
+                  i,
+                  j,
+                  settings),
+                i,
+                j,
+                settings
+              ));
+        }
+      }
+    } else {
+      /* sparse grid of input data cells */
+      cellGrid = [];
+
+      /* compose list of polygons for entire input grid */
+      if (settings.quadTree) {
+        /* collect the cells */
+        root
+          .cellsInBand(settings.minV, settings.maxV, true)
+          .forEach(function(c) {
+            if (typeof cellGrid[c.x] === 'undefined')
+              cellGrid[c.x] = [];
+
+            cellGrid[c.x][c.y] = prepareCell(data,
+              c.x,
+              c.y,
+              settings);
+          });
+      } else {
+        /* prepare cells */
+        for (i = 0; i < data[0].length - 1; ++i) {
+          cellGrid[i] = [];
+          for (j = 0; j < data.length - 1; ++j) {
+            cellGrid[i][j]  = prepareCell(data,
+              i,
+              j,
+              settings);
+          }
+        }
+      }
+
+      bandPolygons = traceBandPaths(data, cellGrid, settings);
+    }
+
+    /* finally, add polygons to output array */
+    if (multiBand)
+      ret.push(bandPolygons);
+    else
+      ret = bandPolygons;
+  });
+
+  if(typeof settings.successCallback === 'function')
+    settings.successCallback(ret);
+
+  return ret;
+}
+
+/*
+ * Thats all for the public interface, below follows the actual
+ * implementation
+ */
+
+/*
+ *  For isoBands, each square is defined by the three states
+ * of its corner points. However, since computers use power-2
+ * values, we use 2bits per trit, i.e.:
+ *
+ * 00 ... below minV
+ * 01 ... between minV and maxV
+ * 10 ... above maxV
+ *
+ * Hence we map the 4-trit configurations as follows:
+ *
+ * 0000 => 0
+ * 0001 => 1
+ * 0002 => 2
+ * 0010 => 4
+ * 0011 => 5
+ * 0012 => 6
+ * 0020 => 8
+ * 0021 => 9
+ * 0022 => 10
+ * 0100 => 16
+ * 0101 => 17
+ * 0102 => 18
+ * 0110 => 20
+ * 0111 => 21
+ * 0112 => 22
+ * 0120 => 24
+ * 0121 => 25
+ * 0122 => 26
+ * 0200 => 32
+ * 0201 => 33
+ * 0202 => 34
+ * 0210 => 36
+ * 0211 => 37
+ * 0212 => 38
+ * 0220 => 40
+ * 0221 => 41
+ * 0222 => 42
+ * 1000 => 64
+ * 1001 => 65
+ * 1002 => 66
+ * 1010 => 68
+ * 1011 => 69
+ * 1012 => 70
+ * 1020 => 72
+ * 1021 => 73
+ * 1022 => 74
+ * 1100 => 80
+ * 1101 => 81
+ * 1102 => 82
+ * 1110 => 84
+ * 1111 => 85
+ * 1112 => 86
+ * 1120 => 88
+ * 1121 => 89
+ * 1122 => 90
+ * 1200 => 96
+ * 1201 => 97
+ * 1202 => 98
+ * 1210 => 100
+ * 1211 => 101
+ * 1212 => 102
+ * 1220 => 104
+ * 1221 => 105
+ * 1222 => 106
+ * 2000 => 128
+ * 2001 => 129
+ * 2002 => 130
+ * 2010 => 132
+ * 2011 => 133
+ * 2012 => 134
+ * 2020 => 136
+ * 2021 => 137
+ * 2022 => 138
+ * 2100 => 144
+ * 2101 => 145
+ * 2102 => 146
+ * 2110 => 148
+ * 2111 => 149
+ * 2112 => 150
+ * 2120 => 152
+ * 2121 => 153
+ * 2122 => 154
+ * 2200 => 160
+ * 2201 => 161
+ * 2202 => 162
+ * 2210 => 164
+ * 2211 => 165
+ * 2212 => 166
+ * 2220 => 168
+ * 2221 => 169
+ * 2222 => 170
+ */
+
+/*
+ * ####################################
+ * Some small helper functions
+ * ####################################
+ */
+
+function computeCenterAverage(bl, br, tr, tl, minV, maxV) {
+  var average = (tl + tr + br + bl) / 4;
+
+  if (average > maxV)
+    return 2; /* above isoband limits */
+
+  if (average < minV)
+    return 0; /* below isoband limits */
+
+  return 1; /* within isoband limits */
+}
+
+
 function prepareCell(grid, x, y, opt) {
+  var cell,
+    center_avg;
+
   /*  compose the 4-trit corner representation */
   var cval = 0;
   var x3 = grid[y + 1][x];
@@ -1396,9 +1401,9 @@ function prepareCell(grid, x, y, opt) {
    * 1 ... within iso band
    * 2 ... above isoband
    */
-  var center_avg = 0;
+  center_avg = 0;
 
-  var cell = {
+  cell = {
     cval:         cval,
     polygons:     [],
     edges:        {},
@@ -1868,7 +1873,4 @@ function prepareCell(grid, x, y, opt) {
 }
 
 
-export {
-  isoBands as isoBands,
-  quadTree as prepareData
-};
+export {isoBands as isoBands};
