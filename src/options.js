@@ -16,16 +16,16 @@ function options() {
 /* Compose settings specific to IsoBands algorithm */
 function isoBandOptions(userSettings) {
   var i,
-      key,
-      val,
-      bandOptions,
-      optionKeys;
+    key,
+    val,
+    bandOptions,
+    optionKeys;
 
   bandOptions   = new options();
   userSettings  = userSettings ? userSettings : {};
   optionKeys    = Object.keys(bandOptions);
 
-  for(i = 0; i < optionKeys.length; i++){
+  for(i = 0; i < optionKeys.length; i++) {
     key = optionKeys[i];
     val = userSettings[key];
     if ((typeof val !== 'undefined') && (val !== null))
@@ -47,16 +47,16 @@ function isoBandOptions(userSettings) {
 /* Compose settings specific to IsoLines algorithm */
 function isoLineOptions(userSettings) {
   var i,
-      key,
-      val,
-      lineOptions,
-      optionKeys;
+    key,
+    val,
+    lineOptions,
+    optionKeys;
 
   lineOptions   = new options();
   userSettings  = userSettings ? userSettings : {};
   optionKeys    = Object.keys(lineOptions);
 
-  for(i = 0; i < optionKeys.length; i++){
+  for(i = 0; i < optionKeys.length; i++) {
     key = optionKeys[i];
     val = userSettings[key];
     if ((typeof val !== 'undefined') && (val !== null))

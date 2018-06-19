@@ -53,10 +53,10 @@ function linear_ab(a, b, v0, v1) {
  *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
  */
 function linear_a(a, b, minV, maxV) {
-    if (a < b)
-      return (minV - a) / (b - a);
+  if (a < b)
+    return (minV - a) / (b - a);
 
-    return (a - maxV) / (a - b);
+  return (a - maxV) / (a - b);
 }
 
 
@@ -69,10 +69,10 @@ function linear_a(a, b, minV, maxV) {
  *  Note, that we assume that 'a' and 'b' have unit distance (i.e. 1)
  */
 function linear_b(a, b, minV, maxV) {
-    if (a < b)
-      return (maxV - a) / (b - a);
+  if (a < b)
+    return (maxV - a) / (b - a);
 
-    return (a - minV) / (a - b);
+  return (a - minV) / (a - b);
 }
 
 
@@ -81,4 +81,4 @@ export {
   linear_ab,
   linear_a,
   linear_b
-}
+};

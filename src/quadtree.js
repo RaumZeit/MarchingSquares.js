@@ -1,6 +1,11 @@
 
 /* quadTree node constructor */
 function treeNode(data, x, y, dx, dy) {
+  var dx_tmp = dx,
+    dy_tmp = dy,
+    msb_x  = 0,
+    msb_y  = 0;
+
   /* left-bottom corner of current quadrant */
   this.x = x;
   this.y = y;
@@ -28,25 +33,20 @@ function treeNode(data, x, y, dx, dy) {
   this.childC = null;
   this.childD = null;
 
-  var dx_tmp = dx,
-      dy_tmp = dy,
-      msb_x  = 0,
-      msb_y  = 0;
-
   if ((dx === 1) && (dy === 1)) {
     /* do not further subdivision */
     this.lowerBound = Math.min(
-                        data[y][x],
-                        data[y][x + 1],
-                        data[y + 1][x + 1],
-                        data[y + 1][x]
-                      );
+      data[y][x],
+      data[y][x + 1],
+      data[y + 1][x + 1],
+      data[y + 1][x]
+    );
     this.upperBound = Math.max(
-                        data[y][x],
-                        data[y][x + 1],
-                        data[y + 1][x + 1],
-                        data[y + 1][x]
-                      );
+      data[y][x],
+      data[y][x + 1],
+      data[y + 1][x + 1],
+      data[y + 1][x]
+    );
   } else {
     /* get most significant bit from dx */
     if (dx > 1) {
@@ -168,6 +168,4 @@ function quadTree(data) {
 }
 
 
-export {
-  quadTree
-};
+export {quadTree};
