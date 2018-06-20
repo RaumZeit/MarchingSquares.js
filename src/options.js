@@ -9,7 +9,7 @@ function options() {
   this.polygons         = false;
   this.polygons_full    = false;
   this.linearRing       = true;
-  this.quadTree         = false;
+  this.noQuadTree       = false;
 }
 
 

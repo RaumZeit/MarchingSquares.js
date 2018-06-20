@@ -14,11 +14,12 @@ function isoLines(input, threshold, options) {
   var settings,
     i,
     j,
-    multiLine = false,
-    tree      = null,
-    root      = null,
-    data      = null,
-    cellGrid  = null,
+    useQuadTree   = false,
+    multiLine     = false,
+    tree          = null,
+    root          = null,
+    data          = null,
+    cellGrid      = null,
     linePolygons  = null,
     ret           = [];
 
@@ -35,6 +36,8 @@ function isoLines(input, threshold, options) {
     tree = input;
     root = input.root;
     data = input.data;
+    if (!settings.noQuadTree)
+      useQuadTree = true;
   } else if (Array.isArray(input) && Array.isArray(input[0])) {
     data = input;
   } else {
@@ -44,6 +47,10 @@ function isoLines(input, threshold, options) {
   /* check and prepare input threshold(s) */
   if (Array.isArray(threshold)) {
     multiLine = true;
+
+    /* activate QuadTree optimization if not explicitly forbidden by user settings */
+    if (!settings.noQuadTree)
+      useQuadTree = true;
 
     /* check if all minV are numbers */
     for (i = 0; i < threshold.length; i++)
@@ -57,7 +64,7 @@ function isoLines(input, threshold, options) {
   }
 
   /* create quadTree root node if not already present */
-  if ((settings.quadTree) && (!root)) {
+  if ((useQuadTree) && (!root)) {
     tree = new quadTree(data);
     root = tree.root;
     data = tree.data;
@@ -87,7 +94,7 @@ function isoLines(input, threshold, options) {
 
     if (settings.polygons) {
       /* compose list of polygons for each single cell */
-      if (settings.quadTree) {
+      if (useQuadTree) {
         /* go through list of cells retrieved from quadTree */
         root
           .cellsBelowThreshold(settings.threshold, true)
@@ -124,7 +131,7 @@ function isoLines(input, threshold, options) {
       cellGrid = [];
 
       /* compose list of polygons for entire input grid */
-      if (settings.quadTree) {
+      if (useQuadTree) {
         /* collect the cells */
         root
           .cellsBelowThreshold(settings.threshold, settings.linearRing ? true : false)
