@@ -63,57 +63,49 @@ div.tooltip {
       bandWidths.pop(bandWidths.length - 1);
 
       MarchingSquaresJS
-      .isoBands(
-        prepData,
-        intervals,
-        bandWidths,
-        { quadTree: true })
-      .forEach(function(b, i) {
-        isoBands.push({
-          "coords": b,
-          "level": i + 1,
-          "val": intervals[i] + bandWidths[i]
+        .isoBands(
+          prepData,
+          intervals,
+          bandWidths)
+        .forEach(function(b, i) {
+          isoBands.push({
+            "coords": b,
+            "level": i + 1,
+            "val": intervals[i] + bandWidths[i]
+          });
         });
-      });
 
       /*******************
         2nd: iso lines
       ********************/
 
       /* iso line set A */
-      MarchingSquaresJS.
-      isoLines(
-        prepData,
-        intervals_lines,
-        {
-          linearRing: false,
-          quadTree: true
-        })
-      .forEach(function(c, i) {
-        isoLines.push({
-          "coords": c,
-          "level": i,
-          "val": intervals_lines[i]
+      MarchingSquaresJS
+        .isoLines(
+          prepData,
+          intervals_lines,
+          { linearRing: false })
+        .forEach(function(c, i) {
+          isoLines.push({
+            "coords": c,
+            "level": i,
+            "val": intervals_lines[i]
+          });
         });
-      });
 
       /* iso line set B */
-      MarchingSquaresJS.isoLines(
-        prepData,
-        intervals_lines2,
-        {
-          linearRing: false,
-          quadTree: true
-          
-        })
-      .forEach(function(c, i) {
-        isoLines2.push({
-          "coords": c,
-          "level": i,
-          "val": intervals_lines2[i]
+      MarchingSquaresJS
+        .isoLines(
+          prepData,
+          intervals_lines2,
+          { linearRing: false })
+        .forEach(function(c, i) {
+          isoLines2.push({
+            "coords": c,
+            "level": i,
+            "val": intervals_lines2[i]
+          });
         });
-      });
-
     } else {
       for (var i = 1; i < intervals.length; i++) {
         var lowerBand = intervals[i - 1];
