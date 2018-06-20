@@ -9,7 +9,10 @@ A JavaScript implementation of the [Marching Squares](https://en.wikipedia.org/w
 featuring IsoLines and IsoBand computation.
 
 The implementation computes *iso lines* (*iso contours*) or *iso bands* for gridded scalar
-fields and returns an array of (closed) paths that enclose the respective threshold(s).
+fields and returns an array of (closed) paths that enclose the respective threshold(s). To speed-up
+computations when multiple *iso lines*/*iso bands* are required, the implementation makes use of a
+[Quad-Tree](https://en.wikipedia.org/wiki/Quadtree) data structure for fast look-ups of those cells
+in the scalar field that actually contribute to the *iso line* or *iso band*, respectively.
 
 ## Table of contents
 1. [Availability](#availability)
@@ -188,7 +191,7 @@ The `options` object may have the following fields:
 | `options.verbose`         | *bool*      | Create `console.log()` info messages before each major step of the algorithm                                                                                                                                                                                                    | `false`       |
 | `options.polygons`        | *bool*      | If `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons.                                                                          | `false`       |
 | `options.linearRing`      | *bool*      | If `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths.  | `true`        |
-
+| `options.noQuadTree`      | *bool*      | If `true`, Quad-Tree optimization is deactivated no matter what the input is. Otherwise, the implementations create a Quad-Tree optimization if the input requests *multiple* iso lines/bands.                                                                                  | `false`       |
 
 ### Deprecation Warnings
 
