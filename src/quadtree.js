@@ -136,11 +136,11 @@ treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
     if (this.childB)
       cells = cells.concat(this.childB.cellsInBand(lowerBound, upperBound, subsumed));
 
-    if (this.childC)
-      cells = cells.concat(this.childC.cellsInBand(lowerBound, upperBound, subsumed));
-
     if (this.childD)
       cells = cells.concat(this.childD.cellsInBand(lowerBound, upperBound, subsumed));
+
+    if (this.childC)
+      cells = cells.concat(this.childC.cellsInBand(lowerBound, upperBound, subsumed));
   }
 
   return cells;
@@ -170,11 +170,11 @@ treeNode.prototype.cellsBelowThreshold = function(threshold, subsumed) {
     if (this.childB)
       cells = cells.concat(this.childB.cellsBelowThreshold(threshold, subsumed));
 
-    if (this.childC)
-      cells = cells.concat(this.childC.cellsBelowThreshold(threshold, subsumed));
-
     if (this.childD)
       cells = cells.concat(this.childD.cellsBelowThreshold(threshold, subsumed));
+
+    if (this.childC)
+      cells = cells.concat(this.childC.cellsBelowThreshold(threshold, subsumed));
   }
 
   return cells;
