@@ -6,6 +6,13 @@ node_js:
 cache:
   directories:
   - node_modules
+script:
+  # Build environment.
+  - node --version
+  - npm --version
+  # Build and test.
+  - npm run-script build
+  - npm run-script test
 deploy:
   provider: releases
   api-key:
