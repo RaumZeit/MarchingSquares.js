@@ -63,14 +63,16 @@ Pre-compiled (minified) versions are available at the
 In most cases, you may want to load the entire library to expose all implemented
 algorithms at once. Alternatively, you may include only one of the `isoLines` or
 `isoBands` algorithms. In this case, however, you have to sacrifice the possibility
-to pass pre-processed data to effectively circumvent redundant *Quad-Tree* construction.
+to pass pre-processed data to effectively circumvent redundant *Quad-Tree* construction
+since the `quadTree` constructor will be unavailable.
 
 The library exposes the following two function attributes (see also [API description](#api-description))
 
 ```javascript
 MarchingSquaresJS = {
     isoLines : function(data, threshold, options){},
-    isoBands : function(data, lowerBound, bandwidth, options){}
+    isoBands : function(data, lowerBound, bandwidth, options){},
+    quadTree : function(data){}
 };
 ```
 
@@ -131,11 +133,11 @@ function isoLines(data, threshold, options)
 
 Compute *iso lines* and *iso contours* for a 2-dimensional scalar field and a (list of) thresholds.
 
-| Parameter   | Description                                                                                                                                   |
-| ----------- | :-------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`      | 2-dimensional input data (scalar field). This parameter is **mandatory**.                                                                     |
-| `threshold` | A constant numerical value (or array of numerical values) defining the curve function for the *iso line(s)*. This parameter is **mandatory**  |
-| `options`   | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**                   |
+| Parameter   | Description                                                                                                                                                               |
+| ----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data`      | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new quadTree()`). This parameter is **mandatory**.  |
+| `threshold` | A constant numerical value (or array of numerical values) defining the curve function for the *iso line(s)*. This parameter is **mandatory**                              |
+| `options`   | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**                                               |
 
 #### Returns:
 
@@ -159,12 +161,12 @@ function isoBands(data, lowerBound, bandWidth, options)
 
 Compute *iso bands* for a 2-dimensional scalar field, a (list of) lowerBound(s), and a (list of) bandWidth(s).
 
-| Parameter     | Description                                                                                                                                                     |
-| ------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`        | 2-dimensional input data (scalar field). This parameter is **mandatory**.                                                                                       |
-| `lowerBound`  | A constant numerical value (or array of numerical values) that define(s) the lower bound of the *iso band*. This parameter is **mandatory**.                    |
-| `bandWidth`   | A constant numerical value (or array of numerical values) that defines the width(s) the *iso band*, i.e. the range of values. This parameter is **mandatory**.  |
-| `options`     | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**.                                    |
+| Parameter     | Description                                                                                                                                                               |
+| ------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data`        | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new quadTree()`). This parameter is **mandatory**.  |
+| `lowerBound`  | A constant numerical value (or array of numerical values) that define(s) the lower bound of the *iso band*. This parameter is **mandatory**.                              |
+| `bandWidth`   | A constant numerical value (or array of numerical values) that defines the width(s) the *iso band*, i.e. the range of values. This parameter is **mandatory**.            |
+| `options`     | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**.                                              |
 
 #### Returns:
 
@@ -179,6 +181,42 @@ denoting the `x` and `y` position, respectively.
 
 Note, that the paths resemble *linear Rings* by default, i.e. they are closed and have identical first and last
 coordinates. (see the `options` parameter to change the output)
+
+
+### Pre-process Data
+
+```javascript
+function quadTree(data)
+```
+
+Pre-compute a Quad-Tree for the scalar field `data`.
+
+To speed-up consecutive calls of the `isoLines` and `isoBands` functions using the same scalar field
+but different `treshold` or `band` levels, users can pass *pre-processed data*. The pre-processing
+step essentially creates a Quad-Tree data structure for the scalar field, and glues it together with
+the scalar field. Consequently, when passing pre-processed data, the `isoLines` and`isoBands`
+functions do not need to create the same Quad-Tree (for the same scalar field) over and over again.
+
+| Parameter     | Description                                                               |
+| ------------- | :------------------------------------------------------------------------ |
+| `data`        | 2-dimensional input data (scalar field). This parameter is **mandatory**. |
+
+#### Returns:
+
+An object that glues together the scalar fiels `data` and the corresponding pre-computed Quad-Tree.
+
+##### Note:
+
+This function is a **constructor**! Thus, to generate an object with pre-processed data, one
+has to create a new `quadTree` object:
+
+```javascript
+var prepData = new MarchingSquaresJS.quadTree(data);
+```
+
+Furthermore, when passing pre-processed data to one of the `isoLines` or `isoBands` function, they
+will *always* perform Quad-Tree look-ups to speed-up the computation, unless the `options.noQuadTree`
+flag is set.
 
 
 ### The Options Object
