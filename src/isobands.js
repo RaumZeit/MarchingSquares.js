@@ -1178,16 +1178,15 @@ function isoBands(input, minV, bandWidth, options) {
     } else {
       /* sparse grid of input data cells */
       cellGrid = [];
+      for (i = 0; i < data[0].length - 1; ++i)
+        cellGrid[i] = [];
 
       /* compose list of polygons for entire input grid */
       if (useQuadTree) {
         /* collect the cells */
         root
-          .cellsInBand(settings.minV, settings.maxV, true)
+          .cellsInBand(settings.minV, settings.maxV, false)
           .forEach(function(c) {
-            if (typeof cellGrid[c.x] === 'undefined')
-              cellGrid[c.x] = [];
-
             cellGrid[c.x][c.y] = prepareCell(data,
               c.x,
               c.y,
@@ -1196,7 +1195,6 @@ function isoBands(input, minV, bandWidth, options) {
       } else {
         /* prepare cells */
         for (i = 0; i < data[0].length - 1; ++i) {
-          cellGrid[i] = [];
           for (j = 0; j < data.length - 1; ++j) {
             cellGrid[i][j]  = prepareCell(data,
               i,

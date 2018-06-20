@@ -129,15 +129,15 @@ function isoLines(input, threshold, options) {
     } else {
       /* sparse grid of input data cells */
       cellGrid = [];
+      for (i = 0; i < data[0].length - 1; ++i)
+        cellGrid[i] = [];
 
       /* compose list of polygons for entire input grid */
       if (useQuadTree) {
         /* collect the cells */
         root
-          .cellsBelowThreshold(settings.threshold, settings.linearRing ? true : false)
+          .cellsBelowThreshold(settings.threshold, false)
           .forEach(function(c) {
-            if (typeof cellGrid[c.x] === 'undefined')
-              cellGrid[c.x] = [];
             cellGrid[c.x][c.y] = prepareCell(data,
               c.x,
               c.y,
@@ -146,7 +146,6 @@ function isoLines(input, threshold, options) {
       } else {
         /* prepare cells */
         for (i = 0; i < data[0].length - 1; ++i) {
-          cellGrid[i] = [];
           for (j = 0; j < data.length - 1; ++j) {
             cellGrid[i][j]  = prepareCell(data,
               i,

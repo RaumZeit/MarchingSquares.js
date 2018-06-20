@@ -231,7 +231,8 @@ function traceBandPaths(data, cellGrid, settings) {
           y     = y + ee.move.y;
 
           /* handle out-of-grid moves */
-          if ((typeof cellGrid[x] === 'undefined') || (typeof cellGrid[x][y] === 'undefined')) {
+          if ((typeof cellGrid[x] === 'undefined') ||
+              (typeof cellGrid[x][y] === 'undefined')) {
             dir   = 0;
             count = 0;
 
@@ -247,6 +248,8 @@ function traceBandPaths(data, cellGrid, settings) {
             } else if (y < 0) {
               y++;
               dir = 1;  /* move left */
+            } else {
+              throw new Error('Left the grid somewhere in the interior!');
             }
 
             if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
@@ -261,18 +264,21 @@ function traceBandPaths(data, cellGrid, settings) {
               if (count > 4)
                 throw new Error('Direction change counter overflow! This should never happen!');
 
-              cc = cellGrid[x][y];
+              if (!((typeof cellGrid[x] === 'undefined') ||
+                    (typeof cellGrid[x][y] === 'undefined'))) {
+                cc = cellGrid[x][y];
 
-              /* check for re-entry */
-              for (s = 0; s < valid_entries[dir].length; s++) {
-                ve = valid_entries[dir][s];
-                if (typeof cc.edges[ve] === 'object') {
-                /* found re-entry */
-                  ee = cc.edges[ve];
-                  path.push(entry_coordinate(x, y, dir, ee.path));
-                  enter = ve;
-                  found_entry = true;
-                  break;
+                /* check for re-entry */
+                for (s = 0; s < valid_entries[dir].length; s++) {
+                  ve = valid_entries[dir][s];
+                  if (typeof cc.edges[ve] === 'object') {
+                    /* found re-entry */
+                    ee = cc.edges[ve];
+                    path.push(entry_coordinate(x, y, dir, ee.path));
+                    enter = ve;
+                    found_entry = true;
+                    break;
+                  }
                 }
               }
 
@@ -285,12 +291,18 @@ function traceBandPaths(data, cellGrid, settings) {
                 y += add_y[dir];
 
                 /* change direction if we'e moved out of grid again */
-                if ((typeof cellGrid[x] === 'undefined') || (typeof cellGrid[x][y] === 'undefined')) {
-                  x -= add_x[dir];
-                  y -= add_y[dir];
+                if ((typeof cellGrid[x] === 'undefined') ||
+                    (typeof cellGrid[x][y] === 'undefined')) {
+                  if (((dir === 0) && (y < 0)) ||
+                      ((dir === 1) && (x < 0)) ||
+                      ((dir === 2) && (y === rows)) ||
+                      ((dir === 3) && (x === cols))) {
+                    x -= add_x[dir];
+                    y -= add_y[dir];
 
-                  dir = (dir + 1) % 4;
-                  count++;
+                    dir = (dir + 1) % 4;
+                    count++;
+                  }
                 }
 
                 if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
@@ -451,17 +463,20 @@ function traceLinePaths(data, cellGrid, settings) {
               if (count > 4)
                 throw new Error('Direction change counter overflow! This should never happen!');
 
-              cc = cellGrid[x][y];
+              if (!((typeof cellGrid[x] === 'undefined') ||
+                    (typeof cellGrid[x][y] === 'undefined'))) {
+                cc = cellGrid[x][y];
 
-              /* check for re-entry */
-              ve = valid_entries[dir];
-              if (typeof cc.edges[ve] === 'object') {
-                /* found re-entry */
-                ee = cc.edges[ve];
-                path.push(entry_coordinate(x, y, dir, ee.path));
-                enter = ve;
-                found_entry = true;
-                break;
+                /* check for re-entry */
+                ve = valid_entries[dir];
+                if (typeof cc.edges[ve] === 'object') {
+                  /* found re-entry */
+                  ee = cc.edges[ve];
+                  path.push(entry_coordinate(x, y, dir, ee.path));
+                  enter = ve;
+                  found_entry = true;
+                  break;
+                }
               }
 
               if (found_entry) {
@@ -475,11 +490,16 @@ function traceLinePaths(data, cellGrid, settings) {
                 /* change direction if we'e moved out of grid again */
                 if ((typeof cellGrid[x] === 'undefined') ||
                   (typeof cellGrid[x][y] === 'undefined')) {
-                  x -= add_x[dir];
-                  y -= add_y[dir];
+                  if (((dir === 0) && (y < 0)) ||
+                      ((dir === 1) && (x < 0)) ||
+                      ((dir === 2) && (y === rows)) ||
+                      ((dir === 3) && (x === rows))) {
+                    x -= add_x[dir];
+                    y -= add_y[dir];
 
-                  dir = (dir + 1) % 4;
-                  count++;
+                    dir = (dir + 1) % 4;
+                    count++;
+                  }
                 }
 
                 if ((x === i) && (y === j) && (dir === entry_dir[nextedge])) {
