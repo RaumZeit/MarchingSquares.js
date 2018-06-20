@@ -144,7 +144,7 @@ Compute *iso lines* and *iso contours* for a 2-dimensional scalar field and a (l
 2. If `threshold` is an *array of scalars*, an additional array layer wraps the individual arrays of
 paths for each threshold value.
 
-A single path is an arrays of coordinates where each coordinate, again, is an array with two entries
+A single path is an array of coordinates where each coordinate, again, is an array with two entries
 `[ x, y ]` denoting the `x` and `y` position, respectively.
 
 Note, that the paths resemble *linear Rings* by default, i.e. they are closed and have identical first
@@ -154,7 +154,7 @@ and last coordinates. (see the `options` parameter to change the output)
 ### Computing Iso Bands
 
 ```javascript
-isoBands(data, lowerBound, bandWidth, options)
+function isoBands(data, lowerBound, bandWidth, options)
 ```
 
 Compute *iso bands* for a 2-dimensional scalar field, a (list of) lowerBound(s), and a (list of) bandWidth(s).
@@ -174,7 +174,7 @@ Compute *iso bands* for a 2-dimensional scalar field, a (list of) lowerBound(s),
 for each `threshold`-`bandWidth` pair. Note, that if `bandWidth` is a *scalar* it will be applied to all
 entries in the `lowerBound` array.
  
-A single path is an arrays of coordinates where each coordinate, again, is an array with two entries `[ x, y ]`
+A single path is an array of coordinates where each coordinate, again, is an array with two entries `[ x, y ]`
 denoting the `x` and `y` position, respectively.
 
 Note, that the paths resemble *linear Rings* by default, i.e. they are closed and have identical first and last
@@ -191,7 +191,7 @@ The `options` object may have the following fields:
 | `options.verbose`         | *bool*      | Create `console.log()` info messages before each major step of the algorithm                                                                                                                                                                                                    | `false`       |
 | `options.polygons`        | *bool*      | If `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons.                                                                          | `false`       |
 | `options.linearRing`      | *bool*      | If `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths.  | `true`        |
-| `options.noQuadTree`      | *bool*      | If `true`, Quad-Tree optimization is deactivated no matter what the input is. Otherwise, the implementations create a Quad-Tree optimization if the input requests *multiple* iso lines/bands.                                                                                  | `false`       |
+| `options.noQuadTree`      | *bool*      | If `true`, Quad-Tree optimization is deactivated no matter what the input is. Otherwise, the implementations make use of Quad-Tree optimization if the input demands for *multiple* iso lines/bands.                                                                            | `false`       |
 
 ### Deprecation Warnings
 
