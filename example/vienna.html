@@ -29,16 +29,20 @@ div.tooltip {
     var useQuadTree = true;
     var intervals = []
     var bandWidths = []
-    for (var i = 0; i <= 256; i+=8) {
+    var intervals_lines = []
+    var intervals_lines2 = []
+    var isoBands  = [];
+    var isoLines  = [];
+    var isoLines2 = [];
+
+    for (var i = 0; i < 256; i+=8) {
       intervals.push(i);
       bandWidths.push(8);
     }
 
-    var intervals_lines = []
     for (var i = 16; i < 256; i+=16)
       intervals_lines.push(i);
 
-    var intervals_lines2 = []
     for (var i = 8; i < 256; i+=16)
       intervals_lines2.push(i);
 
@@ -46,104 +50,61 @@ div.tooltip {
     var xs = d3.range(0, data[0].length);
     var ys = d3.range(0, data.length);
 
-    var isoBands = [];
-    var isoLines = [];
-    var isoLines2 = [];
+    var prepData  = data;
 
-    if (useQuadTree) {
-      /* pre-process data to speed up multiple calls to isoBands/isoLines */
-      var prepData = new MarchingSquaresJS.quadTree(data);
+    /* pre-process data to speed up multiple calls to isoBands/isoLines */
+    if (useQuadTree)
+      prepData = new MarchingSquaresJS.quadTree(data);
 
-      /*******************
-        1st: iso bands
-      ********************/
+    /*******************
+      1st: iso bands
+    ********************/
 
-      /* remove last element in iso band lists if working with quadTree feature */
-      intervals.pop(intervals.length - 1);
-      bandWidths.pop(bandWidths.length - 1);
-
-      MarchingSquaresJS
-        .isoBands(
-          prepData,
-          intervals,
-          bandWidths)
-        .forEach(function(b, i) {
-          isoBands.push({
-            "coords": b,
-            "level": i + 1,
-            "val": intervals[i] + bandWidths[i]
-          });
+    MarchingSquaresJS
+      .isoBands(
+        prepData,
+        intervals,
+        bandWidths,
+        { noQuadTree: !useQuadTree })
+      .forEach(function(b, i) {
+        isoBands.push({
+          "coords": b,
+          "level": i + 1,
+          "val": intervals[i] + bandWidths[i]
         });
+      });
 
-      /*******************
-        2nd: iso lines
-      ********************/
+    /*******************
+      2nd: iso lines
+    ********************/
 
-      /* iso line set A */
-      MarchingSquaresJS
-        .isoLines(
-          prepData,
-          intervals_lines,
-          { linearRing: false })
-        .forEach(function(c, i) {
-          isoLines.push({
-            "coords": c,
-            "level": i,
-            "val": intervals_lines[i]
-          });
+    /* iso line set A */
+    MarchingSquaresJS
+      .isoLines(
+        prepData,
+        intervals_lines,
+        { linearRing: false, noQuadTree: !useQuadTree })
+      .forEach(function(c, i) {
+        isoLines.push({
+          "coords": c,
+          "level": i,
+          "val": intervals_lines[i]
         });
+      });
 
-      /* iso line set B */
-      MarchingSquaresJS
-        .isoLines(
-          prepData,
-          intervals_lines2,
-          { linearRing: false })
-        .forEach(function(c, i) {
-          isoLines2.push({
-            "coords": c,
-            "level": i,
-            "val": intervals_lines2[i]
-          });
+    /* iso line set B */
+    MarchingSquaresJS
+      .isoLines(
+        prepData,
+        intervals_lines2,
+        { linearRing: false, noQuadTree: !useQuadTree })
+      .forEach(function(c, i) {
+        isoLines2.push({
+          "coords": c,
+          "level": i,
+          "val": intervals_lines2[i]
         });
-    } else {
-      for (var i = 1; i < intervals.length; i++) {
-        var lowerBand = intervals[i - 1];
-        var upperBand = intervals[i];
-        var band = MarchingSquaresJS.isoBands(
-                data,
-                lowerBand,
-                upperBand - lowerBand,
-                {
-                  polygons: false,
-                  quadTree: false
-                }
-        );
-        isoBands.push({"coords": band, "level": i, "val": intervals[i]});
-      }
-
-      for (var i = 0; i < intervals_lines.length; i++) {
-          var contour = MarchingSquaresJS.isoContours(
-                  data,
-                  intervals_lines[i],
-                  {
-                      linearRing: false
-                  }
-          );
-          isoLines.push({"coords": contour, "level": i, "val": intervals_lines[i]});
-      }
-
-      for (var i = 0; i < intervals_lines2.length; i++) {
-          var contour = MarchingSquaresJS.isoContours(
-                  data,
-                  intervals_lines2[i],
-                  {
-                      linearRing: false
-                  }
-          );
-          isoLines2.push({"coords": contour, "level": i, "val": intervals_lines2[i]});
-      }
-    }
+      });
 
     iso_lines_array = [];
 
