@@ -8,11 +8,12 @@
 A JavaScript implementation of the [Marching Squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm
 featuring IsoLines and IsoBand computation.
 
-The implementation computes *iso lines* (*iso contours*) or *iso bands* for gridded scalar
-fields and returns an array of (closed) paths that enclose the respective threshold(s). To speed-up
-computations when multiple *iso lines*/*iso bands* are required, the implementation makes use of a
-[Quad-Tree](https://en.wikipedia.org/wiki/Quadtree) data structure for fast look-ups of those cells
-in the scalar field that actually contribute to the *iso line* or *iso band*, respectively.
+The implementation computes *iso lines* (*iso contours*) or *iso bands* for rectangular
+2-dimensional scalar fields and returns an array of (closed) paths that enclose the respective
+threshold(s). To speed-up computations when multiple *iso lines*/*iso bands* are required, the
+implementation makes use of a [Quad-Tree](https://en.wikipedia.org/wiki/Quadtree) data
+structure for fast look-ups of those cells in the scalar field that actually contribute to the
+*iso line* or *iso band*, respectively.
 
 ## Table of contents
 1. [Availability](#availability)
@@ -192,7 +193,7 @@ function quadTree(data)
 Pre-compute a Quad-Tree for the scalar field `data`.
 
 To speed-up consecutive calls of the `isoLines` and `isoBands` functions using the same scalar field
-but different `treshold` or `band` levels, users can pass *pre-processed data*. The pre-processing
+but different `threshold` or `band` levels, users can pass *pre-processed data*. The pre-processing
 step essentially creates a Quad-Tree data structure for the scalar field, and glues it together with
 the scalar field. Consequently, when passing pre-processed data, the `isoLines` and`isoBands`
 functions do not need to create the same Quad-Tree (for the same scalar field) over and over again.
@@ -203,7 +204,7 @@ functions do not need to create the same Quad-Tree (for the same scalar field) o
 
 #### Returns:
 
-An object that glues together the scalar fiels `data` and the corresponding pre-computed Quad-Tree.
+An object that glues together the scalar field `data` and the corresponding pre-computed Quad-Tree.
 
 ##### Note:
 
@@ -225,7 +226,7 @@ The `options` object may have the following fields:
 
 | Property                  | Type        | Description                                                                                                                                                                                                                                                                     | Default value |
 | ------------------------- | :---------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| `options.successCallback` | *function*  | A function called at the end of the process with the band array passed as argument                                                                                                                                                                                              | `null`        |
+| `options.successCallback` | *function*  | A function called at the end of each *iso line* / *iso band* computation. It will be passed the `path array` and the corresponding limit(s) (`threshold` or `lowerBound, bandWidth`) as first and second (third) arguments, respectively.                                    | `null`        |
 | `options.verbose`         | *bool*      | Create `console.log()` info messages before each major step of the algorithm                                                                                                                                                                                                    | `false`       |
 | `options.polygons`        | *bool*      | If `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons.                                                                          | `false`       |
 | `options.linearRing`      | *bool*      | If `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths.  | `true`        |

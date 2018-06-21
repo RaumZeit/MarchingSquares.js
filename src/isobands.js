@@ -1212,10 +1212,10 @@ function isoBands(input, minV, bandWidth, options) {
       ret.push(bandPolygons);
     else
       ret = bandPolygons;
-  });
 
-  if(typeof settings.successCallback === 'function')
-    settings.successCallback(ret);
+    if(typeof settings.successCallback === 'function')
+      settings.successCallback(ret, lowerBound, bandWidth[b]);
+  });
 
   return ret;
 }

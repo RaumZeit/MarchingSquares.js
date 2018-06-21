@@ -163,10 +163,11 @@ function isoLines(input, threshold, options) {
       ret.push(linePolygons);
     else
       ret = linePolygons;
-  });
 
-  if(typeof settings.successCallback === 'function')
-    settings.successCallback(ret);
+    if(typeof settings.successCallback === 'function')
+      settings.successCallback(ret, t);
+
+  });
 
   return ret;
 }
