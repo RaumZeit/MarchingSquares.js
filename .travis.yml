@@ -1,0 +1,36 @@
+sudo: false
+dist: trusty
+language: node_js
+node_js:
+- '7'
+cache:
+  directories:
+  - node_modules
+script:
+  # Build environment.
+  - node --version
+  - npm --version
+  # Build and test.
+  - npm run-script build
+  - npm run-script test
+deploy:
+  provider: releases
+  api-key:
+    secure: CdlASISfNX9G62SnJcTA8PvHbiq03eHCkdeXCkzJEHgIApL/CpRLy6r4oaLxuMFOwBaUvVRmCmgKcuvAHOUKNVW13N3UdY4Cm//GYj85NrLqe1MuVOlQ4Yy/g3GAwSJ0fQDWtMnphidriEkgLxpeg7X3Lc3hP/sY6UvV1wnzYM0SUBshU1K8IS64eGCY/a3fGtvOgqzs0vjyoMqUZnmVIWQkqgdsXMtu8y45yuopzbM9keiTvDGCzH7OBaHXHXNPAMlx+aTRBX/gqeEUJ+c7RUE3GVMDwGenBjcvtS7pYQG1s/WmVVZ6LOxLVfs0O7QVXGSgrcOfpKFIY9AWwhQt45OW9oDA3mD8ieIacCbJoI281Gusc08Bbg4rOxT4+UgpN8C21q2ZK5SH5Hzedd6NLpvmGXSIfn6/K3UUsmJHAn+ttShDe6tQPdwdMIUSz3EZLmphbgcyMoBF1aUui3EdPTWZP33wc/HZdTR/j++fxzKcS85QLaaQMuG+z0fRTUhNPIR4v2HdxAKZIniwmoDUTJQ48QoZCzAK1n+7Eo9W02/7EuZu0xdZbjwXM7J8GW92ndOHK8bYB5goQQ9dZoPy7/KYBZWNYgwN6vHMvAoYDC8EfjOdbQ6CLrbiBu7WrrDlMWJ4hkFPHRXhPmgoSS5iBbaQ0NOuaPjSm/Pp/rq04V4=
+  skip_cleanup: true
+  file_glob: true
+  overwrite: true
+  file:
+  - dist/marchingsquares.js
+  - dist/marchingsquares-esm.js
+  - dist/marchingsquares-isobands.js
+  - dist/marchingsquares-isocontours.js
+  - dist/marchingsquares-isolines.js
+  - dist/marchingsquares.min.js
+  - dist/marchingsquares-isobands.min.js
+  - dist/marchingsquares-isocontours.min.js
+  - dist/marchingsquares-isolines.min.js
+  - Changelog.md
+  on:
+    repo: RaumZeit/MarchingSquares.js
+    tags: true

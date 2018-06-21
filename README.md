@@ -1,112 +1,250 @@
+![GitHub tag](https://img.shields.io/github/release/RaumZeit/MarchingSquares.js.svg)
+[![Build Status](https://travis-ci.org/RaumZeit/MarchingSquares.js.svg?branch=master)](https://travis-ci.org/RaumZeit/MarchingSquares.js)
+[![npm](https://img.shields.io/npm/dw/marchingsquares.svg)](https://www.npmjs.com/package/marchingsquares)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 # MarchingSquaresJS
 
 A JavaScript implementation of the [Marching Squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm
-featuring IsoContour and IsoBand computation.
+featuring IsoLines and IsoBand computation.
 
+The implementation computes *iso lines* (*iso contours*) or *iso bands* for rectangular
+2-dimensional scalar fields and returns an array of (closed) paths that enclose the respective
+threshold(s). To speed-up computations when multiple *iso lines*/*iso bands* are required, the
+implementation makes use of a [Quad-Tree](https://en.wikipedia.org/wiki/Quadtree) data
+structure for fast look-ups of those cells in the scalar field that actually contribute to the
+*iso line* or *iso band*, respectively.
 
-### Availability
+## Table of contents
+1. [Availability](#availability)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [API Description](#api-description)
+5. [Examples](#examples)
+6. [License](#license)
+
+----
+
+## Availability
 
 The source code of this module is available through [github](https://github.com/RaumZeit/MarchingSquares.js).
 This module is also available as an [npm package](https://www.npmjs.com/package/marchingsquares).
 
-### INSTALL
+----
 
-This module uses the [Universal Module Definition (UMD)](https://github.com/umdjs/umd) API for
-JavaScript modules. Thus, it is easy to run the implementations on the server, the client, or
-elsewhere.
+## Installation
 
-##### Using Node:
+While this module only consists of `ECMAScript 5` language elements, it already makes use of the
+`ECMAScript 6 module` specification. To provide maximum compatibility and allow for loading with
+`node` and web browsers, the library is bundled with [rollup.js](https://rollupjs.org) and
+wrapped in a [Universal Module Definition (UMD)](https://github.com/umdjs/umd) API by default.
+
+#### Quick Start
+
+```shell
+npm install marchingsquares
+```
+
+#### Build from Repository:
+
+To (re-)build the distribution bundles run `rollup -c` or
+```shell
+npm run-script build
+```
+
+#### Download Precompiled Files
+
+Pre-compiled (minified) versions are available at the
+[MarchingSquares.js release page](https://github.com/RaumZeit/MarchingSquares.js/releases).
+
+----
+
+## Usage
+
+In most cases, you may want to load the entire library to expose all implemented
+algorithms at once. Alternatively, you may include only one of the `isoLines` or
+`isoBands` algorithms. In this case, however, you have to sacrifice the possibility
+to pass pre-processed data to effectively circumvent redundant *Quad-Tree* construction
+since the `quadTree` constructor will be unavailable.
+
+The library exposes the following function attributes (see also [API description](#api-description))
+
+```javascript
+MarchingSquaresJS = {
+    isoLines : function(data, threshold, options){},
+    isoBands : function(data, lowerBound, bandwidth, options){},
+    quadTree : function(data){}
+};
+```
+
+and can easily be integrated into your project (see below)
+
+#### Loading with Node:
 
 ```javascript
 var MarchingSquaresJS = require('./marchingsquares.js');
 ```
 
-The above code creates an object `MarchingSquaresJS` with two function attributes:
+#### Loading with AMD (e.g. RequireJS)
 
-```javascript
-MarchingSquaresJS = {
-    isoContours : function(data, threshold, options){},
-    isoBands : function(data, minV, bandwidth, options){}
-};
-```
-
-It is possible to require only one of the implementations, `isoContours` or `isoBands`,
-by requiring the correpsonding implementation directly, e.g.:
+The MarchingSquaresJS module works fine with the Asynchronous Module Definition (AMD)
+API. This enables easy integration with module loaders such as
+[RequireJS](https://github.com/requirejs/requirejs)
 
 ```javascript
 var MarchingSquaresJS = require('./marchingsquares-isobands.js');
 ```
 
-This creates the same object as before but without bound `isoContours` function.
+#### Loading with Web Browser
 
-##### Using AMD (e.g RequireJS):
+To use the library in a web browser you simply load the library using the `<script>`
+tag to expose a global variable `MarchingSquaresJS`:
 
-The MarchingSquaresJS module should work perfectly fine through the Asynchronous Module
-Definition (AMD) API. This enables easy integration with module loaders such as
-[RequireJS](https://github.com/requirejs/requirejs)
-
-Similar to the usage in Node, you can either `require` all the impementations
-```javascript
-var MarchingSquaresJS = require('./marchingsquares');
-```
-or just a single one
-```javascript
-var MarchingSquaresJS = require('./marchingsquares-isobands');
-```
-
-to retrieve an object with `isoContours` and/or `isoBands` function attributes:
-
-
-```javascript
-MarchingSquaresJS = {
-    isoContours : function(data, threshold, options){},
-    isoBands : function(data, minV, bandwidth, options){}
-};
-```
-
-See also `example/index_require.html` for using MarchingSquaresJS with AMD
-
-##### Using as browser global:
-
-Download the [minified Iso Bands](https://raw.githubusercontent.com/RaumZeit/MarchingSquares.js/master/marchingsquares-isobands.min.js)
-and/or the [minified Iso Contours](https://raw.githubusercontent.com/RaumZeit/MarchingSquares.js/master/marchingsquares-isocontours.min.js)
-implementation, and include them in a script tag.
 
 ```html
-<script src="marchingsquares-isocontours.min.js"></script>
+<script src="marchingsquares.min.js"></script>
+```
+
+#### Loading a Single Implementation
+
+It is possible to require only one of the implementations, `isoLines` or `isoBands`,
+by requiring the corresponding implementation directly, e.g.:
+
+```javascript
+var MarchingSquaresJS = require('./marchingsquares-isobands.js');
+```
+
+or 
+
+```html
 <script src="marchingsquares-isobands.min.js"></script>
 ```
 
-This will expose a global variable named `MarchingSquaresJS` with two function
-attributes:
+This creates the same object as before but without the `isoLines` function.
+
+----
+
+## API Description
+
+### Computing Iso Lines
 
 ```javascript
-MarchingSquaresJS = {
-    isoContours : function(data, threshold, options){},
-    isoBands : function(data, minV, bandwidth, options){}
-};
+function isoLines(data, threshold, options)
 ```
 
-Again, it is possible to omit one of the script tags to load only one of the implementations.
+Compute *iso lines* and *iso contours* for a 2-dimensional scalar field and a (list of) thresholds.
+
+| Parameter   | Description                                                                                                                                                               |
+| ----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data`      | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new quadTree()`). This parameter is **mandatory**.  |
+| `threshold` | A constant numerical value (or array of numerical values) defining the curve function for the *iso line(s)*. This parameter is **mandatory**                              |
+| `options`   | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**                                               |
+
+#### Returns:
+
+1. If `threshold` is a *single scalar*, an array of paths representing the *iso lines* for the given
+`threshold` and input `data`.
+2. If `threshold` is an *array of scalars*, an additional array layer wraps the individual arrays of
+paths for each threshold value.
+
+A single path is an array of coordinates where each coordinate, again, is an array with two entries
+`[ x, y ]` denoting the `x` and `y` position, respectively.
+
+Note, that the paths resemble *linear Rings* by default, i.e. they are closed and have identical first
+and last coordinates. (see the `options` parameter to change the output)
 
 
-### Usage
-
-For both implementations, `isoContours` and `isoBands`, the input data must be formatted as a
-regular 2-dimensional grid. All grid values must be defined.
-
-#### Isocontours parameters
-The `data` parameter denotes the gridded input data.
-The `threshold` parameter denotes the threshold of value that will be encompassed by the iso-contour.
-The optional parameter `options` may be used to change the behavior of this function (See below)
-
-#### IsoBands parameters
-The `data` parameter denotes the gridded input data.
-The `lowerBand` parameter denotes the lowest value that will be encompassed by this iso-band, while
-the `bandWidth` parameter denotes what range of values it will cover. The iso-band shown below should contain all values between `lowerBand` and `upperBand`.
-The optional parameter `options` may be used to chane the behavior of this function (See below)
+### Computing Iso Bands
 
 ```javascript
+function isoBands(data, lowerBound, bandWidth, options)
+```
+
+Compute *iso bands* for a 2-dimensional scalar field, a (list of) lowerBound(s), and a (list of) bandWidth(s).
+
+| Parameter     | Description                                                                                                                                                               |
+| ------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `data`        | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new quadTree()`). This parameter is **mandatory**.  |
+| `lowerBound`  | A constant numerical value (or array of numerical values) that define(s) the lower bound of the *iso band*. This parameter is **mandatory**.                              |
+| `bandWidth`   | A constant numerical value (or array of numerical values) that defines the width(s) the *iso band*, i.e. the range of values. This parameter is **mandatory**.            |
+| `options`     | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**.                                              |
+
+#### Returns:
+
+1. If `lowerBound` is a *single scalar*, an array of paths representing the *iso lines* which enclose the
+*iso band* of size `bandWidth`.
+2. If `lowerBound` is an *array of scalars*, an additional array layer wraps the individual arrays of paths
+for each `threshold`-`bandWidth` pair. Note, that if `bandWidth` is a *scalar* it will be applied to all
+entries in the `lowerBound` array.
+ 
+A single path is an array of coordinates where each coordinate, again, is an array with two entries `[ x, y ]`
+denoting the `x` and `y` position, respectively.
+
+Note, that the paths resemble *linear Rings* by default, i.e. they are closed and have identical first and last
+coordinates. (see the `options` parameter to change the output)
+
+
+### Pre-process Data
+
+```javascript
+function quadTree(data)
+```
+
+Pre-compute a Quad-Tree for the scalar field `data`.
+
+To speed-up consecutive calls of the `isoLines` and `isoBands` functions using the same scalar field
+but different `threshold` or `band` levels, users can pass *pre-processed data*. The pre-processing
+step essentially creates a Quad-Tree data structure for the scalar field, and glues it together with
+the scalar field. Consequently, when passing pre-processed data, the `isoLines` and`isoBands`
+functions do not need to create the same Quad-Tree (for the same scalar field) over and over again.
+
+| Parameter     | Description                                                               |
+| ------------- | :------------------------------------------------------------------------ |
+| `data`        | 2-dimensional input data (scalar field). This parameter is **mandatory**. |
+
+#### Returns:
+
+An object that glues together the scalar field `data` and the corresponding pre-computed Quad-Tree.
+
+##### Note:
+
+This function is a **constructor**! Thus, to generate an object with pre-processed data, one
+has to create a new `quadTree` object:
+
+```javascript
+var prepData = new MarchingSquaresJS.quadTree(data);
+```
+
+Furthermore, when passing pre-processed data to one of the `isoLines` or `isoBands` function, they
+will *always* perform Quad-Tree look-ups to speed-up the computation, unless the `options.noQuadTree`
+flag is set.
+
+
+### The Options Object
+
+The `options` object may have the following fields:
+
+| Property                  | Type        | Description                                                                                                                                                                                                                                                                     | Default value |
+| ------------------------- | :---------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| `options.successCallback` | *function*  | A function called at the end of each *iso line* / *iso band* computation. It will be passed the `path array` and the corresponding limit(s) (`threshold` or `lowerBound, bandWidth`) as first and second (third) arguments, respectively.                                    | `null`        |
+| `options.verbose`         | *bool*      | Create `console.log()` info messages before each major step of the algorithm                                                                                                                                                                                                    | `false`       |
+| `options.polygons`        | *bool*      | If `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons.                                                                          | `false`       |
+| `options.linearRing`      | *bool*      | If `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths.  | `true`        |
+| `options.noQuadTree`      | *bool*      | If `true`, Quad-Tree optimization is deactivated no matter what the input is. Otherwise, the implementations make use of Quad-Tree optimization if the input demands for *multiple* iso lines/bands.                                                                            | `false`       |
+
+### Deprecation Warnings
+
+The `isoContour` function was renamed to `isoLines` with version `1.3.0` but still remains for backward compatibility reasons!
+
+----
+
+## Examples
+
+The *iso band* shown below should contain all values between `lowerBound` and `upperBound`.
+ 
+```javascript
+var lowerBound = 2;
+var upperBound = 3;
 var data = [
     [18, 13, 10,  9, 10, 13, 18],
     [13,  8,  5,  4,  5,  8, 13],
@@ -118,11 +256,11 @@ var data = [
     [18, 13, 10,  9, 10, 13, 18]
 ];
 
-var bandWidth = upperBand - lowerBand;
-var band = MarchingSquaresJS.isoBands(data, lowerBand, bandWidth, options);
+var bandWidth = upperBound - lowerBound;
+var band = MarchingSquaresJS.isoBands(data, lowerBound, bandWidth);
 ```
 
-The return value, `band`, is an array of closed polygons which includes all the point of the grid with values between the limiting isolines:
+The return value, `band`, is an array of closed polygons which includes all the points of the grid with values between the limiting *iso lines*:
 
 ```text
 [Array[21], Array[5]]
@@ -147,17 +285,19 @@ The return value, `band`, is an array of closed polygons which includes all the 
   __proto__: Array[0]
 ```
 
-##### Options
+You can find more examples in the [example/](example/) directory.
 
-The object has the following fields:
+----
 
-`successCallback`: *function* - called at the end of the process with the band array passed as argument; default `null`.
+## License
 
-`verbose`: *bool* - logs info messages before each major step of the algorithm; default `false`.
+MarchingSquaresJS is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-`polygons`: *bool* - if `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons. Default `false`.
-
-`linearRing`: *bool* - if `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoContour` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths. Default `true`.
+MarchingSquaresJS grants additional permissions under GNU Affero General
+Public License version 3 section 7. See [LICENSE.md](LICENSE.md) for details.
 
 ----
 

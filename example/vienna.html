@@ -5,8 +5,7 @@
     <title>IsoBands example</title>
 
     <script src="https://d3js.org/d3.v3.min.js"></script>
-    <script src="../marchingsquares-isobands.js"></script>
-    <script src="../marchingsquares-isocontours.js"></script>
+    <script src="../dist/marchingsquares.js"></script>
 
     <style>
 div.tooltip {
@@ -27,60 +26,87 @@ div.tooltip {
 
 <script src="vienna_data.js"></script>
 <script>
-
+    var useQuadTree = true;
     var intervals = []
-    for (var i = 0; i <= 256; i+=16)
+    var bandWidths = []
+    var intervals_lines = []
+    var intervals_lines2 = []
+    var isoBands  = [];
+    var isoLines  = [];
+    var isoLines2 = [];
+
+    for (var i = 0; i < 256; i+=8) {
       intervals.push(i);
+      bandWidths.push(8);
+    }
+
+    for (var i = 16; i < 256; i+=16)
+      intervals_lines.push(i);
+
+    for (var i = 8; i < 256; i+=16)
+      intervals_lines2.push(i);
 
     data = d3.transpose(vienna_basin);
     var xs = d3.range(0, data[0].length);
     var ys = d3.range(0, data.length);
 
-    var isoBands = [];
-    for (var i = 1; i < intervals.length; i++) {
-        var lowerBand = intervals[i - 1];
-        var upperBand = intervals[i];
-        var band = MarchingSquaresJS.isoBands(
-                data,
-                lowerBand,
-                upperBand - lowerBand
-        );
-        isoBands.push({"coords": band, "level": i, "val": intervals[i]});
-    }
+    var prepData  = data;
+
+    /* pre-process data to speed up multiple calls to isoBands/isoLines */
+    if (useQuadTree)
+      prepData = new MarchingSquaresJS.quadTree(data);
+
+    /*******************
+      1st: iso bands
+    ********************/
+
+    MarchingSquaresJS
+      .isoBands(
+        prepData,
+        intervals,
+        bandWidths,
+        { noQuadTree: !useQuadTree })
+      .forEach(function(b, i) {
+        isoBands.push({
+          "coords": b,
+          "level": i + 1,
+          "val": intervals[i] + bandWidths[i]
+        });
+      });
+
+    /*******************
+      2nd: iso lines
+    ********************/
+
+    /* iso line set A */
+    MarchingSquaresJS
+      .isoLines(
+        prepData,
+        intervals_lines,
+        { linearRing: false, noQuadTree: !useQuadTree })
+      .forEach(function(c, i) {
+        isoLines.push({
+          "coords": c,
+          "level": i,
+          "val": intervals_lines[i]
+        });
+      });
+
+    /* iso line set B */
+    MarchingSquaresJS
+      .isoLines(
+        prepData,
+        intervals_lines2,
+        { linearRing: false, noQuadTree: !useQuadTree })
+      .forEach(function(c, i) {
+        isoLines2.push({
+          "coords": c,
+          "level": i,
+          "val": intervals_lines2[i]
+        });
+      });
 
     iso_lines_array = [];
-
-    var intervals_lines = []
-    for (var i = 16; i < 256; i+=16)
-      intervals_lines.push(i);
-
-    var intervals_lines2 = []
-    for (var i = 8; i < 256; i+=16)
-      intervals_lines2.push(i);
-
-    var isoLines = [];
-    for (var i = 0; i < intervals_lines.length; i++) {
-        var contour = MarchingSquaresJS.isoContours(
-                data,
-                intervals_lines[i],
-                {
-                    linearRing: false
-                }
-        );
-        isoLines.push({"coords": contour, "level": i, "val": intervals_lines[i]});
-    }
-
-    var isoLines2 = [];
-    for (var i = 0; i < intervals_lines2.length; i++) {
-        var contour = MarchingSquaresJS.isoContours(
-                data,
-                intervals_lines2[i],
-                {
-                    linearRing: false
-                }
-        );
-        isoLines2.push({"coords": contour, "level": i, "val": intervals_lines2[i]});
-    }
 
     iso_lines_array.push({
       intervals: intervals_lines2,
@@ -112,8 +138,8 @@ div.tooltip {
                 .range([0, height])
                 .domain([Math.min.apply(null, ys), Math.max.apply(null, ys)]);
 
-        var colours = d3.scale.linear().domain([intervals[0], intervals[2], intervals[4], intervals[intervals.length - 1]])
-                .range(["blue", "darkgreen", "green", "grey"]);
+        var colours = d3.scale.linear().domain([intervals[0], intervals[2], intervals[4], intervals[Math.floor(intervals.length / 2)], intervals[intervals.length - 1]])
+                .range(["blue", "darkgreen", "green", "brown", "grey"]);
 
         var svg = d3.select(divId)
                 .append("svg")
