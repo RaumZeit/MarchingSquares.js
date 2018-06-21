@@ -1,4 +1,4 @@
-![GitHub tag](https://img.shields.io/github/tag/RaumZeit/MarchingSquares.js.svg)
+![GitHub tag](https://img.shields.io/github/release/RaumZeit/MarchingSquares.js.svg)
 [![Build Status](https://travis-ci.org/RaumZeit/MarchingSquares.js.svg?branch=master)](https://travis-ci.org/RaumZeit/MarchingSquares.js)
 [![npm](https://img.shields.io/npm/dw/marchingsquares.svg)](https://www.npmjs.com/package/marchingsquares)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
@@ -33,10 +33,10 @@ This module is also available as an [npm package](https://www.npmjs.com/package/
 
 ## Installation
 
-This module is developed as `ECMAScript 6 module` and uses [rollup.js](https://rollupjs.org) to bundle the final
-javascript libraries. To provide maximum compatibility, the library is wrapped in a
-[Universal Module Definition (UMD)](https://github.com/umdjs/umd) API. This makes it easy to run the implementations
-on the server, the client, or elsewhere.
+While this module only consists of `ECMAScript 5` language elements, it already makes use of the
+`ECMAScript 6 module` specification. To provide maximum compatibility and allow for loading with
+`node` and web browsers, the library is bundled with [rollup.js](https://rollupjs.org) and
+wrapped in a [Universal Module Definition (UMD)](https://github.com/umdjs/umd) API by default.
 
 #### Quick Start
 
@@ -66,7 +66,7 @@ algorithms at once. Alternatively, you may include only one of the `isoLines` or
 to pass pre-processed data to effectively circumvent redundant *Quad-Tree* construction
 since the `quadTree` constructor will be unavailable.
 
-The library exposes the following two function attributes (see also [API description](#api-description))
+The library exposes the following function attributes (see also [API description](#api-description))
 
 ```javascript
 MarchingSquaresJS = {
@@ -86,8 +86,8 @@ var MarchingSquaresJS = require('./marchingsquares.js');
 
 #### Loading with AMD (e.g. RequireJS)
 
-The MarchingSquaresJS module should work perfectly fine through the Asynchronous Module
-Definition (AMD) API. This enables easy integration with module loaders such as
+The MarchingSquaresJS module works fine with the Asynchronous Module Definition (AMD)
+API. This enables easy integration with module loaders such as
 [RequireJS](https://github.com/requirejs/requirejs)
 
 ```javascript
@@ -96,8 +96,8 @@ var MarchingSquaresJS = require('./marchingsquares-isobands.js');
 
 #### Loading with Web Browser
 
-MarchingSquaresJS should work out-of-the-box with modern web browsers. You
-simply load the library using the `<script>` tag, e.g.:
+To use the library in a web browser you simply load the library using the `<script>`
+tag to expose a global variable `MarchingSquaresJS`:
 
 
 ```html
