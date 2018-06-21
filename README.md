@@ -1,5 +1,5 @@
 ![GitHub tag](https://img.shields.io/github/release/RaumZeit/MarchingSquares.js.svg)
-[![Build Status](https://travis-ci.org/RaumZeit/MarchingSquares.js.svg?branch=master)](https://travis-ci.org/RaumZeit/MarchingSquares.js)
+[![Build Status](https://img.shields.io/travis/RaumZeit/MarchingSquares.js/master.svg)](https://travis-ci.org/RaumZeit/MarchingSquares.js)
 [![npm](https://img.shields.io/npm/dw/marchingsquares.svg)](https://www.npmjs.com/package/marchingsquares)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
