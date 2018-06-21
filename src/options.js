@@ -74,6 +74,6 @@ function isoLineOptions(userSettings) {
 
 
 export {
-  isoBandOptions as optIsoBands,
-  isoLineOptions as optIsoLines
+  isoBandOptions,
+  isoLineOptions
 };

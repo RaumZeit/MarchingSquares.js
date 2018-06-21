@@ -1,5 +1,5 @@
 
-import {optIsoLines} from './options.js';
+import {isoLineOptions} from './options.js';
 import {cell2Polygons, traceLinePaths} from './polygons.js';
 import {quadTree} from './quadtree.js';
 
@@ -29,7 +29,7 @@ function isoLines(input, threshold, options) {
   if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
   /* process options */
-  settings = optIsoLines(options);
+  settings = isoLineOptions(options);
 
   /* check for input data */
   if (input instanceof quadTree) {
@@ -630,6 +630,6 @@ function prepareCell(grid, x, y, settings) {
 
 
 export {
-  isoLines as isoLines,
+  isoLines,
   isoLines as isoContours
 };

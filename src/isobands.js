@@ -1,5 +1,5 @@
 
-import {optIsoBands} from './options.js';
+import {isoBandOptions} from './options.js';
 import {cell2Polygons, traceBandPaths} from './polygons.js';
 import {quadTree} from './quadtree.js';
 
@@ -1053,7 +1053,7 @@ function isoBands(input, minV, bandWidth, options) {
   if (bandWidth === undefined || bandWidth === null) throw new Error('bandWidth is required');
   if ((!!options) && (typeof options !== 'object')) throw new Error('options must be an object');
 
-  settings = optIsoBands(options);
+  settings = isoBandOptions(options);
 
   /* check for input data */
   if (input instanceof quadTree) {
@@ -1878,4 +1878,4 @@ function prepareCell(grid, x, y, opt) {
 }
 
 
-export {isoBands as isoBands};
+export {isoBands};
