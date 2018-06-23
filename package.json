@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@krios.tbi.univie.ac.at:ronny/MarchingSquaresJS.git"
+    "url": "git://github.com/RaumZeit/MarchingSquares.js.git"
   },
   "bugs": {
     "url": "https://github.com/RaumZeit/MarchingSquares.js/issues"
