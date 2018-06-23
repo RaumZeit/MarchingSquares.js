@@ -1,5 +1,12 @@
 # Changelog
 
+### v1.3.0
+- Refactor all implementations
+- Add **Quad-Tree** lookup data structure for faster retrieval of relevant grid cells
+- Allow for array input to specify limits
+- modularize sources, move them into src/ director, and use **ES2015 modules** scheme
+- Use `rollup.js` to bundle final UMD wrapped modules
+
 ### v1.2.3
 - refactor `IsoContours` implementation
 - restore default behavior to return closed polygons in `IsoContours` and `IsoBands`
