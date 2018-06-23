@@ -1,0 +1,4 @@
+node_modules
+.travis.yml
+*.tar.gz
+*.tgz
