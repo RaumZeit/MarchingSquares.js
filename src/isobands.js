@@ -1,3 +1,5 @@
+/* eslint no-console: ["error", { allow: ["log"] }] */
+/* eslint-env browser,node */
 
 import {isoBandOptions} from './options.js';
 import {cell2Polygons, traceBandPaths} from './polygons.js';

@@ -1,3 +1,5 @@
+/* eslint no-console: ["error", { allow: ["log"] }] */
+/* eslint-env browser,node */
 
 import {isoLineOptions} from './options.js';
 import {cell2Polygons, traceLinePaths} from './polygons.js';
