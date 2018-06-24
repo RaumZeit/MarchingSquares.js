@@ -1,0 +1,37 @@
+div {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.marchingsquares {
+    right: 50%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.right {
+    width: 50%;
+    overflow-x: hidden;
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    right: 0;
+    min-width: 400px;
+    box-sizing: border-box;
+    background: #fff;
+    transition: all 200ms;
+    -webkit-transition: all 200ms;
+    box-shadow: rgba(0, 0, 0, 0.1) -2px 0px 0px;
+}
+
+.CodeMirror {
+    height: 200px;
+}
+/*@media screen and (max-width: 1100px) {*/
+    /*.right {*/
+        /*width: 50%;*/
+    /*}*/
+/*}*/
