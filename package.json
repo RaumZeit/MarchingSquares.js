@@ -4,8 +4,12 @@
   "version": "1.3.0",
   "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
   "contributors": [
-    { "name": "Stefano Borghi" },
-    { "name": "Peter Kerpedjiev" }
+    {
+      "name": "Stefano Borghi"
+    },
+    {
+      "name": "Peter Kerpedjiev"
+    }
   ],
   "license": "AGPL-3.0",
   "main": "./dist/marchingsquares.js",
@@ -15,6 +19,7 @@
     "dist": "./dist"
   },
   "scripts": {
+    "lint": "eslint --fix src/**",
     "build": "rollup -c",
     "pretest": "rollup -c rollup.config.test.js",
     "test": "node ./test/test.js"
@@ -35,6 +40,7 @@
     "isoline"
   ],
   "devDependencies": {
+    "eslint": "5.0.1",
     "load-json-file": "^2.0.0",
     "rollup": "^0.60.7",
     "rollup-plugin-eslint": "^4.0.0",
