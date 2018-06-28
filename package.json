@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "pretest": "npm run build",
     "test": "node ./test/test.js"
   },
   "repository": {

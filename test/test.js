@@ -4,6 +4,7 @@ var test = require('tape');
 var load = require('load-json-file');
 var isoBands = require('../dist/marchingsquares.js').isoBands;
 var isoLines = require('../dist/marchingsquares.js').isoLines;
+var quadTree = require('../dist/marchingsquares.js').quadTree;
 
 var directories = {
     in: path.join(__dirname, 'data', 'in') + path.sep,
@@ -30,8 +31,35 @@ test('isoBands output', function (t) {
         var upperBand = inputFile.data.upperBand;
 
         var bands = isoBands(data, lowerBand, upperBand - lowerBand);
-        // console.log(bands)
+        // console.log(JSON.stringify(bands));
         t.deepEqual(bands, load.sync(outputfile), name);
+    });
+
+    t.end();
+});
+
+
+var isoLinesTestCases = fs.readdirSync(directories.in)
+        .filter(function (filename) {
+        return filename.includes('isoLines');
+    })
+        .map(function (filename) {
+        return {
+            name: path.parse(filename).name,
+            data: load.sync(directories.in + filename)
+        };
+    });
+
+test('isoLines output', function (t) {
+    isoLinesTestCases.forEach(function (inputFile) {
+        var name = inputFile.name;
+        var data = inputFile.data.matrix;
+        var outputfile = directories.out + name + '.json';
+        var thresholds = inputFile.data.thresholds;
+
+        var lines = isoLines(data, thresholds);
+        // console.log(JSON.stringify(lines));
+        t.deepEqual(lines, load.sync(outputfile), name);
     });
 
     t.end();
@@ -67,6 +95,40 @@ test('isoLines input validation', function (t) {
     t.throws(function(){isoLines(dataArr, 'number')}, /threshold must be a number/, 'invalid threshold');
     t.throws(function(){isoLines(dataArr, [0, 'foo'])}, /is not a number/, 'invalid threshold entry');
     t.throws(function(){isoLines(dataArr, 23, 'string')}, /options must be an object/, 'invalid options');
+
+    t.end();
+});
+
+
+test('successCallback check', function (t) {
+    var data = [[1, 1], [1, 5]];
+    var called = false;
+    var options = {
+        successCallback: function () {
+            called = true;
+        }
+    };
+
+    isoLines(data, 1, options);
+    t.true(called);
+    called = false;
+    isoBands(data, 1, 2, options);
+    t.true(called);
+
+    t.end();
+});
+
+
+test('quadTree', function (t) {
+    var data = [
+        [1, 1, 1, 0],
+        [1, 5, 5, 1],
+        [0, 1, 1, 1]
+    ];
+    var prepData = new quadTree(data);
+
+    t.equal('quadTree', prepData.constructor.name);
+    t.equal('treeNode', prepData.root.constructor.name);
 
     t.end();
 });
