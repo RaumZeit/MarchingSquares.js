@@ -83,13 +83,7 @@ window.onload = function () {
 
         try {
             var bands = MarchingSquaresJS
-                .isoBands(data, intervals.slice(1), bandWidths,
-                    // {
-                    //     successCallback: function (band) {
-                    //         // console.log('Band ' + i + ':', JSON.stringify(band))
-                    //     }
-                    // }
-                );
+                .isoBands(data, intervals.slice(0, -1), bandWidths,);
         } catch (e) {
             output.doc.setValue(e.message);
             return;
