@@ -10,17 +10,19 @@ var directories = {
     out: path.join(__dirname, 'data', 'out') + path.sep
 };
 
-var testCases = fs.readdirSync(directories.in).map(function (filename) {
-    return {
-        filename: filename,
-        name: path.parse(filename).name,
-        data: load.sync(directories.in + filename)
-    };
-});
-
+var isoBandsTestCases = fs.readdirSync(directories.in)
+        .filter(function (filename) {
+        return filename.includes('isoBands');
+    })
+        .map(function (filename) {
+        return {
+            name: path.parse(filename).name,
+            data: load.sync(directories.in + filename)
+        };
+    });
 
 test('isoBands output', function (t) {
-    testCases.forEach(function (inputFile) {
+    isoBandsTestCases.forEach(function (inputFile) {
         var name = inputFile.name;
         var data = inputFile.data.matrix;
         var outputfile = directories.out + name + '.json';
