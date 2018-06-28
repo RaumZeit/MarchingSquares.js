@@ -4,12 +4,8 @@
   "version": "1.3.0",
   "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
   "contributors": [
-    {
-      "name": "Stefano Borghi"
-    },
-    {
-      "name": "Peter Kerpedjiev"
-    }
+    {"name": "Stefano Borghi"},
+    {"name": "Peter Kerpedjiev"}
   ],
   "license": "AGPL-3.0",
   "main": "./dist/marchingsquares.js",
