@@ -2,7 +2,7 @@
 import * as interpolate from './interpolation';
 
 
-function options() {
+function Options() {
   /* Settings common to all implemented algorithms */
   this.successCallback  = null;
   this.verbose          = false;
@@ -21,7 +21,7 @@ function isoBandOptions(userSettings) {
     bandOptions,
     optionKeys;
 
-  bandOptions   = new options();
+  bandOptions   = new Options();
   userSettings  = userSettings ? userSettings : {};
   optionKeys    = Object.keys(bandOptions);
 
@@ -52,7 +52,7 @@ function isoLineOptions(userSettings) {
     lineOptions,
     optionKeys;
 
-  lineOptions   = new options();
+  lineOptions   = new Options();
   userSettings  = userSettings ? userSettings : {};
   optionKeys    = Object.keys(lineOptions);
 
