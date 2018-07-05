@@ -188,12 +188,32 @@ TreeNode.prototype.cellsBelowThreshold = function(threshold, subsumed) {
  * range of [lowerbound, upperbound] limits.
  */
 function QuadTree(data) {
+  var i, cols;
+
   /* do some input checking */
   if (!data)
     throw new Error('data is required');
+
   if (!Array.isArray(data) ||
       !Array.isArray(data[0]))
     throw new Error('data must be scalar field, i.e. array of arrays');
+
+  if (data.length < 2)
+    throw new Error('data must contain at least two rows');
+
+  /* check if we've got a regular grid */
+  cols = data[0].length;
+
+  if (cols < 2)
+    throw new Error('data must contain at least two columns');
+
+  for (i = 1; i < data.length; i++) {
+    if (!Array.isArray(data[i]))
+      throw new Error('Row ' + i + ' is not an array');
+
+    if (data[i].length != cols)
+      throw new Error('unequal row lengths detected, please provide a regular grid');
+  }
 
   /* create pre-processing object */
   this.data = data;
