@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IsoBands example</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.38.0/lib/codemirror.min.css">
+    <link href="styles.css" rel="stylesheet"/>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.38.0/lib/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/javascript/javascript.min.js"></script>
+
+    <script src="../../dist/marchingsquares.js"></script>
+</head>
+<body>
+
+<div class="marchingsquares">
+    <div id="isobands"></div>
+</div>
+
+<div class="right">
+
+    <p>Intervals:</p>
+    <textarea id="intervals" cols="30" rows="2" placeholder="comma separated values...">0, 3, 5, 7, 9</textarea>
+
+    <p>Data:</p>
+    <div id="editor"></div>
+
+    <p>Bands:</p>
+    <div id="output"></div>
+
+</div>
+
+<script src="./draw-lines.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
