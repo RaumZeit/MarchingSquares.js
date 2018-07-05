@@ -1,7 +1,9 @@
+/* eslint no-console: ["error", { allow: ["log"] }] */
+/* eslint-env browser,node */
 
 import {isoLineOptions} from './options.js';
 import {cell2Polygons, traceLinePaths} from './polygons.js';
-import {quadTree} from './quadtree.js';
+import {QuadTree} from './quadtree.js';
 
 
 /*
@@ -32,7 +34,7 @@ function isoLines(input, threshold, options) {
   settings = isoLineOptions(options);
 
   /* check for input data */
-  if (input instanceof quadTree) {
+  if (input instanceof QuadTree) {
     tree = input;
     root = input.root;
     data = input.data;
@@ -41,7 +43,7 @@ function isoLines(input, threshold, options) {
   } else if (Array.isArray(input) && Array.isArray(input[0])) {
     data = input;
   } else {
-    throw new Error('input is neither array of arrays nor object retrieved from \'quadTree()\'');
+    throw new Error('input is neither array of arrays nor object retrieved from \'QuadTree()\'');
   }
 
   /* check and prepare input threshold(s) */
@@ -63,9 +65,9 @@ function isoLines(input, threshold, options) {
     threshold = [ threshold ];
   }
 
-  /* create quadTree root node if not already present */
+  /* create QuadTree root node if not already present */
   if ((useQuadTree) && (!root)) {
-    tree = new quadTree(data);
+    tree = new QuadTree(data);
     root = tree.root;
     data = tree.data;
   }
@@ -95,7 +97,7 @@ function isoLines(input, threshold, options) {
     if (settings.polygons) {
       /* compose list of polygons for each single cell */
       if (useQuadTree) {
-        /* go through list of cells retrieved from quadTree */
+        /* go through list of cells retrieved from QuadTree */
         root
           .cellsBelowThreshold(settings.threshold, true)
           .forEach(function(c) {

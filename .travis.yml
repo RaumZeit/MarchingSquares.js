@@ -10,9 +10,9 @@ script:
   # Build environment.
   - node --version
   - npm --version
-  # Build and test.
-  - npm run-script build
+  # Test and build.
   - npm run-script test
+  - npm run-script build
 deploy:
   provider: releases
   api-key:

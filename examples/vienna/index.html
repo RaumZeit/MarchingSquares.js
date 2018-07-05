@@ -5,7 +5,7 @@
     <title>IsoBands example</title>
 
     <script src="https://d3js.org/d3.v3.min.js"></script>
-    <script src="../dist/marchingsquares.js"></script>
+    <script src="../../dist/marchingsquares.js"></script>
 
     <style>
 div.tooltip {
@@ -54,12 +54,12 @@ div.tooltip {
 
     /* pre-process data to speed up multiple calls to isoBands/isoLines */
     if (useQuadTree)
-      prepData = new MarchingSquaresJS.quadTree(data);
+      prepData = new MarchingSquaresJS.QuadTree(data);
 
     /*******************
       1st: iso bands
     ********************/
-
+debugger
     MarchingSquaresJS
       .isoBands(
         prepData,

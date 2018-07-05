@@ -1,11 +1,11 @@
 {
   "name": "marchingsquares",
   "description": "MarchingSquaresJS - An implementation of the Marching Squares algorithm featuring Isocontour and Isoband computation.",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "author": "Ronny Lorenz <ronny@tbi.univie.ac.at>",
   "contributors": [
-    { "name": "Stefano Borghi" },
-    { "name": "Peter Kerpedjiev" }
+    {"name": "Stefano Borghi"},
+    {"name": "Peter Kerpedjiev"}
   ],
   "license": "AGPL-3.0",
   "main": "./dist/marchingsquares.js",
@@ -15,12 +15,14 @@
     "dist": "./dist"
   },
   "scripts": {
+    "lint": "eslint --fix src/**",
     "build": "rollup -c",
+    "pretest": "rollup -c rollup.config.test.js",
     "test": "node ./test/test.js"
   },
   "repository": {
     "type": "git",
-    "url": "git@krios.tbi.univie.ac.at:ronny/MarchingSquaresJS.git"
+    "url": "git://github.com/RaumZeit/MarchingSquares.js.git"
   },
   "bugs": {
     "url": "https://github.com/RaumZeit/MarchingSquares.js/issues"
@@ -34,6 +36,7 @@
     "isoline"
   ],
   "devDependencies": {
+    "eslint": "5.0.1",
     "load-json-file": "^2.0.0",
     "rollup": "^0.60.7",
     "rollup-plugin-eslint": "^4.0.0",

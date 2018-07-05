@@ -65,7 +65,7 @@ In most cases, you may want to load the entire library to expose all implemented
 algorithms at once. Alternatively, you may include only one of the `isoLines` or
 `isoBands` algorithms. In this case, however, you have to sacrifice the possibility
 to pass pre-processed data to effectively circumvent redundant *Quad-Tree* construction
-since the `quadTree` constructor will be unavailable.
+since the `QuadTree` constructor will be unavailable.
 
 The library exposes the following function attributes (see also [API description](#api-description))
 
@@ -73,7 +73,7 @@ The library exposes the following function attributes (see also [API description
 MarchingSquaresJS = {
     isoLines : function(data, threshold, options){},
     isoBands : function(data, lowerBound, bandwidth, options){},
-    quadTree : function(data){}
+    QuadTree : function(data){}
 };
 ```
 
@@ -136,7 +136,7 @@ Compute *iso lines* and *iso contours* for a 2-dimensional scalar field and a (l
 
 | Parameter   | Description                                                                                                                                                               |
 | ----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `data`      | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new quadTree()`). This parameter is **mandatory**.  |
+| `data`      | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new QuadTree()`). This parameter is **mandatory**.  |
 | `threshold` | A constant numerical value (or array of numerical values) defining the curve function for the *iso line(s)*. This parameter is **mandatory**                              |
 | `options`   | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**                                               |
 
@@ -164,7 +164,7 @@ Compute *iso bands* for a 2-dimensional scalar field, a (list of) lowerBound(s),
 
 | Parameter     | Description                                                                                                                                                               |
 | ------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `data`        | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new quadTree()`). This parameter is **mandatory**.  |
+| `data`        | 2-dimensional input data, i.e. the scalar field (must be array of arrays, or pre-processed data object obtained from `new QuadTree()`). This parameter is **mandatory**.  |
 | `lowerBound`  | A constant numerical value (or array of numerical values) that define(s) the lower bound of the *iso band*. This parameter is **mandatory**.                              |
 | `bandWidth`   | A constant numerical value (or array of numerical values) that defines the width(s) the *iso band*, i.e. the range of values. This parameter is **mandatory**.            |
 | `options`     | An object with attributes allowing for changes in the behavior of this function (See below). This parameter is **optional**.                                              |
@@ -187,7 +187,7 @@ coordinates. (see the `options` parameter to change the output)
 ### Pre-process Data
 
 ```javascript
-function quadTree(data)
+function QuadTree(data)
 ```
 
 Pre-compute a Quad-Tree for the scalar field `data`.
@@ -208,11 +208,11 @@ An object that glues together the scalar field `data` and the corresponding pre-
 
 ##### Note:
 
-This function is a **constructor**! Thus, to generate an object with pre-processed data, one
-has to create a new `quadTree` object:
+This is a **constructor** function! Thus, to generate an object with pre-processed data, one
+has to create a new `QuadTree` object:
 
 ```javascript
-var prepData = new MarchingSquaresJS.quadTree(data);
+var prepData = new MarchingSquaresJS.QuadTree(data);
 ```
 
 Furthermore, when passing pre-processed data to one of the `isoLines` or `isoBands` function, they
@@ -235,6 +235,8 @@ The `options` object may have the following fields:
 ### Deprecation Warnings
 
 The `isoContour` function was renamed to `isoLines` with version `1.3.0` but still remains for backward compatibility reasons!
+
+The `quadTree` constructor function was renamed to `QuadTree` with version `1.3.1` but remains for backward compatibility!
 
 ----
 

@@ -1,6 +1,6 @@
 
 /* quadTree node constructor */
-function treeNode(data, x, y, dx, dy) {
+function TreeNode(data, x, y, dx, dy) {
   var dx_tmp = dx,
     dy_tmp = dy,
     msb_x  = 0,
@@ -74,24 +74,24 @@ function treeNode(data, x, y, dx, dy) {
       dy_tmp = 1 << (msb_y - 1);
     }
 
-    this.childA = new treeNode(data, x, y, dx_tmp, dy_tmp);
+    this.childA = new TreeNode(data, x, y, dx_tmp, dy_tmp);
     this.lowerBound = this.childA.lowerBound;
     this.upperBound = this.childA.upperBound;
 
     if (dx - dx_tmp > 0) {
-      this.childB = new treeNode(data, x + dx_tmp, y, dx - dx_tmp, dy_tmp);
+      this.childB = new TreeNode(data, x + dx_tmp, y, dx - dx_tmp, dy_tmp);
       this.lowerBound = Math.min(this.lowerBound, this.childB.lowerBound);
       this.upperBound = Math.max(this.upperBound, this.childB.upperBound);
 
       if (dy - dy_tmp > 0) {
-        this.childC = new treeNode(data, x + dx_tmp, y + dy_tmp, dx - dx_tmp, dy - dy_tmp);
+        this.childC = new TreeNode(data, x + dx_tmp, y + dy_tmp, dx - dx_tmp, dy - dy_tmp);
         this.lowerBound = Math.min(this.lowerBound, this.childC.lowerBound);
         this.upperBound = Math.max(this.upperBound, this.childC.upperBound);
       }
     }
 
     if (dy - dy_tmp > 0) {
-      this.childD = new treeNode(data, x, y + dy_tmp, dx_tmp, dy - dy_tmp);
+      this.childD = new TreeNode(data, x, y + dy_tmp, dx_tmp, dy - dy_tmp);
       this.lowerBound = Math.min(this.lowerBound, this.childD.lowerBound);
       this.upperBound = Math.max(this.upperBound, this.childD.upperBound);
     }
@@ -112,7 +112,7 @@ function treeNode(data, x, y, dx, dy) {
  *            properties: 'o.x' and 'o.y' denoting the left-bottom corner
  *            of the corresponding cell.
  */
-treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
+TreeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
   var cells = [];
 
   subsumed = (typeof subsumed === 'undefined') ? true : subsumed;
@@ -147,7 +147,7 @@ treeNode.prototype.cellsInBand = function(lowerBound, upperBound, subsumed) {
 };
 
 
-treeNode.prototype.cellsBelowThreshold = function(threshold, subsumed) {
+TreeNode.prototype.cellsBelowThreshold = function(threshold, subsumed) {
   var cells = [];
 
   subsumed = (typeof subsumed === 'undefined') ? true : subsumed;
@@ -182,24 +182,47 @@ treeNode.prototype.cellsBelowThreshold = function(threshold, subsumed) {
 
 
 /*
- * Given a scalar field `data` construct a quadTree
+ * Given a scalar field `data` construct a QuadTree
  * to efficiently lookup those parts of the scalar
  * field where values are within a particular
  * range of [lowerbound, upperbound] limits.
  */
-function quadTree(data) {
+function QuadTree(data) {
+  var i, cols;
+
   /* do some input checking */
   if (!data)
     throw new Error('data is required');
+
   if (!Array.isArray(data) ||
       !Array.isArray(data[0]))
     throw new Error('data must be scalar field, i.e. array of arrays');
 
+  if (data.length < 2)
+    throw new Error('data must contain at least two rows');
+
+  /* check if we've got a regular grid */
+  cols = data[0].length;
+
+  if (cols < 2)
+    throw new Error('data must contain at least two columns');
+
+  for (i = 1; i < data.length; i++) {
+    if (!Array.isArray(data[i]))
+      throw new Error('Row ' + i + ' is not an array');
+
+    if (data[i].length != cols)
+      throw new Error('unequal row lengths detected, please provide a regular grid');
+  }
+
   /* create pre-processing object */
   this.data = data;
   /* root node, i.e. entry to the data */
-  this.root = new treeNode(data, 0, 0, data[0].length - 1, data.length - 1);
+  this.root = new TreeNode(data, 0, 0, data[0].length - 1, data.length - 1);
 }
 
 
-export {quadTree};
+export {
+  QuadTree,
+  QuadTree as quadTree
+};

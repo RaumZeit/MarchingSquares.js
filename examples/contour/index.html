@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IsoBands example</title>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="../../dist/marchingsquares-isolines.js"></script>
+
+</head>
+<body>
+
+<div id="isocontours"></div>
+
+<script>
+
+    var intervals = [-5, -4.5, -4.1, -4.05, -4, -3.9, -3.8, -3.7, -3.6, -3.5, -3.4, -3.3, -3.2, -3.1, -3.0, -2.5, -2, -1.5, -1, -0.5, 0];
+
+    var data = [
+      [0.0,   0.0,   0.0,   0.0, 0.0],
+      [0.0, -3.57, -4.12, -3.59, 0.0],
+      [0.0, -3.64, -4.21, -3.62, 0.0],
+      [-10.0, -3.57, -3.99, -3.79, 0.0],
+      [0.0, -3.75, -4.11, -3.94, 0.0],
+      [0.0,  -4.0, -3.98, -4.08, 0.0],
+      [0.0, -4.09, -4.04,   0.0, 0.0],
+      [0.0,   0.0,   0.0,   0.0, 0.0]
+    ];
+
+    var xs = d3.range(0, data[0].length);
+    var ys = d3.range(0, data.length);
+
+    var isoLines = [];
+    MarchingSquaresJS
+      .isoLines(data,
+                intervals,
+                {
+                    polygons: false,
+                    linearRing: false
+                }
+      )
+      .forEach(function(isolines, i) {
+        isoLines.push({
+          "coords": isolines,
+          "level": i + 1,
+          "val": intervals[i]});
+      });
+
+    drawLines('#isocontours', isoLines, intervals);
+
+
+    // helper function
+    function drawLines(divId, lines, intervals) {
+
+        var marginBottomLabel = 0;
+
+        var width = 300;
+        var height = width * (ys.length / xs.length);
+
+        var xScale = d3.scale.linear()
+                .range([0, width])
+                .domain([Math.min.apply(null, xs), Math.max.apply(null, xs)]);
+
+        var yScale = d3.scale.linear()
+                .range([0, height])
+                .domain([Math.min.apply(null, ys), Math.max.apply(null, ys)]);
+
+        var colours = d3.scale.linear().domain([intervals[0], intervals[intervals.length - 1]])
+                .range([d3.rgb(0, 0, 0),
+                    d3.rgb(200, 200, 200)]);
+
+        var svg = d3.select(divId)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height + marginBottomLabel);
+
+        svg.selectAll("path")
+                .data(lines)
+                .enter().append("path")
+                .style("fill", "none")
+                .style("stroke", function (d) {
+                    return colours(d.val);
+                })
+                .style("stroke-width", 1)
+                .style('opacity', 1.0)
+                .attr("d", function (d) {
+                    var p = "";
+                    d.coords.forEach(function (aa) {
+                        p += (d3.svg.line()
+                            .x(function (dat) {
+                                return xScale(dat[0]);
+                            })
+                            .y(function (dat) {
+                                return yScale(dat[1]);
+                            })
+                            .interpolate("linear")
+                        )(aa) + "";
+                    });
+                    return p;
+                })
+                .on('mouseover', function () {
+                    d3.select(this)
+                    .style('stroke', d3.rgb(204, 185, 116))
+                    .style("stroke-width", 3);
+                })
+                .on('mouseout', function () {
+                    d3.select(this)
+                    .style('stroke', function (d1) {
+                        return colours(d1.val);
+                    })
+                    .style("stroke-width", 1);
+                });
+    }
+
+</script>
+</body>
+</html>
