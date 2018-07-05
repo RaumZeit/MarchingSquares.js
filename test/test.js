@@ -4,7 +4,7 @@ var test = require('tape');
 var load = require('load-json-file');
 var isoBands = require('../dist/marchingsquares.js').isoBands;
 var isoLines = require('../dist/marchingsquares.js').isoLines;
-var quadTree = require('../dist/marchingsquares.js').quadTree;
+var QuadTree = require('../dist/marchingsquares.js').QuadTree;
 
 var directories = {
     in: path.join(__dirname, 'data', 'in') + path.sep,
@@ -119,16 +119,34 @@ test('successCallback check', function (t) {
 });
 
 
-test('quadTree', function (t) {
+test('QuadTree', function (t) {
     var data = [
         [1, 1, 1, 0],
         [1, 5, 5, 1],
-        [0, 1, 1, 1]
+        [0, 5, 7, 1]
     ];
-    var prepData = new quadTree(data);
+    var prepData = new QuadTree(data);
 
-    t.equal('quadTree', prepData.constructor.name);
-    t.equal('treeNode', prepData.root.constructor.name);
+    t.equal('QuadTree', prepData.constructor.name);
+    t.equal('TreeNode', prepData.root.constructor.name);
+
+    t.throws(function(){new QuadTree(null)}, /data is required/, 'missing data');
+    t.throws(function(){new QuadTree([ ])}, /array of arrays/, '1D array');
+    t.throws(function(){new QuadTree([ [ ] ])}, /two rows/, 'Empty 2D array');
+    t.throws(function(){new QuadTree([ [0] ])}, /two rows/, 'Single row');
+    t.throws(function(){new QuadTree([ [0], [0] ])}, /two columns/, 'Single column');
+    t.throws(function(){new QuadTree([ [0, 1], [0] ])}, /unequal row lengths/, 'Unequal row lengths');
+
+    /* There are only only two cells with threshold 0 */
+    t.deepEqual([{x: 2, y: 0},{x: 0, y: 1}], prepData.root.cellsBelowThreshold(0, false));
+    /* There are only two cells with threshold 7 */
+    t.deepEqual([{x: 1, y: 1},{x: 2, y: 1}], prepData.root.cellsBelowThreshold(7, false));
+    /* there is no cell with threshold -2 */
+    t.deepEqual([], prepData.root.cellsBelowThreshold(-2, false));
+    /* there is no cell with threshold -2 */
+    t.deepEqual([], prepData.root.cellsBelowThreshold(10, false));
+    /* only two cells with band [7:8] */
+    t.deepEqual([{x: 1, y: 1},{x: 2, y: 1}], prepData.root.cellsInBand(7, 8, false));
 
     t.end();
 });
