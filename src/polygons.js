@@ -493,7 +493,7 @@ function traceLinePaths(data, cellGrid, settings) {
                   if (((dir === 0) && (y < 0)) ||
                       ((dir === 1) && (x < 0)) ||
                       ((dir === 2) && (y === rows)) ||
-                      ((dir === 3) && (x === rows))) {
+                      ((dir === 3) && (x === cols))) {
                     x -= add_x[dir];
                     y -= add_y[dir];
 
