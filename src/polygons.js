@@ -373,7 +373,7 @@ function traceLinePaths(data, cellGrid, settings) {
   };
 
   /* first, detect whether we need any outer frame */
-  if (requireLineFrame(data, settings.minV, settings.maxV)) {
+  if (requireLineFrame(data, settings.threshold)) {
     if (settings.linearRing)
       polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0], [0, 0] ]);
     else
