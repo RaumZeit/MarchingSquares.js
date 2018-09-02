@@ -1,5 +1,9 @@
 # Changelog
 
+### v1.3.2
+- Fix frame detection for iso line/contour tracer
+- Add homepage field to package.json
+
 ### v1.3.1
 - Fix isoLine out-of-grid tracing issue
 - Rename `quadTree` constructor function to `QuadTree`
