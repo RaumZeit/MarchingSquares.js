@@ -153,6 +153,11 @@ A single path is an array of coordinates where each coordinate, again, is an arr
 Note, that the paths resemble *linear Rings* by default, i.e. they are closed and have identical first
 and last coordinates. (see the `options` parameter to change the output)
 
+Furthermore, if all values at the border of the input data are below the threshold, a rectangular frame
+path with coordinates `[ 0, 0 ], [0, rows], [cols, rows], [cols, 0]`, i.e. enclosing the entire scalar
+field, will be added as first element of the returned array. Here, the values of `rows` and `cols` are
+the number of rows and columns of the input data, respectively. To disable this behavior, the user may
+pass the `options.noFrame=true`.
 
 ### Computing Iso Bands
 
@@ -224,13 +229,14 @@ flag is set.
 
 The `options` object may have the following fields:
 
-| Property                  | Type        | Description                                                                                                                                                                                                                                                                     | Default value |
-| ------------------------- | :---------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| `options.successCallback` | *function*  | A function called at the end of each *iso line* / *iso band* computation. It will be passed the `path array` and the corresponding limit(s) (`threshold` or `lowerBound, bandWidth`) as first and second (third) arguments, respectively.                                    | `null`        |
-| `options.verbose`         | *bool*      | Create `console.log()` info messages before each major step of the algorithm                                                                                                                                                                                                    | `false`       |
-| `options.polygons`        | *bool*      | If `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons.                                                                          | `false`       |
-| `options.linearRing`      | *bool*      | If `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths.  | `true`        |
-| `options.noQuadTree`      | *bool*      | If `true`, Quad-Tree optimization is deactivated no matter what the input is. Otherwise, the implementations make use of Quad-Tree optimization if the input demands for *multiple* iso lines/bands.                                                                            | `false`       |
+| Property                  | Type        | Description                                                                                                                                                                                                                                                                                                   | Default value |
+| ------------------------- | :---------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| `options.successCallback` | *function*  | A function called at the end of each *iso line* / *iso band* computation. It will be passed the `path array` and the corresponding limit(s) (`threshold` or `lowerBound, bandWidth`) as first and second (third) arguments, respectively.                                                                     | `null`        |
+| `options.verbose`         | *bool*      | Create `console.log()` info messages before each major step of the algorithm                                                                                                                                                                                                                                  | `false`       |
+| `options.polygons`        | *bool*      | If `true` the function returns a list of path coordinates for individual polygons within each grid cell, if `false` returns a list of path coordinates representing the outline of connected polygons.                                                                                                        | `false`       |
+| `options.linearRing`      | *bool*      | If `true`, the polygon paths are returned as linear rings, i.e. the first and last coordinate are identical indicating a closed path. Note, that for the `IsoLines` implementation a value of `false` reduces the output to *iso lines* that are not necessarily closed paths.                                | `true`        |
+| `options.noQuadTree`      | *bool*      | If `true`, Quad-Tree optimization is deactivated no matter what the input is. Otherwise, the implementations make use of Quad-Tree optimization if the input demands for *multiple* iso lines/bands.                                                                                                          | `false`       |
+| `options.noFrame`         | *bool*      | If `true`, the *iso line* / *iso contour* algorithm omits the enclosing rectangular outer frame when all data points along the boundary of the scalar field are below the threshold. Otherwise, if necessary, the enclosing frame will be included for each threshold level as the very first returned path.  | `false`       |
 
 ### Deprecation Warnings
 
