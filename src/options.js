@@ -10,6 +10,7 @@ function Options() {
   this.polygons_full    = false;
   this.linearRing       = true;
   this.noQuadTree       = false;
+  this.noFrame          = false;
 }
 
 

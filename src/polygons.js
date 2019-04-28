@@ -373,12 +373,13 @@ function traceLinePaths(data, cellGrid, settings) {
   };
 
   /* first, detect whether we need any outer frame */
-  if (requireLineFrame(data, settings.threshold)) {
-    if (settings.linearRing)
-      polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0], [0, 0] ]);
-    else
-      polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0] ]);
-  }
+  if (!settings.noFrame)
+    if (requireLineFrame(data, settings.threshold)) {
+      if (settings.linearRing)
+        polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0], [0, 0] ]);
+      else
+        polygons.push([ [0, 0], [0, rows], [cols, rows], [cols, 0] ]);
+    }
 
   /* finally, start tracing back first polygon(s) */
 
